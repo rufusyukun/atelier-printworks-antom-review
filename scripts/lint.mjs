@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const files = ["index.html", "src/main.js", "src/data.js", "src/styles.css"];
+const files = ["index.html", "src/main.js", "src/styles.css"];
 const forbidden = [/lorem ipsum/i, /theworkspacehero/i, /warpminiatures/i, /lootstudios/i, /api[_-]?key/i, /secret/i];
 const requiredRoutes = [
   "#/products",

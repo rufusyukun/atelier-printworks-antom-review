@@ -13,7 +13,7 @@ mkdirSync(dist, { recursive: true });
 copyFileSync(join(root, "index.html"), join(dist, "index.html"));
 cpSync(join(root, "src"), join(dist, "src"), { recursive: true });
 
-const required = ["src/main.js", "src/data.js", "src/styles.css"].map(file => join(root, file));
+const required = ["src/main.js", "src/styles.css"].map(file => join(root, file));
 for (const file of required) {
   if (!existsSync(file) || statSync(file).size === 0) {
     throw new Error(`${file} is missing or empty`);
