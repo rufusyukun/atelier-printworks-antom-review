@@ -169,12 +169,469 @@ const footerGroups = [
 const supportEmail = "support@atelierprintworks.example";
 const businessName = "Atelier Printworks LLC (placeholder)";
 const operatingAddress = "Operating address placeholder: 1200 Maker Avenue, Suite 8, Dover, DE 19901, United States";
+const languages = [
+  ["en", "English"],
+  ["zh-CN", "中文"],
+  ["ja-JP", "日本語"],
+  ["fr-FR", "Français"],
+  ["es-ES", "Español"]
+];
+let currentLang = localStorage.getItem("atelier-lang") || "en";
+
+const dict = {
+  en: {
+    tag: "Original 3D Print Goods",
+    navProducts: "Products",
+    navCustom: "Custom Print",
+    navStl: "STL Packs",
+    navLicense: "Commercial License",
+    navAbout: "About",
+    navContact: "Contact",
+    cart: "Cart",
+    originalRender: "Original generated product render for",
+    footerLine: "Original files, objects, and print services.",
+    email: "Email",
+    secureNote: "Secure checkout placeholder for Antom integration. Private payment credentials are never stored in the browser.",
+    copyright: "© 2026 Atelier Printworks. All product concepts are original designs.",
+    shop: "Shop",
+    support: "Support",
+    legal: "Legal",
+    products: "Products",
+    customPrint: "Custom Print",
+    stlPacks: "STL Packs",
+    commercialLicense: "Commercial License",
+    orderLookup: "Order Lookup",
+    contactUs: "Contact Us",
+    faq: "FAQ",
+    shippingPolicy: "Shipping Policy",
+    refundPolicy: "Refund Policy",
+    privacyPolicy: "Privacy Policy",
+    terms: "Terms of Service",
+    digitalPolicy: "Digital Goods Policy",
+    licenseAgreement: "License Agreement",
+    heroEyebrow: "Original 3D printed objects and digital STL packs",
+    heroTitle: "Atelier-made tools, keepsakes, and print-ready model files.",
+    heroBody: "Shop clean desk accessories, home objects, pet keepsakes, commercial licenses, and custom 3D print services. Every item is an original design with clear delivery, refund, and license terms.",
+    shopProducts: "Shop products",
+    digitalTerms: "Digital delivery terms",
+    readyPacks: "Ready-to-print packs",
+    readyPacksBody: "STL, 3MF, PDF guide, lifetime order access",
+    purpose: "Shop by purpose",
+    workflowTitle: "Built around real print workflows.",
+    featured: "Featured products",
+    featuredTitle: "Original models, objects, and licenses.",
+    viewAll: "View all",
+    viewDetails: "View details",
+    digitalInfoTitle: "Digital files are delivered through the order page and email.",
+    digitalInfoBody: "STL packs include STL, 3MF, and PDF guide files where noted. Downloads are for personal use unless a Commercial License is purchased. If a file is corrupted or access fails, support will resend or resolve it.",
+    physicalInfoTitle: "Physical items are made to order and shipped worldwide.",
+    physicalInfoBody: "Most physical products are produced in 3-7 business days, then shipped in 7-15 business days depending on region. Custom and personalized items begin after proof approval.",
+    licenseInfoTitle: "Commercial licensing is separated from file ownership.",
+    licenseInfoBody: "Eligible packs can be used for small-batch physical resale only when a Commercial License is purchased. Digital resale, file sharing, and marketplace uploads are prohibited.",
+    trust: ["Secure Checkout", "Original Designs", "Digital Delivery", "Worldwide Shipping", "Support"],
+    quickAnswers: "Quick answers",
+    beforeBuy: "Before you buy.",
+    q1: "Can I refund an STL pack after downloading it?",
+    a1: "No-reason refunds are not available after a digital file has been accessed or downloaded. We will help if the archive is damaged, the download fails, or the file does not match the listing.",
+    q2: "How long do made-to-order products take?",
+    a2: "Most physical products need 3-7 business days for production and 7-15 business days for shipping, depending on destination and carrier availability.",
+    q3: "Can I sell prints made from your STL files?",
+    a3: "Only with a separate Commercial License. The personal license included with STL packs does not permit resale or distribution.",
+    catalog: "Catalog",
+    allProducts: "All Products",
+    catalogBody: "Every listing includes product type, delivery method, processing time, refund rules, and license notes for a clear purchase decision.",
+    addToCart: "Add to cart",
+    buyNow: "Buy now",
+    specifications: "Specifications",
+    delivery: "Delivery",
+    refundNote: "Refund note",
+    licenseNote: "License note",
+    complianceBody: "This page is part of the store compliance structure and will be expanded with full operational copy in V2 and V3. For immediate support, email",
+    supportReply: "Support replies within 1-2 business days.",
+    business: "Business",
+    address: "Operating address",
+    notFound: "Product Not Found",
+    notFoundBody: "The requested product could not be found. Please return to the catalog.",
+    pageNotFound: "Page Not Found",
+    pageNotFoundBody: "This route does not exist. Use the navigation or footer links to continue shopping."
+  },
+  "zh-CN": {
+    tag: "原创 3D 打印商品",
+    navProducts: "商品",
+    navCustom: "定制打印",
+    navStl: "STL 文件包",
+    navLicense: "商业授权",
+    navAbout: "关于我们",
+    navContact: "联系我们",
+    cart: "购物车",
+    originalRender: "原创生成商品图：",
+    footerLine: "原创数字文件、实体小物与打印服务。",
+    email: "邮箱",
+    secureNote: "Antom 接入预留的安全结账入口。支付私密凭证不会存放在浏览器中。",
+    copyright: "© 2026 Atelier Printworks。所有商品概念均为原创设计。",
+    shop: "商店",
+    support: "支持",
+    legal: "法律与政策",
+    products: "商品",
+    customPrint: "定制打印",
+    stlPacks: "STL 文件包",
+    commercialLicense: "商业授权",
+    orderLookup: "订单查询",
+    contactUs: "联系我们",
+    faq: "常见问题",
+    shippingPolicy: "配送政策",
+    refundPolicy: "退款政策",
+    privacyPolicy: "隐私政策",
+    terms: "服务条款",
+    digitalPolicy: "数字商品政策",
+    licenseAgreement: "授权协议",
+    heroEyebrow: "原创 3D 打印实体小物与 STL 数字文件",
+    heroTitle: "工作室原创的桌面工具、纪念摆件与可打印模型文件。",
+    heroBody: "购买桌面收纳、家居小物、宠物纪念摆件、商业授权和定制 3D 打印服务。每件商品都清楚说明交付方式、退款规则和授权范围。",
+    shopProducts: "浏览商品",
+    digitalTerms: "查看数字交付说明",
+    readyPacks: "可直接打印的文件包",
+    readyPacksBody: "包含 STL、3MF、PDF 指南，并可通过订单长期访问",
+    purpose: "按用途选购",
+    workflowTitle: "围绕真实打印流程设计。",
+    featured: "精选商品",
+    featuredTitle: "原创模型、实体小物与授权。",
+    viewAll: "查看全部",
+    viewDetails: "查看详情",
+    digitalInfoTitle: "数字文件通过订单页和邮件交付。",
+    digitalInfoBody: "STL 文件包会按说明包含 STL、3MF 和 PDF 指南。未购买商业授权时仅限个人使用。如果文件损坏或无法下载，客服会补发或协助处理。",
+    physicalInfoTitle: "实体商品按订单制作，并支持全球配送。",
+    physicalInfoBody: "多数实体商品生产周期为 3-7 个工作日，配送通常为 7-15 个工作日，具体取决于地区。定制和个性化商品会在确认稿后开始制作。",
+    licenseInfoTitle: "商业授权与文件所有权分开管理。",
+    licenseInfoBody: "符合条件的文件包只有在购买商业授权后，才可用于小批量实体打印销售。禁止转售数字文件、分享源文件或上传到公开平台。",
+    trust: ["安全结账", "原创设计", "数字交付", "全球配送", "客服支持"],
+    quickAnswers: "快速解答",
+    beforeBuy: "购买前须知。",
+    q1: "STL 文件包下载后还能退款吗？",
+    a1: "数字文件一旦访问或下载，原则上不支持无理由退款。如果压缩包损坏、下载失败或文件与描述不符，我们会协助补发或处理。",
+    q2: "按订单制作的实体商品需要多久？",
+    a2: "多数实体商品生产需要 3-7 个工作日，配送约 7-15 个工作日，具体取决于目的地和承运商。",
+    q3: "我可以销售用你们 STL 文件打印出来的实体商品吗？",
+    a3: "只有单独购买商业授权后才可以。STL 文件包自带的个人授权不允许转售或分发。",
+    catalog: "商品目录",
+    allProducts: "全部商品",
+    catalogBody: "每个商品都会展示类型、交付方式、处理时间、退款规则和授权说明，方便你清楚下单。",
+    addToCart: "加入购物车",
+    buyNow: "立即购买",
+    specifications: "规格参数",
+    delivery: "交付方式",
+    refundNote: "退款说明",
+    licenseNote: "授权说明",
+    complianceBody: "该页面属于店铺合规信息结构，完整政策文本会在 V2 和 V3 扩写。需要帮助请发送邮件至",
+    supportReply: "客服通常会在 1-2 个工作日内回复。",
+    business: "企业名称",
+    address: "经营地址",
+    notFound: "未找到商品",
+    notFoundBody: "请求的商品不存在，请返回商品目录。",
+    pageNotFound: "页面不存在",
+    pageNotFoundBody: "该路由不存在，请使用导航或页脚链接继续浏览。"
+  },
+  "ja-JP": {
+    tag: "オリジナル3Dプリント商品",
+    navProducts: "商品",
+    navCustom: "カスタムプリント",
+    navStl: "STLパック",
+    navLicense: "商用ライセンス",
+    navAbout: "会社情報",
+    navContact: "お問い合わせ",
+    cart: "カート",
+    originalRender: "オリジナル生成商品画像:",
+    footerLine: "オリジナルファイル、雑貨、プリントサービス。",
+    email: "メール",
+    secureNote: "Antom連携用の安全なチェックアウト枠です。決済用の機密情報はブラウザに保存しません。",
+    copyright: "© 2026 Atelier Printworks. すべての商品コンセプトはオリジナルです。",
+    shop: "ショップ",
+    support: "サポート",
+    legal: "法務",
+    products: "商品",
+    customPrint: "カスタムプリント",
+    stlPacks: "STLパック",
+    commercialLicense: "商用ライセンス",
+    orderLookup: "注文検索",
+    contactUs: "お問い合わせ",
+    faq: "FAQ",
+    shippingPolicy: "配送ポリシー",
+    refundPolicy: "返金ポリシー",
+    privacyPolicy: "プライバシーポリシー",
+    terms: "利用規約",
+    digitalPolicy: "デジタル商品ポリシー",
+    licenseAgreement: "ライセンス契約",
+    heroEyebrow: "オリジナル3Dプリント雑貨とSTLデジタルファイル",
+    heroTitle: "アトリエ発のツール、記念品、すぐ印刷できるモデルファイル。",
+    heroBody: "デスク用品、ホームオブジェ、ペット記念品、商用ライセンス、カスタム3Dプリントサービスを購入できます。各商品には配送、返金、ライセンス条件を明記しています。",
+    shopProducts: "商品を見る",
+    digitalTerms: "デジタル納品条件",
+    readyPacks: "すぐ印刷できるパック",
+    readyPacksBody: "STL、3MF、PDFガイド、注文ページから継続アクセス",
+    purpose: "用途で選ぶ",
+    workflowTitle: "実際のプリント工程に合わせた設計。",
+    featured: "注目商品",
+    featuredTitle: "オリジナルモデル、商品、ライセンス。",
+    viewAll: "すべて見る",
+    viewDetails: "詳細を見る",
+    digitalInfoTitle: "デジタルファイルは注文ページとメールで提供されます。",
+    digitalInfoBody: "STLパックには記載に応じてSTL、3MF、PDFガイドが含まれます。商用ライセンスなしでは個人利用のみです。破損やアクセス不良があればサポートが対応します。",
+    physicalInfoTitle: "物理商品は受注生産で世界配送に対応します。",
+    physicalInfoBody: "多くの商品は3-7営業日で制作し、配送は地域により通常7-15営業日です。カスタム商品は校正承認後に制作します。",
+    licenseInfoTitle: "商用ライセンスはファイル所有権とは別です。",
+    licenseInfoBody: "対象パックは商用ライセンス購入時のみ小ロットの物理販売が可能です。デジタル再販、共有、公開アップロードは禁止です。",
+    trust: ["安全決済", "オリジナル設計", "デジタル納品", "世界配送", "サポート"],
+    quickAnswers: "よくある質問",
+    beforeBuy: "購入前に。",
+    q1: "STLパックをダウンロード後に返金できますか？",
+    a1: "アクセスまたはダウンロード後の自己都合返金はできません。破損、ダウンロード失敗、説明との相違がある場合は対応します。",
+    q2: "受注生産品はどのくらいかかりますか？",
+    a2: "通常3-7営業日で制作し、配送は目的地により7-15営業日です。",
+    q3: "STLから印刷した物を販売できますか？",
+    a3: "別途商用ライセンスが必要です。個人ライセンスでは再販や配布はできません。",
+    catalog: "カタログ",
+    allProducts: "すべての商品",
+    catalogBody: "各商品には種類、納品方法、処理時間、返金条件、ライセンス情報を明記しています。",
+    addToCart: "カートに追加",
+    buyNow: "今すぐ購入",
+    specifications: "仕様",
+    delivery: "納品",
+    refundNote: "返金について",
+    licenseNote: "ライセンスについて",
+    complianceBody: "このページはストアのコンプライアンス構成の一部です。詳細文面はV2/V3で拡充します。サポートはメールでご連絡ください:",
+    supportReply: "通常1-2営業日以内に返信します。",
+    business: "事業者名",
+    address: "運営住所",
+    notFound: "商品が見つかりません",
+    notFoundBody: "商品が見つかりません。カタログに戻ってください。",
+    pageNotFound: "ページが見つかりません",
+    pageNotFoundBody: "このページは存在しません。ナビゲーションまたはフッターリンクをご利用ください。"
+  }
+};
+
+dict["fr-FR"] = {
+  ...dict.en,
+  tag: "Produits 3D originaux",
+  shop: "Boutique",
+  support: "Support",
+  legal: "Mentions légales",
+  products: "Produits",
+  customPrint: "Impression sur mesure",
+  stlPacks: "Packs STL",
+  commercialLicense: "Licence commerciale",
+  orderLookup: "Suivi de commande",
+  contactUs: "Contact",
+  faq: "FAQ",
+  shippingPolicy: "Politique de livraison",
+  refundPolicy: "Politique de remboursement",
+  privacyPolicy: "Confidentialité",
+  terms: "Conditions de service",
+  digitalPolicy: "Politique des biens numériques",
+  licenseAgreement: "Accord de licence",
+  navProducts: "Produits",
+  navCustom: "Impression sur mesure",
+  navStl: "Packs STL",
+  navLicense: "Licence commerciale",
+  navAbout: "À propos",
+  navContact: "Contact",
+  cart: "Panier",
+  shopProducts: "Voir les produits",
+  digitalTerms: "Conditions de livraison numérique",
+  heroEyebrow: "Objets 3D originaux et fichiers STL",
+  heroTitle: "Outils d'atelier, souvenirs et fichiers prêts à imprimer.",
+  heroBody: "Achetez des accessoires de bureau, objets pour la maison, souvenirs pour animaux, licences commerciales et services d'impression 3D sur mesure. Chaque produit précise livraison, remboursement et licence.",
+  allProducts: "Tous les produits",
+  catalog: "Catalogue",
+  addToCart: "Ajouter au panier",
+  buyNow: "Acheter",
+  viewDetails: "Voir le détail",
+  viewAll: "Tout voir",
+  specifications: "Spécifications",
+  delivery: "Livraison",
+  refundNote: "Remboursement",
+  licenseNote: "Licence",
+  trust: ["Paiement sécurisé", "Designs originaux", "Livraison numérique", "Livraison mondiale", "Support"]
+};
+
+dict["es-ES"] = {
+  ...dict.en,
+  tag: "Productos 3D originales",
+  shop: "Tienda",
+  support: "Soporte",
+  legal: "Legal",
+  products: "Productos",
+  customPrint: "Impresión personalizada",
+  stlPacks: "Packs STL",
+  commercialLicense: "Licencia comercial",
+  orderLookup: "Buscar pedido",
+  contactUs: "Contacto",
+  faq: "FAQ",
+  shippingPolicy: "Política de envíos",
+  refundPolicy: "Política de reembolsos",
+  privacyPolicy: "Política de privacidad",
+  terms: "Términos de servicio",
+  digitalPolicy: "Política de bienes digitales",
+  licenseAgreement: "Acuerdo de licencia",
+  navProducts: "Productos",
+  navCustom: "Impresión personalizada",
+  navStl: "Packs STL",
+  navLicense: "Licencia comercial",
+  navAbout: "Sobre nosotros",
+  navContact: "Contacto",
+  cart: "Carrito",
+  shopProducts: "Ver productos",
+  digitalTerms: "Condiciones de entrega digital",
+  heroEyebrow: "Objetos 3D originales y archivos STL",
+  heroTitle: "Herramientas de estudio, recuerdos y archivos listos para imprimir.",
+  heroBody: "Compra accesorios de escritorio, objetos para el hogar, recuerdos para mascotas, licencias comerciales y servicios de impresión 3D personalizada. Cada producto explica entrega, reembolsos y licencia.",
+  allProducts: "Todos los productos",
+  catalog: "Catálogo",
+  addToCart: "Añadir al carrito",
+  buyNow: "Comprar ahora",
+  viewDetails: "Ver detalles",
+  viewAll: "Ver todo",
+  specifications: "Especificaciones",
+  delivery: "Entrega",
+  refundNote: "Nota de reembolso",
+  licenseNote: "Nota de licencia",
+  trust: ["Pago seguro", "Diseños originales", "Entrega digital", "Envíos mundiales", "Soporte"]
+};
+
+const localizedCategories = {
+  "zh-CN": {
+    desk: ["桌面配件", "线缆收纳、托盘、模块化小架子和让工作区更清爽的小工具。"],
+    home: ["家居小物", "原创装饰容器、微型展示件和适合日常空间的小批量摆件。"],
+    pet: ["宠物纪念摆件", "按订单制作的宠物姓名底座、纪念牌和温柔克制的纪念形态。"],
+    stl: ["STL 文件包", "包含 STL、3MF 和 PDF 指南的可打印数字文件，适合个人打印。"],
+    custom: ["定制打印", "为原创原型、小摆件和桌面实用零件提供定制打印协助。"]
+  },
+  "ja-JP": {
+    desk: ["デスク用品", "ケーブルホルダー、トレー、モジュラー棚など整理された作業空間向けの小物。"],
+    home: ["ホームオブジェ", "日常空間に合うオリジナルの器、ミクロ展示物、少量生産の装飾品。"],
+    pet: ["ペット記念品", "受注生産の名前入り台座、タグ、穏やかな記念オブジェ。"],
+    stl: ["STLパック", "個人プリント向けのSTL、3MF、PDFガイド付きファイル。"],
+    custom: ["カスタムプリント", "試作品、小型装飾、デスク用パーツのプリント相談。"]
+  },
+  "fr-FR": {
+    desk: ["Accessoires de bureau", "Supports de câbles, plateaux, mini étagères modulaires et organiseurs pour un espace calme."],
+    home: ["Objets pour la maison", "Vases sculpturaux, micro-présentoirs et décorations en petite série pour le quotidien."],
+    pet: ["Souvenirs pour animaux", "Socles personnalisés, plaques de nom et formes commémoratives fabriquées sur commande."],
+    stl: ["Packs STL", "Fichiers STL et 3MF prêts à imprimer avec guides PDF pour usage personnel."],
+    custom: ["Impressions sur mesure", "Aide à l'impression pour prototypes originaux, petites décorations et pièces utiles de bureau."]
+  },
+  "es-ES": {
+    desk: ["Accesorios de escritorio", "Soportes de cable, bandejas, estantes modulares y organizadores para espacios de trabajo ordenados."],
+    home: ["Objetos para el hogar", "Piezas decorativas originales, microexpositores y objetos de baja producción para uso diario."],
+    pet: ["Recuerdos para mascotas", "Peanas personalizadas, placas de nombre y formas conmemorativas hechas bajo pedido."],
+    stl: ["Packs STL", "Archivos STL y 3MF listos para imprimir con guías PDF para uso personal."],
+    custom: ["Impresiones personalizadas", "Ayuda de impresión para prototipos originales, decoración pequeña y piezas útiles de escritorio."]
+  }
+};
+
+const localizedProducts = {
+  "zh-CN": {
+    "arc-desk-dock": ["弧形桌面停靠座", "可放置手机、手表、笔和线缆的加重模块化桌面底座。"],
+    "linea-cable-orbit": ["Linea 线缆环", "适用于 USB-C、音频线和充电线的简洁螺旋线缆收纳器。"],
+    "modu-rise-mini-shelf": ["Modu-Rise 迷你层架", "可堆叠的小型展示架，适合植物、钥匙和入口小物。"],
+    "quiet-paws-keepsake": ["Quiet Paws 宠物纪念底座", "带可选日期刻字的极简宠物姓名纪念底座。"],
+    "urban-nook-stl-pack": ["Urban Nook 建筑 STL 包", "原创微缩建筑模型，适合展示架、场景和打印练习。"],
+    "mechanic-sprout-stl-bundle": ["Mechanic Sprout 机械玩具包", "五款原创机械风桌面玩具模型，配可打印展示底座。"],
+    "studio-commercial-license": ["工作室商业授权", "允许一个小型商家销售符合条件 STL 文件打印出的实体商品。"],
+    "prototype-print-service": ["原型打印服务", "面向小型实用零件、展示模型和原创原型的入门打印服务。"]
+  },
+  "ja-JP": {
+    "arc-desk-dock": ["Arcデスクドック", "スマホ、時計、ペン、ケーブルを置ける重みのあるモジュラードック。"],
+    "linea-cable-orbit": ["Lineaケーブルオービット", "USB-C、オーディオ、充電ケーブル向けのシンプルなスパイラル収納。"],
+    "modu-rise-mini-shelf": ["Modu-Riseミニシェルフ", "植物、鍵、小物向けの積み重ね式ミニ棚。"],
+    "quiet-paws-keepsake": ["Quiet Paws記念台座", "日付刻印も選べるミニマルなペット名入り記念台座。"],
+    "urban-nook-stl-pack": ["Urban Nook STLパック", "棚展示、ジオラマ、練習プリント向けのオリジナル微建築モデル。"],
+    "mechanic-sprout-stl-bundle": ["Mechanic Sprout玩具バンドル", "スナップ式展示台付きの機械風デスクトイ5種。"],
+    "studio-commercial-license": ["スタジオ商用ライセンス", "対象STLから印刷した物理商品を小規模販売できるライセンス。"],
+    "prototype-print-service": ["プロトタイププリントサービス", "小型パーツ、展示モデル、オリジナル試作品向けの入門サービス。"]
+  },
+  "fr-FR": {
+    "arc-desk-dock": ["Station de bureau Arc", "Un dock modulaire lesté pour téléphone, montre, stylo et câbles."],
+    "linea-cable-orbit": ["Orbit de câble Linea", "Un organiseur spiralé propre pour câbles USB-C, audio et charge."],
+    "modu-rise-mini-shelf": ["Mini étagère Modu-Rise", "Une micro-étagère empilable pour plantes, clés et petits objets."],
+    "quiet-paws-keepsake": ["Socle souvenir Quiet Paws", "Un socle minimaliste personnalisé pour animal, avec date optionnelle."],
+    "urban-nook-stl-pack": ["Pack STL Urban Nook", "Modèles de micro-architecture originaux pour étagères, dioramas et essais d'impression."],
+    "mechanic-sprout-stl-bundle": ["Bundle Mechanic Sprout", "Cinq jouets de bureau originaux d'inspiration mécanique avec bases imprimables."],
+    "studio-commercial-license": ["Licence commerciale Studio", "Autorisation pour une petite entreprise de vendre des impressions physiques issues de packs éligibles."],
+    "prototype-print-service": ["Service d'impression prototype", "Service de départ pour petites pièces utiles, modèles d'exposition et prototypes originaux."]
+  },
+  "es-ES": {
+    "arc-desk-dock": ["Base de escritorio Arc", "Una base modular con peso para teléfono, reloj, bolígrafo y cables."],
+    "linea-cable-orbit": ["Órbita de cable Linea", "Un organizador espiral limpio para cables USB-C, audio y carga."],
+    "modu-rise-mini-shelf": ["Mini estante Modu-Rise", "Un microestante apilable para plantas pequeñas, llaves y objetos de entrada."],
+    "quiet-paws-keepsake": ["Peana recuerdo Quiet Paws", "Una peana minimalista con nombre de mascota y fecha opcional."],
+    "urban-nook-stl-pack": ["Pack STL Urban Nook", "Modelos originales de microarquitectura para estantes, dioramas y práctica de impresión."],
+    "mechanic-sprout-stl-bundle": ["Bundle Mechanic Sprout", "Cinco juguetes de escritorio originales de inspiración mecánica con bases imprimibles."],
+    "studio-commercial-license": ["Licencia comercial Studio", "Permiso para que una pequeña empresa venda impresiones físicas de packs elegibles."],
+    "prototype-print-service": ["Servicio de impresión de prototipos", "Servicio inicial para piezas útiles pequeñas, modelos de exhibición y prototipos originales."]
+  }
+};
+
+const routeTranslations = {
+  "/cart": ["cart", "Your cart will show physical products, digital packs, and licenses with delivery notes before checkout."],
+  "/checkout": ["Checkout / Payment", "Payment is simulated in this V1 preview. Antom integration will be added without exposing private credentials in front-end code."],
+  "/order-lookup": ["orderLookup", "Customers can look up downloads, fulfillment status, and license certificates by order email and order number."],
+  "/about": ["About Us", "We design original 3D printable objects for organized desks, warm homes, pet memories, and small creative studios."],
+  "/contact": ["contactUs", `Email ${supportEmail}. Business hours: Monday-Friday, 9:00-18:00 UTC+8. Support replies within 1-2 business days.`],
+  "/shipping-policy": ["shippingPolicy", "Physical products are made to order in 3-7 business days and usually ship in 7-15 business days depending on destination."],
+  "/refund-policy": ["refundPolicy", "Physical defects, damaged shipments, wrong items, and missing parts are handled by support. Downloaded digital goods are not eligible for no-reason refunds."],
+  "/privacy-policy": ["privacyPolicy", "We collect order, contact, shipping, and support information needed to operate the store and provide customer service."],
+  "/terms-of-service": ["terms", "Purchases require accurate contact details, lawful use, and acceptance of product-specific delivery, refund, and license terms."],
+  "/digital-goods-policy": ["digitalPolicy", "STL, 3MF, and PDF guide downloads are delivered after purchase through order page access and email links."],
+  "/license-agreement": ["licenseAgreement", "Digital products include personal-use rights only unless a separate Commercial License is purchased."],
+  "/faq": ["faq", "Find concise answers about digital downloads, made-to-order production, returns, commercial rights, and custom print requests."],
+  "/commercial-license": ["commercialLicense", "Small businesses may purchase a license to sell physical prints from eligible Atelier Printworks files. Digital resale is prohibited."]
+};
+
+function t(key) {
+  return (dict[currentLang] && dict[currentLang][key]) || dict.en[key] || key;
+}
+
+function categoryText(category) {
+  const localized = localizedCategories[currentLang]?.[category.id];
+  return {
+    title: localized?.[0] || category.title,
+    description: localized?.[1] || category.description
+  };
+}
+
+function productText(product) {
+  const localized = localizedProducts[currentLang]?.[product.id];
+  return {
+    name: localized?.[0] || product.name,
+    summary: localized?.[1] || product.summary
+  };
+}
+
+function labelFromFooter(label) {
+  const keys = {
+    Products: "products",
+    "Custom Print": "customPrint",
+    "STL Packs": "stlPacks",
+    "Commercial License": "commercialLicense",
+    "Order Lookup": "orderLookup",
+    "Contact Us": "contactUs",
+    FAQ: "faq",
+    "Shipping Policy": "shippingPolicy",
+    "Refund Policy": "refundPolicy",
+    "Privacy Policy": "privacyPolicy",
+    "Terms of Service": "terms",
+    "Digital Goods Policy": "digitalPolicy",
+    "License Agreement": "licenseAgreement"
+  };
+  return t(keys[label] || label);
+}
 
 function money(value) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
 
 function renderIllustration(product, index = 0) {
+  const productLabel = productText(product).name;
   const colors = [
     ["#eef2f0", "#82908a", "#1b2732"],
     ["#f2eee7", "#b8a88e", "#253245"],
@@ -184,7 +641,7 @@ function renderIllustration(product, index = 0) {
   ][index % 5];
 
   return `
-    <div class="render-card" aria-label="Original generated product render for ${product.name}">
+    <div class="render-card" aria-label="${t("originalRender")} ${productLabel}">
       <div class="render-grid"></div>
       <div class="render-orbit" style="background: ${colors[0]}"></div>
       <div class="render-block render-block-a" style="background: linear-gradient(135deg, ${colors[1]}, ${colors[2]})"></div>
@@ -202,26 +659,22 @@ function nav() {
         <span class="brand-mark">AP</span>
         <span>
           <strong>Atelier Printworks</strong>
-          <small>Original 3D Print Goods</small>
+          <small>${t("tag")}</small>
         </span>
       </a>
       <nav class="main-nav" aria-label="Primary navigation">
-        <a href="#/products">Products</a>
-        <a href="#/products?category=custom">Custom Print</a>
-        <a href="#/products?category=stl">STL Packs</a>
-        <a href="#/commercial-license">Commercial License</a>
-        <a href="#/about">About</a>
-        <a href="#/contact">Contact</a>
+        <a href="#/products">${t("navProducts")}</a>
+        <a href="#/products?category=custom">${t("navCustom")}</a>
+        <a href="#/products?category=stl">${t("navStl")}</a>
+        <a href="#/commercial-license">${t("navLicense")}</a>
+        <a href="#/about">${t("navAbout")}</a>
+        <a href="#/contact">${t("navContact")}</a>
       </nav>
       <div class="header-actions">
         <select class="language-select" aria-label="Language selector">
-          <option>English</option>
-          <option>中文</option>
-          <option>日本語</option>
-          <option>Français</option>
-          <option>Español</option>
+          ${languages.map(([code, label]) => `<option value="${code}" ${currentLang === code ? "selected" : ""}>${label}</option>`).join("")}
         </select>
-        <a class="cart-link" href="#/cart" aria-label="Cart">Cart <span>0</span></a>
+        <a class="cart-link" href="#/cart" aria-label="${t("cart")}">${t("cart")} <span>0</span></a>
       </div>
     </header>
   `;
@@ -236,41 +689,42 @@ function footer() {
             <span class="brand-mark">AP</span>
             <span>
               <strong>Atelier Printworks</strong>
-              <small>Original files, objects, and print services.</small>
+              <small>${t("footerLine")}</small>
             </span>
           </a>
           <p>${businessName}</p>
           <p>${operatingAddress}</p>
-          <p>Email: <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+          <p>${t("email")}: <a href="mailto:${supportEmail}">${supportEmail}</a></p>
         </div>
         ${footerGroups.map(group => `
           <div class="footer-group">
-            <h3>${group.title}</h3>
-            ${group.links.map(([label, href]) => `<a href="${href}">${label}</a>`).join("")}
+            <h3>${t(group.title.toLowerCase())}</h3>
+            ${group.links.map(([label, href]) => `<a href="${href}">${labelFromFooter(label)}</a>`).join("")}
           </div>
         `).join("")}
       </div>
       <div class="footer-bottom">
-        <span>Secure checkout placeholder for Antom integration. Private payment credentials are never stored in the browser.</span>
-        <span>© 2026 Atelier Printworks. All product concepts are original designs.</span>
+        <span>${t("secureNote")}</span>
+        <span>${t("copyright")}</span>
       </div>
     </footer>
   `;
 }
 
 function productCard(product, index) {
+  const text = productText(product);
   return `
     <article class="product-card">
       <a href="#/products/${product.id}" class="product-media">${renderIllustration(product, index)}</a>
       <div class="product-body">
         <span class="pill">${product.badge}</span>
-        <h3><a href="#/products/${product.id}">${product.name}</a></h3>
-        <p>${product.summary}</p>
+        <h3><a href="#/products/${product.id}">${text.name}</a></h3>
+        <p>${text.summary}</p>
         <div class="product-meta">
           <span>${product.type}</span>
           <strong>${money(product.price)}</strong>
         </div>
-        <a class="text-link" href="#/products/${product.id}">View details</a>
+        <a class="text-link" href="#/products/${product.id}">${t("viewDetails")}</a>
       </div>
     </article>
   `;
@@ -283,48 +737,48 @@ function homePage() {
     <main>
       <section class="hero">
         <div class="hero-copy">
-          <span class="eyebrow">Original 3D printed objects and digital STL packs</span>
-          <h1>Atelier-made tools, keepsakes, and print-ready model files.</h1>
-          <p>
-            Shop clean desk accessories, home objects, pet keepsakes, commercial licenses, and custom 3D print services.
-            Every item is an original design with clear delivery, refund, and license terms.
-          </p>
+          <span class="eyebrow">${t("heroEyebrow")}</span>
+          <h1>${t("heroTitle")}</h1>
+          <p>${t("heroBody")}</p>
           <div class="hero-actions">
-            <a class="button primary" href="#/products">Shop products</a>
-            <a class="button secondary" href="#/digital-goods-policy">Digital delivery terms</a>
+            <a class="button primary" href="#/products">${t("shopProducts")}</a>
+            <a class="button secondary" href="#/digital-goods-policy">${t("digitalTerms")}</a>
           </div>
         </div>
         <div class="hero-stage">
           ${renderIllustration(products[4], 4)}
           <div class="stage-note">
-            <strong>Ready-to-print packs</strong>
-            <span>STL, 3MF, PDF guide, lifetime order access</span>
+            <strong>${t("readyPacks")}</strong>
+            <span>${t("readyPacksBody")}</span>
           </div>
         </div>
       </section>
 
       <section class="section">
         <div class="section-heading">
-          <span class="eyebrow">Shop by purpose</span>
-          <h2>Built around real print workflows.</h2>
+          <span class="eyebrow">${t("purpose")}</span>
+          <h2>${t("workflowTitle")}</h2>
         </div>
         <div class="category-grid">
-          ${categories.map(category => `
+          ${categories.map(category => {
+            const text = categoryText(category);
+            return `
             <a class="category-card" href="#/products?category=${category.id}">
-              <span>${category.title}</span>
-              <p>${category.description}</p>
+              <span>${text.title}</span>
+              <p>${text.description}</p>
             </a>
-          `).join("")}
+          `;
+          }).join("")}
         </div>
       </section>
 
       <section class="section muted">
         <div class="section-heading with-action">
           <div>
-            <span class="eyebrow">Featured products</span>
-            <h2>Original models, objects, and licenses.</h2>
+            <span class="eyebrow">${t("featured")}</span>
+            <h2>${t("featuredTitle")}</h2>
           </div>
-          <a class="button secondary" href="#/products">View all</a>
+          <a class="button secondary" href="#/products">${t("viewAll")}</a>
         </div>
         <div class="product-grid">
           ${featured.map(productCard).join("")}
@@ -333,21 +787,21 @@ function homePage() {
 
       <section class="info-band">
         <div>
-          <h2>Digital files are delivered through the order page and email.</h2>
-          <p>STL packs include STL, 3MF, and PDF guide files where noted. Downloads are for personal use unless a Commercial License is purchased. If a file is corrupted or access fails, support will resend or resolve it.</p>
+          <h2>${t("digitalInfoTitle")}</h2>
+          <p>${t("digitalInfoBody")}</p>
         </div>
         <div>
-          <h2>Physical items are made to order and shipped worldwide.</h2>
-          <p>Most physical products are produced in 3-7 business days, then shipped in 7-15 business days depending on region. Custom and personalized items begin after proof approval.</p>
+          <h2>${t("physicalInfoTitle")}</h2>
+          <p>${t("physicalInfoBody")}</p>
         </div>
         <div>
-          <h2>Commercial licensing is separated from file ownership.</h2>
-          <p>Eligible packs can be used for small-batch physical resale only when a Commercial License is purchased. Digital resale, file sharing, and marketplace uploads are prohibited.</p>
+          <h2>${t("licenseInfoTitle")}</h2>
+          <p>${t("licenseInfoBody")}</p>
         </div>
       </section>
 
       <section class="trust-section">
-        ${["Secure Checkout", "Original Designs", "Digital Delivery", "Worldwide Shipping", "Support"].map(item => `
+        ${t("trust").map(item => `
           <div>
             <span class="trust-icon" aria-hidden="true"></span>
             <strong>${item}</strong>
@@ -357,20 +811,20 @@ function homePage() {
 
       <section class="section faq-preview">
         <div class="section-heading">
-          <span class="eyebrow">Quick answers</span>
-          <h2>Before you buy.</h2>
+          <span class="eyebrow">${t("quickAnswers")}</span>
+          <h2>${t("beforeBuy")}</h2>
         </div>
         <details open>
-          <summary>Can I refund an STL pack after downloading it?</summary>
-          <p>No-reason refunds are not available after a digital file has been accessed or downloaded. We will help if the archive is damaged, the download fails, or the file does not match the listing.</p>
+          <summary>${t("q1")}</summary>
+          <p>${t("a1")}</p>
         </details>
         <details>
-          <summary>How long do made-to-order products take?</summary>
-          <p>Most physical products need 3-7 business days for production and 7-15 business days for shipping, depending on destination and carrier availability.</p>
+          <summary>${t("q2")}</summary>
+          <p>${t("a2")}</p>
         </details>
         <details>
-          <summary>Can I sell prints made from your STL files?</summary>
-          <p>Only with a separate Commercial License. The personal license included with STL packs does not permit resale or distribution.</p>
+          <summary>${t("q3")}</summary>
+          <p>${t("a3")}</p>
         </details>
       </section>
     </main>
@@ -382,21 +836,22 @@ function productsPage() {
   const params = new URLSearchParams(location.hash.split("?")[1] || "");
   const active = params.get("category");
   const visible = active ? products.filter(product => product.category === active || product.type.toLowerCase().includes(active)) : products;
-  const activeTitle = categories.find(category => category.id === active)?.title || "All Products";
+  const activeCategory = categories.find(category => category.id === active);
+  const activeTitle = activeCategory ? categoryText(activeCategory).title : t("allProducts");
 
   return `
     ${nav()}
     <main>
       <section class="page-hero compact">
-        <span class="eyebrow">Catalog</span>
+        <span class="eyebrow">${t("catalog")}</span>
         <h1>${activeTitle}</h1>
-        <p>Every listing includes product type, delivery method, processing time, refund rules, and license notes for a clear purchase decision.</p>
+        <p>${t("catalogBody")}</p>
       </section>
       <section class="catalog-layout">
         <aside class="filters" aria-label="Product categories">
-          <a class="${!active ? "active" : ""}" href="#/products">All Products</a>
-          ${categories.map(category => `<a class="${active === category.id ? "active" : ""}" href="#/products?category=${category.id}">${category.title}</a>`).join("")}
-          <a class="${active === "license" ? "active" : ""}" href="#/products?category=license">Commercial License</a>
+          <a class="${!active ? "active" : ""}" href="#/products">${t("allProducts")}</a>
+          ${categories.map(category => `<a class="${active === category.id ? "active" : ""}" href="#/products?category=${category.id}">${categoryText(category).title}</a>`).join("")}
+          <a class="${active === "license" ? "active" : ""}" href="#/products?category=license">${t("commercialLicense")}</a>
         </aside>
         <div class="product-grid catalog-grid">
           ${visible.map(productCard).join("")}
@@ -417,9 +872,9 @@ function placeholderPage(title, subtitle) {
         <p>${subtitle}</p>
       </section>
       <section class="policy-shell">
-        <p>This page is part of the store compliance structure and will be expanded with full operational copy in V2 and V3. For immediate support, email <a href="mailto:${supportEmail}">${supportEmail}</a>. Support replies within 1-2 business days.</p>
-        <p><strong>Business:</strong> ${businessName}</p>
-        <p><strong>Operating address:</strong> ${operatingAddress}</p>
+        <p>${t("complianceBody")} <a href="mailto:${supportEmail}">${supportEmail}</a>. ${t("supportReply")}</p>
+        <p><strong>${t("business")}:</strong> ${businessName}</p>
+        <p><strong>${t("address")}:</strong> ${operatingAddress}</p>
       </section>
     </main>
     ${footer()}
@@ -428,8 +883,9 @@ function placeholderPage(title, subtitle) {
 
 function productDetailPage(id) {
   const product = products.find(item => item.id === id);
-  if (!product) return placeholderPage("Product Not Found", "The requested product could not be found. Please return to the catalog.");
+  if (!product) return placeholderPage(t("notFound"), t("notFoundBody"));
   const index = products.findIndex(item => item.id === id);
+  const text = productText(product);
   return `
     ${nav()}
     <main>
@@ -437,20 +893,20 @@ function productDetailPage(id) {
         <div>${renderIllustration(product, index)}</div>
         <div class="detail-copy">
           <span class="pill">${product.type}</span>
-          <h1>${product.name}</h1>
-          <p class="lead">${product.summary}</p>
+          <h1>${text.name}</h1>
+          <p class="lead">${text.summary}</p>
           <strong class="detail-price">${money(product.price)}</strong>
           <div class="detail-actions">
-            <a class="button primary" href="#/cart">Add to cart</a>
-            <a class="button secondary" href="#/checkout">Buy now</a>
+            <a class="button primary" href="#/cart">${t("addToCart")}</a>
+            <a class="button secondary" href="#/checkout">${t("buyNow")}</a>
           </div>
-          <h2>Specifications</h2>
+          <h2>${t("specifications")}</h2>
           <ul>${product.specs.map(spec => `<li>${spec}</li>`).join("")}</ul>
-          <h2>Delivery</h2>
+          <h2>${t("delivery")}</h2>
           <p>${product.delivery}</p>
-          <h2>Refund note</h2>
+          <h2>${t("refundNote")}</h2>
           <p>${product.refund}</p>
-          <h2>License note</h2>
+          <h2>${t("licenseNote")}</h2>
           <p>${product.license}</p>
         </div>
       </section>
@@ -459,22 +915,6 @@ function productDetailPage(id) {
   `;
 }
 
-const routeTitles = {
-  "/cart": ["Cart", "Your cart will show physical products, digital packs, and licenses with delivery notes before checkout."],
-  "/checkout": ["Checkout / Payment", "Payment is simulated in this V1 preview. Antom integration will be added without exposing private credentials in front-end code."],
-  "/order-lookup": ["Order Lookup", "Customers can look up downloads, fulfillment status, and license certificates by order email and order number."],
-  "/about": ["About Us", "We design original 3D printable objects for organized desks, warm homes, pet memories, and small creative studios."],
-  "/contact": ["Contact Us", `Email ${supportEmail}. Business hours: Monday-Friday, 9:00-18:00 UTC+8. Support replies within 1-2 business days.`],
-  "/shipping-policy": ["Shipping Policy", "Physical products are made to order in 3-7 business days and usually ship in 7-15 business days depending on destination."],
-  "/refund-policy": ["Refund Policy", "Physical defects, damaged shipments, wrong items, and missing parts are handled by support. Downloaded digital goods are not eligible for no-reason refunds."],
-  "/privacy-policy": ["Privacy Policy", "We collect order, contact, shipping, and support information needed to operate the store and provide customer service."],
-  "/terms-of-service": ["Terms of Service", "Purchases require accurate contact details, lawful use, and acceptance of product-specific delivery, refund, and license terms."],
-  "/digital-goods-policy": ["Digital Goods Policy", "STL, 3MF, and PDF guide downloads are delivered after purchase through order page access and email links."],
-  "/license-agreement": ["License Agreement", "Digital products include personal-use rights only unless a separate Commercial License is purchased."],
-  "/faq": ["FAQ", "Find concise answers about digital downloads, made-to-order production, returns, commercial rights, and custom print requests."],
-  "/commercial-license": ["Commercial License", "Small businesses may purchase a license to sell physical prints from eligible Atelier Printworks files. Digital resale is prohibited."]
-};
-
 function route() {
   const raw = location.hash.replace("#", "") || "/";
   const path = raw.split("?")[0];
@@ -482,13 +922,24 @@ function route() {
   if (path === "/") return homePage();
   if (path === "/products") return productsPage();
   if (productMatch) return productDetailPage(productMatch[1]);
-  if (routeTitles[path]) return placeholderPage(routeTitles[path][0], routeTitles[path][1]);
-  return placeholderPage("Page Not Found", "This route does not exist. Use the navigation or footer links to continue shopping.");
+  if (routeTranslations[path]) {
+    const [titleKey, subtitle] = routeTranslations[path];
+    return placeholderPage(t(titleKey), subtitle);
+  }
+  return placeholderPage(t("pageNotFound"), t("pageNotFoundBody"));
 }
 
 function render() {
   app.innerHTML = route();
-  document.documentElement.lang = "en";
+  document.documentElement.lang = currentLang;
+  const languageSelect = document.querySelector(".language-select");
+  if (languageSelect) {
+    languageSelect.addEventListener("change", event => {
+      currentLang = event.target.value;
+      localStorage.setItem("atelier-lang", currentLang);
+      render();
+    });
+  }
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
