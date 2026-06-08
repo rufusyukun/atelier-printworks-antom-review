@@ -132,6 +132,58 @@ const products = [
     delivery: "Support reviews your brief within 1-2 business days. Production timeline is confirmed before payment capture where a custom quote is required.",
     refund: "Custom service refunds depend on project stage. Work not yet started can be canceled; approved and printed custom work is not refundable unless defective.",
     license: "Customer keeps rights to customer-provided original files. We do not accept infringing character, brand, or logo requests."
+  },
+  {
+    id: "terra-minimal-plant-pot",
+    name: "Terra Minimal Plant Pot",
+    type: "Physical Product",
+    category: "home",
+    price: 34,
+    badge: "Home object",
+    summary: "A softly faceted planter with a removable drainage tray for small indoor plants.",
+    specs: ["Approx. 12 x 12 x 11 cm", "PLA matte ceramic finish", "Removable drainage saucer"],
+    delivery: "Made to order in 3-7 business days. Shipping normally takes 7-15 business days depending on destination.",
+    refund: "Eligible for replacement or refund if damaged in transit, defective, or materially different from the listing.",
+    license: "Physical item only. Digital model files are not included."
+  },
+  {
+    id: "desk-setup-stl-pack",
+    name: "Desk Setup STL Pack",
+    type: "Digital STL Pack",
+    category: "stl",
+    price: 19,
+    badge: "STL + 3MF",
+    summary: "A focused set of cable clips, riser feet, pen cups, and micro trays for personal desk printing.",
+    specs: ["18 STL files", "3MF build plates", "PDF print guide", "Personal-use license"],
+    delivery: "Download links are available on the order page and sent by email after payment confirmation.",
+    refund: "Downloaded digital goods are not eligible for no-reason refunds. Support will fix corrupted files, failed downloads, or mismatched descriptions.",
+    license: "Personal printing only unless a Commercial License is purchased separately."
+  },
+  {
+    id: "custom-logo-desk-sign",
+    name: "Custom Logo Desk Sign",
+    type: "Custom Print",
+    category: "custom",
+    price: 66,
+    badge: "Proof required",
+    summary: "A clean desk sign for original business names, studio names, or personal maker labels.",
+    specs: ["One text/logo review", "Two color options", "Proof before production"],
+    delivery: "Support reviews the request within 1-2 business days. Production starts after proof approval and takes 3-7 business days.",
+    refund: "Not refundable after proof approval unless the item is defective or produced incorrectly. We reject trademark-infringing logo requests.",
+    license: "Customer must own or have permission to use submitted artwork and business marks."
+  },
+  {
+    id: "single-product-commercial-license",
+    name: "Single Product Commercial License",
+    type: "Commercial License",
+    category: "license",
+    price: 39,
+    badge: "One design",
+    summary: "Commercial permission to sell physical prints from one eligible Atelier Printworks digital product.",
+    specs: ["Covers one eligible digital product", "Up to 150 physical units per year", "One business entity"],
+    delivery: "License certificate is delivered by email and attached to the order record after purchase.",
+    refund: "Non-refundable after certificate delivery unless duplicate payment or order error is confirmed.",
+    license: "Allows physical print resale only. Digital files may not be shared, resold, uploaded, or sublicensed."
   }
 ];
 
@@ -242,6 +294,34 @@ const dict = {
     catalogBody: "Every listing includes product type, delivery method, processing time, refund rules, and license notes for a clear purchase decision.",
     addToCart: "Add to cart",
     buyNow: "Buy now",
+    remove: "Remove",
+    quantity: "Qty",
+    subtotal: "Subtotal",
+    total: "Total",
+    continueShopping: "Continue shopping",
+    checkout: "Checkout",
+    emptyCart: "Your cart is empty.",
+    emptyCartBody: "Add a physical product, STL pack, custom service, or license before checkout.",
+    customerEmail: "Customer email",
+    shippingAddress: "Shipping address",
+    customNotes: "Custom print notes",
+    placeOrder: "Place order",
+    orderSuccess: "Order confirmed",
+    orderNumber: "Order number",
+    lookupHelp: "Enter an order number to view delivery, download, and support details.",
+    lookupOrder: "Look up order",
+    notRequiredDigital: "Shipping address is not required for digital-only carts.",
+    deliveryRefundBeforeCheckout: "Delivery and refund notes are shown before checkout for each item.",
+    paymentPlaceholder: "Antom payment integration placeholder. This preview creates a mock order and stores no payment credentials.",
+    requiredField: "Please complete the required fields.",
+    invalidEmail: "Please enter a valid email address.",
+    orderNotFound: "Order not found. Check the order number or email support.",
+    successBody: "Your mock order has been created for review. Digital links and license certificates would appear on this page after payment confirmation.",
+    downloadAccess: "Download access",
+    shippingNeeded: "Shipping required",
+    customReview: "Custom review required",
+    productFaq: "Product FAQ",
+    auditChecklist: "Audit Checklist",
     specifications: "Specifications",
     delivery: "Delivery",
     refundNote: "Refund note",
@@ -318,6 +398,34 @@ const dict = {
     catalogBody: "每个商品都会展示类型、交付方式、处理时间、退款规则和授权说明，方便你清楚下单。",
     addToCart: "加入购物车",
     buyNow: "立即购买",
+    remove: "移除",
+    quantity: "数量",
+    subtotal: "小计",
+    total: "合计",
+    continueShopping: "继续购物",
+    checkout: "结账",
+    emptyCart: "购物车是空的。",
+    emptyCartBody: "请先添加实体商品、STL 文件包、定制服务或授权。",
+    customerEmail: "客户邮箱",
+    shippingAddress: "收货地址",
+    customNotes: "定制需求备注",
+    placeOrder: "提交订单",
+    orderSuccess: "订单已生成",
+    orderNumber: "订单号",
+    lookupHelp: "输入订单号即可查看交付、下载和客服信息。",
+    lookupOrder: "查询订单",
+    notRequiredDigital: "纯数字商品购物车不需要填写收货地址。",
+    deliveryRefundBeforeCheckout: "每件商品在结账前都会展示交付和退款说明。",
+    paymentPlaceholder: "Antom 支付接入预留位。当前预览会生成模拟订单，不保存任何支付凭证。",
+    requiredField: "请填写必填信息。",
+    invalidEmail: "请输入有效邮箱地址。",
+    orderNotFound: "未找到订单，请检查订单号或联系邮箱客服。",
+    successBody: "模拟订单已生成用于审核。真实支付确认后，数字下载和授权证书会显示在此页面。",
+    downloadAccess: "下载访问",
+    shippingNeeded: "需要配送",
+    customReview: "需要定制审核",
+    productFaq: "商品常见问题",
+    auditChecklist: "审核清单",
     specifications: "规格参数",
     delivery: "交付方式",
     refundNote: "退款说明",
@@ -537,7 +645,11 @@ const localizedProducts = {
     "urban-nook-stl-pack": ["Urban Nook 建筑 STL 包", "原创微缩建筑模型，适合展示架、场景和打印练习。"],
     "mechanic-sprout-stl-bundle": ["Mechanic Sprout 机械玩具包", "五款原创机械风桌面玩具模型，配可打印展示底座。"],
     "studio-commercial-license": ["工作室商业授权", "允许一个小型商家销售符合条件 STL 文件打印出的实体商品。"],
-    "prototype-print-service": ["原型打印服务", "面向小型实用零件、展示模型和原创原型的入门打印服务。"]
+    "prototype-print-service": ["原型打印服务", "面向小型实用零件、展示模型和原创原型的入门打印服务。"],
+    "terra-minimal-plant-pot": ["Terra 极简植物盆", "带可拆卸托盘的柔和切面小花盆，适合室内小植物。"],
+    "desk-setup-stl-pack": ["桌面布置 STL 包", "包含线夹、增高脚、笔筒和小托盘的桌面打印文件组合。"],
+    "custom-logo-desk-sign": ["定制 Logo 桌牌", "用于原创企业名、工作室名或个人创作者标签的简洁桌牌。"],
+    "single-product-commercial-license": ["单品商业授权", "允许销售一个符合条件数字商品打印出的实体成品。"]
   },
   "ja-JP": {
     "arc-desk-dock": ["Arcデスクドック", "スマホ、時計、ペン、ケーブルを置ける重みのあるモジュラードック。"],
@@ -547,7 +659,11 @@ const localizedProducts = {
     "urban-nook-stl-pack": ["Urban Nook STLパック", "棚展示、ジオラマ、練習プリント向けのオリジナル微建築モデル。"],
     "mechanic-sprout-stl-bundle": ["Mechanic Sprout玩具バンドル", "スナップ式展示台付きの機械風デスクトイ5種。"],
     "studio-commercial-license": ["スタジオ商用ライセンス", "対象STLから印刷した物理商品を小規模販売できるライセンス。"],
-    "prototype-print-service": ["プロトタイププリントサービス", "小型パーツ、展示モデル、オリジナル試作品向けの入門サービス。"]
+    "prototype-print-service": ["プロトタイププリントサービス", "小型パーツ、展示モデル、オリジナル試作品向けの入門サービス。"],
+    "terra-minimal-plant-pot": ["Terraミニマルプランター", "取り外し可能な受け皿付きの柔らかな面構成の小型プランター。"],
+    "desk-setup-stl-pack": ["Desk Setup STLパック", "ケーブルクリップ、ライザー脚、ペンカップ、小型トレーのファイルセット。"],
+    "custom-logo-desk-sign": ["カスタムロゴデスクサイン", "オリジナルの事業名、スタジオ名、メーカーネーム向けのクリーンなサイン。"],
+    "single-product-commercial-license": ["単品商用ライセンス", "対象デジタル商品1点から印刷した物理商品の販売許可。"]
   },
   "fr-FR": {
     "arc-desk-dock": ["Station de bureau Arc", "Un dock modulaire lesté pour téléphone, montre, stylo et câbles."],
@@ -557,7 +673,11 @@ const localizedProducts = {
     "urban-nook-stl-pack": ["Pack STL Urban Nook", "Modèles de micro-architecture originaux pour étagères, dioramas et essais d'impression."],
     "mechanic-sprout-stl-bundle": ["Bundle Mechanic Sprout", "Cinq jouets de bureau originaux d'inspiration mécanique avec bases imprimables."],
     "studio-commercial-license": ["Licence commerciale Studio", "Autorisation pour une petite entreprise de vendre des impressions physiques issues de packs éligibles."],
-    "prototype-print-service": ["Service d'impression prototype", "Service de départ pour petites pièces utiles, modèles d'exposition et prototypes originaux."]
+    "prototype-print-service": ["Service d'impression prototype", "Service de départ pour petites pièces utiles, modèles d'exposition et prototypes originaux."],
+    "terra-minimal-plant-pot": ["Pot minimal Terra", "Un petit pot facetté avec soucoupe amovible pour plantes d'intérieur."],
+    "desk-setup-stl-pack": ["Pack STL Desk Setup", "Un ensemble de clips, pieds de rehausse, pots à crayons et micro-plateaux à imprimer."],
+    "custom-logo-desk-sign": ["Panneau de bureau personnalisé", "Un panneau propre pour noms d'entreprise, studios ou labels de créateur originaux."],
+    "single-product-commercial-license": ["Licence commerciale mono-produit", "Autorisation de vendre des impressions physiques d'un produit numérique éligible."]
   },
   "es-ES": {
     "arc-desk-dock": ["Base de escritorio Arc", "Una base modular con peso para teléfono, reloj, bolígrafo y cables."],
@@ -567,7 +687,11 @@ const localizedProducts = {
     "urban-nook-stl-pack": ["Pack STL Urban Nook", "Modelos originales de microarquitectura para estantes, dioramas y práctica de impresión."],
     "mechanic-sprout-stl-bundle": ["Bundle Mechanic Sprout", "Cinco juguetes de escritorio originales de inspiración mecánica con bases imprimibles."],
     "studio-commercial-license": ["Licencia comercial Studio", "Permiso para que una pequeña empresa venda impresiones físicas de packs elegibles."],
-    "prototype-print-service": ["Servicio de impresión de prototipos", "Servicio inicial para piezas útiles pequeñas, modelos de exhibición y prototipos originales."]
+    "prototype-print-service": ["Servicio de impresión de prototipos", "Servicio inicial para piezas útiles pequeñas, modelos de exhibición y prototipos originales."],
+    "terra-minimal-plant-pot": ["Maceta minimal Terra", "Una maceta suavemente facetada con bandeja extraíble para plantas pequeñas de interior."],
+    "desk-setup-stl-pack": ["Pack STL Desk Setup", "Un set de clips de cable, elevadores, portalápices y microbandejas para imprimir."],
+    "custom-logo-desk-sign": ["Letrero de escritorio personalizado", "Un letrero limpio para nombres de negocio, estudio o etiqueta personal original."],
+    "single-product-commercial-license": ["Licencia comercial de producto único", "Permiso para vender impresiones físicas de un producto digital elegible."]
   }
 };
 
@@ -626,6 +750,122 @@ function labelFromFooter(label) {
   return t(keys[label] || label);
 }
 
+function getCart() {
+  try {
+    return JSON.parse(localStorage.getItem("atelier-cart") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveCart(cart) {
+  localStorage.setItem("atelier-cart", JSON.stringify(cart));
+}
+
+function getOrders() {
+  try {
+    return JSON.parse(localStorage.getItem("atelier-orders") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveOrders(orders) {
+  localStorage.setItem("atelier-orders", JSON.stringify(orders));
+}
+
+function addToCart(productId) {
+  const cart = getCart();
+  const item = cart.find(entry => entry.id === productId);
+  if (item) item.qty += 1;
+  else cart.push({ id: productId, qty: 1 });
+  saveCart(cart);
+  render();
+}
+
+function setCartQty(productId, qty) {
+  const next = getCart()
+    .map(item => item.id === productId ? { ...item, qty: Math.max(0, qty) } : item)
+    .filter(item => item.qty > 0);
+  saveCart(next);
+  render();
+}
+
+function cartLines() {
+  return getCart()
+    .map(item => ({ ...item, product: products.find(product => product.id === item.id) }))
+    .filter(item => item.product);
+}
+
+function cartTotal(lines = cartLines()) {
+  return lines.reduce((sum, item) => sum + item.product.price * item.qty, 0);
+}
+
+function cartNeedsShipping(lines = cartLines()) {
+  return lines.some(item => ["Physical Product", "Custom Print"].includes(item.product.type));
+}
+
+function cartNeedsCustomNotes(lines = cartLines()) {
+  return lines.some(item => item.product.type === "Custom Print");
+}
+
+function isDigitalOnly(lines = cartLines()) {
+  return lines.length > 0 && lines.every(item => ["Digital STL Pack", "Commercial License"].includes(item.product.type));
+}
+
+function orderDeliverySummary(lines) {
+  const parts = [];
+  if (lines.some(item => item.product.type === "Digital STL Pack")) parts.push(t("downloadAccess"));
+  if (lines.some(item => item.product.type === "Commercial License")) parts.push(t("licenseAgreement"));
+  if (cartNeedsShipping(lines)) parts.push(t("shippingNeeded"));
+  if (cartNeedsCustomNotes(lines)) parts.push(t("customReview"));
+  return parts.join(" · ");
+}
+
+function createMockOrder(form) {
+  const lines = cartLines();
+  const order = {
+    id: `AP-${Date.now().toString().slice(-8)}`,
+    createdAt: new Date().toISOString(),
+    email: form.email,
+    address: form.address || "",
+    notes: form.notes || "",
+    items: lines.map(line => ({ id: line.product.id, qty: line.qty, price: line.product.price })),
+    total: cartTotal(lines),
+    delivery: orderDeliverySummary(lines),
+    status: "Payment preview created"
+  };
+  const orders = getOrders();
+  orders.unshift(order);
+  saveOrders(orders);
+  saveCart([]);
+  sessionStorage.setItem("atelier-last-order", order.id);
+  location.hash = `#/order-success?order=${order.id}`;
+}
+
+const mockOrders = [
+  {
+    id: "AP-DEMO-1001",
+    email: "customer@example.com",
+    total: 53,
+    delivery: "Download access · License Agreement",
+    status: "Digital files available",
+    items: [
+      { id: "urban-nook-stl-pack", qty: 1, price: 24 },
+      { id: "desk-setup-stl-pack", qty: 1, price: 19 }
+    ]
+  }
+];
+
+function findOrder(orderId) {
+  const normalized = orderId.trim().toUpperCase();
+  return [...getOrders(), ...mockOrders].find(order => order.id.toUpperCase() === normalized);
+}
+
+function cartBadgeCount() {
+  return getCart().reduce((sum, item) => sum + item.qty, 0);
+}
+
 function money(value) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
 }
@@ -674,7 +914,7 @@ function nav() {
         <select class="language-select" aria-label="Language selector">
           ${languages.map(([code, label]) => `<option value="${code}" ${currentLang === code ? "selected" : ""}>${label}</option>`).join("")}
         </select>
-        <a class="cart-link" href="#/cart" aria-label="${t("cart")}">${t("cart")} <span>0</span></a>
+        <a class="cart-link" href="#/cart" aria-label="${t("cart")}">${t("cart")} <span>${cartBadgeCount()}</span></a>
       </div>
     </header>
   `;
@@ -724,7 +964,10 @@ function productCard(product, index) {
           <span>${product.type}</span>
           <strong>${money(product.price)}</strong>
         </div>
-        <a class="text-link" href="#/products/${product.id}">${t("viewDetails")}</a>
+        <div class="card-actions">
+          <button class="mini-button" data-add-to-cart="${product.id}" type="button">${t("addToCart")}</button>
+          <a class="text-link" href="#/products/${product.id}">${t("viewDetails")}</a>
+        </div>
       </div>
     </article>
   `;
@@ -897,8 +1140,8 @@ function productDetailPage(id) {
           <p class="lead">${text.summary}</p>
           <strong class="detail-price">${money(product.price)}</strong>
           <div class="detail-actions">
-            <a class="button primary" href="#/cart">${t("addToCart")}</a>
-            <a class="button secondary" href="#/checkout">${t("buyNow")}</a>
+            <button class="button primary" data-add-to-cart="${product.id}" type="button">${t("addToCart")}</button>
+            <button class="button secondary" data-buy-now="${product.id}" type="button">${t("buyNow")}</button>
           </div>
           <h2>${t("specifications")}</h2>
           <ul>${product.specs.map(spec => `<li>${spec}</li>`).join("")}</ul>
@@ -908,7 +1151,337 @@ function productDetailPage(id) {
           <p>${product.refund}</p>
           <h2>${t("licenseNote")}</h2>
           <p>${product.license}</p>
+          <h2>${t("productFaq")}</h2>
+          <ul>
+            <li>${product.type === "Digital STL Pack" ? "Downloads are available after payment confirmation from the order page and email." : "Production or delivery starts after order confirmation and required proof approval when applicable."}</li>
+            <li>${product.type === "Commercial License" ? "The license permits physical print resale only within the stated limits." : "Commercial resale rights are not included unless a license is purchased separately."}</li>
+          </ul>
         </div>
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function cartPage() {
+  const lines = cartLines();
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">${t("cart")}</span>
+        <h1>${lines.length ? t("cart") : t("emptyCart")}</h1>
+        <p>${lines.length ? t("deliveryRefundBeforeCheckout") : t("emptyCartBody")}</p>
+      </section>
+      <section class="commerce-shell">
+        ${lines.length ? `
+          <div class="cart-list">
+            ${lines.map((line, index) => {
+              const text = productText(line.product);
+              return `
+                <article class="cart-line">
+                  <div class="cart-thumb">${renderIllustration(line.product, index)}</div>
+                  <div>
+                    <span class="pill">${line.product.type}</span>
+                    <h2>${text.name}</h2>
+                    <p>${text.summary}</p>
+                    <p><strong>${t("delivery")}:</strong> ${line.product.delivery}</p>
+                    <p><strong>${t("refundNote")}:</strong> ${line.product.refund}</p>
+                  </div>
+                  <div class="qty-box">
+                    <span>${t("quantity")}</span>
+                    <button data-cart-qty="${line.product.id}" data-qty="${line.qty - 1}" type="button">-</button>
+                    <strong>${line.qty}</strong>
+                    <button data-cart-qty="${line.product.id}" data-qty="${line.qty + 1}" type="button">+</button>
+                    <button class="text-button" data-cart-qty="${line.product.id}" data-qty="0" type="button">${t("remove")}</button>
+                    <b>${money(line.product.price * line.qty)}</b>
+                  </div>
+                </article>
+              `;
+            }).join("")}
+          </div>
+          <aside class="checkout-summary">
+            <h2>${t("subtotal")}</h2>
+            <strong class="detail-price">${money(cartTotal(lines))}</strong>
+            <p>${isDigitalOnly(lines) ? t("notRequiredDigital") : t("shippingNeeded")}</p>
+            <a class="button primary" href="#/checkout">${t("checkout")}</a>
+            <a class="button secondary" href="#/products">${t("continueShopping")}</a>
+          </aside>
+        ` : `
+          <div class="empty-state">
+            <p>${t("emptyCartBody")}</p>
+            <a class="button primary" href="#/products">${t("shopProducts")}</a>
+          </div>
+        `}
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function checkoutPage(error = sessionStorage.getItem("atelier-checkout-error") || "") {
+  sessionStorage.removeItem("atelier-checkout-error");
+  const lines = cartLines();
+  if (!lines.length) return cartPage();
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">${t("checkout")}</span>
+        <h1>Checkout / Payment</h1>
+        <p>${t("paymentPlaceholder")}</p>
+      </section>
+      <section class="checkout-layout">
+        <form class="checkout-form" data-checkout-form>
+          ${error ? `<div class="form-error">${error}</div>` : ""}
+          <label>${t("customerEmail")}<input name="email" type="email" placeholder="customer@example.com" required /></label>
+          ${cartNeedsShipping(lines) ? `<label>${t("shippingAddress")}<textarea name="address" required placeholder="Name, street, city, postal code, country"></textarea></label>` : `<p class="form-note">${t("notRequiredDigital")}</p>`}
+          ${cartNeedsCustomNotes(lines) ? `<label>${t("customNotes")}<textarea name="notes" required placeholder="Describe the custom print request, personalization text, or proof requirements."></textarea></label>` : `<label>${t("customNotes")}<textarea name="notes" placeholder="Optional notes for support."></textarea></label>`}
+          <div class="policy-confirm">
+            <label><input name="terms" type="checkbox" required /> I agree to delivery, refund, digital goods, and license terms.</label>
+          </div>
+          <button class="button primary" type="submit">${t("placeOrder")}</button>
+        </form>
+        <aside class="checkout-summary">
+          <h2>${t("total")}</h2>
+          <strong class="detail-price">${money(cartTotal(lines))}</strong>
+          <p>${orderDeliverySummary(lines)}</p>
+          ${lines.map(line => `<p><strong>${productText(line.product).name}</strong> × ${line.qty}<br>${line.product.delivery}</p>`).join("")}
+        </aside>
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function orderCard(order) {
+  return `
+    <article class="order-card">
+      <span class="pill">${order.status}</span>
+      <h2>${t("orderNumber")}: ${order.id}</h2>
+      <p>${t("total")}: <strong>${money(order.total)}</strong></p>
+      <p>${t("delivery")}: ${order.delivery}</p>
+      <p>${t("email")}: ${order.email}</p>
+      <h3>${t("products")}</h3>
+      <ul>${order.items.map(item => {
+        const product = products.find(product => product.id === item.id);
+        return `<li>${product ? productText(product).name : item.id} × ${item.qty}</li>`;
+      }).join("")}</ul>
+      <p>${t("successBody")}</p>
+      <p>${t("contactUs")}: <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+    </article>
+  `;
+}
+
+function orderLookupPage(result = null, error = sessionStorage.getItem("atelier-lookup-error") || "") {
+  sessionStorage.removeItem("atelier-lookup-error");
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">${t("orderLookup")}</span>
+        <h1>${t("orderLookup")}</h1>
+        <p>${t("lookupHelp")} Demo: AP-DEMO-1001</p>
+      </section>
+      <section class="policy-shell">
+        <form class="lookup-form" data-order-lookup>
+          ${error ? `<div class="form-error">${error}</div>` : ""}
+          <label>${t("orderNumber")}<input name="orderId" placeholder="AP-DEMO-1001" required /></label>
+          <button class="button primary" type="submit">${t("lookupOrder")}</button>
+        </form>
+        ${result ? orderCard(result) : ""}
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function orderSuccessPage() {
+  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const order = findOrder(params.get("order") || sessionStorage.getItem("atelier-last-order") || "");
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">${t("orderSuccess")}</span>
+        <h1>${order ? `${t("orderNumber")}: ${order.id}` : t("orderNotFound")}</h1>
+        <p>${t("successBody")}</p>
+      </section>
+      <section class="policy-shell">
+        ${order ? orderCard(order) : `<p>${t("orderNotFound")}</p>`}
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+const policyPages = {
+  "/shipping-policy": {
+    title: "shippingPolicy",
+    sections: [
+      ["Made to order", "Physical products are printed after purchase. Most orders require 3-7 business days for production. Larger or personalized prints may require proof approval before production starts."],
+      ["Shipping timeline", "Estimated transit time is usually 7-15 business days depending on destination, carrier capacity, customs review, and local delivery conditions."],
+      ["Damage or missing items", "If an item arrives damaged, incorrect, or incomplete, contact support with order number and photos within 7 days. We may replace the item, resend missing parts, or issue a refund after review."]
+    ]
+  },
+  "/refund-policy": {
+    title: "refundPolicy",
+    sections: [
+      ["Physical products", "Defective, damaged, wrongly shipped, or materially different physical goods may be replaced or refunded after support review. Made-to-order items are not eligible for no-reason returns once production begins."],
+      ["Digital goods", "Downloaded STL, 3MF, PDF, and license files are not refundable after access or download, except when files are corrupted, unavailable, or materially different from the listing."],
+      ["Custom prints", "Custom or personalized prints cannot be canceled after proof approval unless the produced item is defective or different from the approved proof."]
+    ]
+  },
+  "/digital-goods-policy": {
+    title: "digitalPolicy",
+    sections: [
+      ["Digital goods delivery", "Digital goods include STL, 3MF, PDF guide, and license certificate files. Access is provided through the order page and email after payment confirmation."],
+      ["Download support", "If a download link fails, an archive is corrupted, or a file is missing, contact support and we will resend or correct access."],
+      ["Usage restrictions", "Digital files may not be resold, redistributed, uploaded to public platforms, included in file bundles, or shared with third parties without written permission."]
+    ]
+  },
+  "/license-agreement": {
+    title: "licenseAgreement",
+    sections: [
+      ["Personal license", "Digital STL packs include a personal-use license for the purchaser to print for personal use. Digital resale, sharing, and marketplace upload are prohibited."],
+      ["Commercial license", "A Commercial License allows one business entity to sell physical prints from eligible files within the stated limits. It does not transfer ownership of source files."],
+      ["No sublicensing", "License holders may not sublicense, publish, distribute, or sell the digital files themselves."]
+    ]
+  },
+  "/privacy-policy": {
+    title: "privacyPolicy",
+    sections: [
+      ["Data we collect", "We collect order details, email address, shipping address when required, custom print notes, support messages, and payment status references needed to operate the store."],
+      ["How data is used", "Data is used for order fulfillment, digital delivery, support, fraud prevention, compliance, and customer communications."],
+      ["Retention and contact", `Customers may contact ${supportEmail} for privacy questions. We do not sell customer personal data.`]
+    ]
+  },
+  "/terms-of-service": {
+    title: "terms",
+    sections: [
+      ["Terms of purchase", "By purchasing, customers agree to provide accurate contact information and accept the delivery, refund, digital goods, and license terms listed for each product."],
+      ["Original designs only", "We sell original designs and reject requests that include copyrighted characters, protected logos, celebrity likenesses, or third-party brand assets without permission."],
+      ["Payment integration", "The site is prepared for Antom payment integration. Private payment credentials must remain server-side and are not stored in front-end code."]
+    ]
+  }
+};
+
+function policyPage(path) {
+  const policy = policyPages[path];
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">Policy</span>
+        <h1>${t(policy.title)}</h1>
+        <p>${t("supportReply")} ${t("email")}: <a href="mailto:${supportEmail}">${supportEmail}</a></p>
+      </section>
+      <section class="policy-shell policy-article">
+        ${policy.sections.map(([heading, body]) => `
+          <section>
+            <h2>${heading}</h2>
+            <p>${body}</p>
+          </section>
+        `).join("")}
+        <section>
+          <h2>${t("business")}</h2>
+          <p>${businessName}<br>${operatingAddress}</p>
+        </section>
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function aboutPage() {
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">Atelier Printworks</span>
+        <h1>${t("navAbout")}</h1>
+        <p>Atelier Printworks is a small independent 3D design shop focused on original desk utility, home objects, pet keepsakes, STL files, and custom print services.</p>
+      </section>
+      <section class="info-band">
+        <div><h2>Original Designs</h2><p>We avoid infringing IP, character replicas, protected brand marks, and unauthorized fan merchandise.</p></div>
+        <div><h2>Physical & Digital</h2><p>Customers can buy made-to-order printed goods, downloadable files, commercial licenses, and reviewed custom services.</p></div>
+        <div><h2>Clear Support</h2><p>Support replies within 24-48 hours on business days at ${supportEmail}.</p></div>
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function contactPage() {
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">${t("contactUs")}</span>
+        <h1>${t("contactUs")}</h1>
+        <p>Email <a href="mailto:${supportEmail}">${supportEmail}</a>. Business hours: Monday-Friday, 9:00-18:00 UTC+8. Support replies within 24-48 hours.</p>
+      </section>
+      <section class="policy-shell">
+        <p><strong>${t("business")}:</strong> ${businessName}</p>
+        <p><strong>${t("address")}:</strong> ${operatingAddress}</p>
+        <p>For order support, include order number, product name, photos if damaged, and the email used at checkout.</p>
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function faqPage() {
+  const faqs = [
+    [t("q1"), t("a1")],
+    [t("q2"), t("a2")],
+    [t("q3"), t("a3")],
+    ["Do you accept custom character or brand requests?", "No. We reject requests involving protected characters, logos, celebrity likenesses, or third-party IP without permission."],
+    ["Where are digital files delivered?", "Digital files are available through the order page and email after payment confirmation."]
+  ];
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">${t("faq")}</span>
+        <h1>${t("faq")}</h1>
+      </section>
+      <section class="section faq-preview">
+        ${faqs.map(([q, a], index) => `<details ${index === 0 ? "open" : ""}><summary>${q}</summary><p>${a}</p></details>`).join("")}
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function auditChecklistPage() {
+  const checks = [
+    ["Pass", "Homepage complete", "Hero, categories, featured products, delivery, trust modules, FAQ, and footer are present."],
+    ["Pass", "Products and prices clear", "The catalog includes 12 original products with prices and product types."],
+    ["Pass", "Physical, digital, custom, and license rules", "Each product type has delivery, refund, and license notes."],
+    ["Pass", "Policies exist", "Shipping, refund, privacy, terms, digital goods, and license pages are present."],
+    ["Pass", "Contact available", `Email, response time, business name, and address placeholder are visible.`],
+    ["Pass", "Order lookup exists", "Mock order AP-DEMO-1001 and locally generated orders can be queried."],
+    ["Warning", "Preview payment only", "Antom is not connected yet. Add server-side Antom API integration before production."],
+    ["Pass", "No infringing IP positioning", "The site states original designs only and rejects protected character/logo requests."],
+    ["Warning", "Policy translations", "Core UI is multilingual; long policy body copy is currently English-first and should be fully localized before final submission."],
+    ["Pass", "Dead links", "All header and footer routes resolve inside the SPA."]
+  ];
+  return `
+    ${nav()}
+    <main>
+      <section class="page-hero compact">
+        <span class="eyebrow">Internal</span>
+        <h1>${t("auditChecklist")}</h1>
+        <p>Internal Antom readiness review for storefront, checkout, delivery, refund, support, and IP-risk posture.</p>
+      </section>
+      <section class="policy-shell audit-list">
+        ${checks.map(([status, item, note]) => `
+          <article class="audit-row ${status.toLowerCase()}">
+            <strong>${status}</strong>
+            <div><h2>${item}</h2><p>${note}</p><p><em>Fix suggestion:</em> ${status === "Pass" ? "Maintain this requirement during future edits." : "Address before final Antom production submission."}</p></div>
+          </article>
+        `).join("")}
       </section>
     </main>
     ${footer()}
@@ -921,6 +1494,15 @@ function route() {
   const productMatch = path.match(/^\/products\/(.+)$/);
   if (path === "/") return homePage();
   if (path === "/products") return productsPage();
+  if (path === "/cart") return cartPage();
+  if (path === "/checkout") return checkoutPage();
+  if (path === "/order-lookup") return orderLookupPage();
+  if (path === "/order-success") return orderSuccessPage();
+  if (path === "/audit-checklist") return auditChecklistPage();
+  if (path === "/about") return aboutPage();
+  if (path === "/contact") return contactPage();
+  if (path === "/faq") return faqPage();
+  if (policyPages[path]) return policyPage(path);
   if (productMatch) return productDetailPage(productMatch[1]);
   if (routeTranslations[path]) {
     const [titleKey, subtitle] = routeTranslations[path];
@@ -938,6 +1520,49 @@ function render() {
       currentLang = event.target.value;
       localStorage.setItem("atelier-lang", currentLang);
       render();
+    });
+  }
+  app.querySelectorAll("[data-add-to-cart]").forEach(button => {
+    button.addEventListener("click", () => addToCart(button.dataset.addToCart));
+  });
+  app.querySelectorAll("[data-buy-now]").forEach(button => {
+    button.addEventListener("click", () => {
+      addToCart(button.dataset.buyNow);
+      location.hash = "#/checkout";
+    });
+  });
+  app.querySelectorAll("[data-cart-qty]").forEach(button => {
+    button.addEventListener("click", () => setCartQty(button.dataset.cartQty, Number(button.dataset.qty)));
+  });
+  const checkoutForm = app.querySelector("[data-checkout-form]");
+  if (checkoutForm) {
+    checkoutForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(checkoutForm));
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email || "");
+      if (!emailValid) {
+        sessionStorage.setItem("atelier-checkout-error", t("invalidEmail"));
+        render();
+        return;
+      }
+      const lines = cartLines();
+      if ((cartNeedsShipping(lines) && !data.address) || (cartNeedsCustomNotes(lines) && !data.notes) || !data.terms) {
+        sessionStorage.setItem("atelier-checkout-error", t("requiredField"));
+        render();
+        return;
+      }
+      createMockOrder(data);
+    });
+  }
+  const lookupForm = app.querySelector("[data-order-lookup]");
+  if (lookupForm) {
+    lookupForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(lookupForm));
+      const order = findOrder(data.orderId || "");
+      if (!order) sessionStorage.setItem("atelier-lookup-error", t("orderNotFound"));
+      app.innerHTML = orderLookupPage(order, order ? "" : t("orderNotFound"));
+      document.documentElement.lang = currentLang;
     });
   }
   window.scrollTo({ top: 0, behavior: "instant" });

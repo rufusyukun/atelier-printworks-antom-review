@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://atelier-printworks.example/</loc></url>
+  <url><loc>https://atelier-printworks.example/#/products</loc></url>
+  <url><loc>https://atelier-printworks.example/#/cart</loc></url>
+  <url><loc>https://atelier-printworks.example/#/checkout</loc></url>
+  <url><loc>https://atelier-printworks.example/#/order-lookup</loc></url>
+  <url><loc>https://atelier-printworks.example/#/contact</loc></url>
+  <url><loc>https://atelier-printworks.example/#/shipping-policy</loc></url>
+  <url><loc>https://atelier-printworks.example/#/refund-policy</loc></url>
+  <url><loc>https://atelier-printworks.example/#/digital-goods-policy</loc></url>
+  <url><loc>https://atelier-printworks.example/#/license-agreement</loc></url>
+  <url><loc>https://atelier-printworks.example/#/privacy-policy</loc></url>
+  <url><loc>https://atelier-printworks.example/#/terms-of-service</loc></url>
+  <url><loc>https://atelier-printworks.example/#/faq</loc></url>
+</urlset>

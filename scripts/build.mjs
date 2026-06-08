@@ -12,6 +12,11 @@ rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 copyFileSync(join(root, "index.html"), join(dist, "index.html"));
 cpSync(join(root, "src"), join(dist, "src"), { recursive: true });
+for (const asset of ["favicon.svg", "robots.txt", "sitemap.xml"]) {
+  if (existsSync(join(root, asset))) {
+    copyFileSync(join(root, asset), join(dist, asset));
+  }
+}
 
 const required = ["src/main.js", "src/styles.css"].map(file => join(root, file));
 for (const file of required) {
