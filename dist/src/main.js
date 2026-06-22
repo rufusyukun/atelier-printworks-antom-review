@@ -334,6 +334,15 @@ const dict = {
     customReview: "Custom review required",
     productFaq: "Product FAQ",
     auditChecklist: "Audit Checklist",
+    physicalProduct: "Physical Product",
+    digitalStlPack: "Digital STL Pack",
+    customPrintType: "Custom Print",
+    commercialLicenseType: "Commercial License",
+    processingTime: "Processing time",
+    deliveryMethod: "Delivery method",
+    refundRule: "Refund rule",
+    licenseScope: "License scope",
+    termsAgreement: "I agree to the delivery, refund, digital goods, and license terms before placing this order.",
     specifications: "Specifications",
     delivery: "Delivery",
     refundNote: "Refund note",
@@ -438,6 +447,15 @@ const dict = {
     customReview: "需要定制审核",
     productFaq: "商品常见问题",
     auditChecklist: "审核清单",
+    physicalProduct: "实体商品",
+    digitalStlPack: "数字 STL 文件包",
+    customPrintType: "定制打印",
+    commercialLicenseType: "商业授权",
+    processingTime: "处理时间",
+    deliveryMethod: "交付方式",
+    refundRule: "退款规则",
+    licenseScope: "授权范围",
+    termsAgreement: "我已在下单前阅读并同意交付、退款、数字商品和授权条款。",
     specifications: "规格参数",
     delivery: "交付方式",
     refundNote: "退款说明",
@@ -743,6 +761,30 @@ function productText(product) {
   };
 }
 
+function productTypeLabel(type) {
+  const keys = {
+    "Physical Product": "physicalProduct",
+    "Digital STL Pack": "digitalStlPack",
+    "Custom Print": "customPrintType",
+    "Commercial License": "commercialLicenseType"
+  };
+  return t(keys[type] || type);
+}
+
+function processingTime(product) {
+  if (product.type === "Digital STL Pack") return "Instant after payment confirmation";
+  if (product.type === "Commercial License") return "Certificate delivered after payment confirmation";
+  if (product.type === "Custom Print") return "1-2 business day review, then 3-7 business day production";
+  return "3-7 business days production";
+}
+
+function deliveryMethod(product) {
+  if (product.type === "Digital STL Pack") return "Order page and email download";
+  if (product.type === "Commercial License") return "Email certificate and order page record";
+  if (product.type === "Custom Print") return "Proof review, made-to-order production, tracked shipping where available";
+  return "Made-to-order production and worldwide shipping";
+}
+
 function labelFromFooter(label) {
   const keys = {
     Products: "products",
@@ -893,12 +935,29 @@ function renderIllustration(product, index = 0) {
   return `
     <div class="render-card product-photo" aria-label="${t("originalRender")} ${productLabel}" style="--image-x: ${x}%; --image-y: ${y}%;">
       <div class="product-photo-image" role="img" aria-label="${productLabel}"></div>
-      <span class="render-type">${product.type}</span>
+      <span class="render-type">${productTypeLabel(product.type)}</span>
     </div>
   `;
 }
 
 function nav() {
+  const rawPath = location.hash.replace("#", "") || "/";
+  const path = rawPath.split("?")[0];
+  const isActive = href => {
+    const targetRaw = href.replace("#", "");
+    const target = targetRaw.split("?")[0];
+    if (targetRaw.includes("?")) return rawPath === targetRaw;
+    if (target === "/products") return path === "/products" || path.startsWith("/products/");
+    return path === target;
+  };
+  const navLinks = [
+    ["#/products", t("navProducts")],
+    ["#/products?category=custom", t("navCustom")],
+    ["#/products?category=stl", t("navStl")],
+    ["#/commercial-license", t("navLicense")],
+    ["#/about", t("navAbout")],
+    ["#/contact", t("navContact")]
+  ];
   return `
     <header class="site-header">
       <a class="brand" href="#/" aria-label="Atelier Printworks home">
@@ -909,12 +968,7 @@ function nav() {
         </span>
       </a>
       <nav class="main-nav" aria-label="Primary navigation">
-        <a href="#/products">${t("navProducts")}</a>
-        <a href="#/products?category=custom">${t("navCustom")}</a>
-        <a href="#/products?category=stl">${t("navStl")}</a>
-        <a href="#/commercial-license">${t("navLicense")}</a>
-        <a href="#/about">${t("navAbout")}</a>
-        <a href="#/contact">${t("navContact")}</a>
+        ${navLinks.map(([href, label]) => `<a class="${isActive(href) ? "active" : ""}" ${isActive(href) ? "aria-current=\"page\"" : ""} href="${href}">${label}</a>`).join("")}
       </nav>
       <div class="header-actions">
         <select class="language-select" aria-label="Language selector">
@@ -963,11 +1017,11 @@ function productCard(product, index) {
     <article class="product-card">
       <a href="#/products/${product.id}" class="product-media">${renderIllustration(product, index)}</a>
       <div class="product-body">
-        <span class="pill">${product.badge}</span>
+        <span class="pill">${productTypeLabel(product.type)}</span>
         <h3><a href="#/products/${product.id}">${text.name}</a></h3>
         <p>${text.summary}</p>
         <div class="product-meta">
-          <span>${product.type}</span>
+          <span>${product.badge}</span>
           <strong>${money(product.price)}</strong>
         </div>
         <div class="card-actions">
@@ -1141,13 +1195,19 @@ function productDetailPage(id) {
       <section class="detail-layout">
         <div>${renderIllustration(product, index)}</div>
         <div class="detail-copy">
-          <span class="pill">${product.type}</span>
+          <span class="pill">${productTypeLabel(product.type)}</span>
           <h1>${text.name}</h1>
           <p class="lead">${text.summary}</p>
           <strong class="detail-price">${money(product.price)}</strong>
           <div class="detail-actions">
             <button class="button primary" data-add-to-cart="${product.id}" type="button">${t("addToCart")}</button>
             <button class="button secondary" data-buy-now="${product.id}" type="button">${t("buyNow")}</button>
+          </div>
+          <div class="detail-facts">
+            <div><span>${t("deliveryMethod")}</span><strong>${deliveryMethod(product)}</strong></div>
+            <div><span>${t("processingTime")}</span><strong>${processingTime(product)}</strong></div>
+            <div><span>${t("refundRule")}</span><strong>${product.type === "Digital STL Pack" ? "No no-reason refund after download" : "Defects and shipping issues reviewed"}</strong></div>
+            <div><span>${t("licenseScope")}</span><strong>${product.type === "Commercial License" ? "Physical resale rights only" : "Personal use unless licensed"}</strong></div>
           </div>
           <h2>${t("specifications")}</h2>
           <ul>${product.specs.map(spec => `<li>${spec}</li>`).join("")}</ul>
@@ -1188,7 +1248,7 @@ function cartPage() {
                 <article class="cart-line">
                   <div class="cart-thumb">${renderIllustration(line.product, index)}</div>
                   <div>
-                    <span class="pill">${line.product.type}</span>
+                    <span class="pill">${productTypeLabel(line.product.type)}</span>
                     <h2>${text.name}</h2>
                     <p>${text.summary}</p>
                     <p><strong>${t("delivery")}:</strong> ${line.product.delivery}</p>
@@ -1244,7 +1304,7 @@ function checkoutPage(error = sessionStorage.getItem("atelier-checkout-error") |
           ${cartNeedsShipping(lines) ? `<label>${t("shippingAddress")}<textarea name="address" required placeholder="Name, street, city, postal code, country"></textarea></label>` : `<p class="form-note">${t("notRequiredDigital")}</p>`}
           ${cartNeedsCustomNotes(lines) ? `<label>${t("customNotes")}<textarea name="notes" required placeholder="Describe the custom print request, personalization text, or proof requirements."></textarea></label>` : `<label>${t("customNotes")}<textarea name="notes" placeholder="Optional notes for support."></textarea></label>`}
           <div class="policy-confirm">
-            <label><input name="terms" type="checkbox" required /> I agree to delivery, refund, digital goods, and license terms.</label>
+            <label><input name="terms" type="checkbox" required /> ${t("termsAgreement")}</label>
           </div>
           <button class="button primary" type="submit">${t("placeOrder")}</button>
         </form>
@@ -1281,6 +1341,8 @@ function orderCard(order) {
 
 function orderLookupPage(result = null, error = sessionStorage.getItem("atelier-lookup-error") || "") {
   sessionStorage.removeItem("atelier-lookup-error");
+  const rememberedLookup = sessionStorage.getItem("atelier-lookup-order") || "";
+  const rememberedResult = result || (rememberedLookup ? findOrder(rememberedLookup) : null);
   return `
     ${nav()}
     <main>
@@ -1292,10 +1354,10 @@ function orderLookupPage(result = null, error = sessionStorage.getItem("atelier-
       <section class="policy-shell">
         <form class="lookup-form" data-order-lookup>
           ${error ? `<div class="form-error">${error}</div>` : ""}
-          <label>${t("orderNumber")}<input name="orderId" placeholder="AP-DEMO-1001" required /></label>
+          <label>${t("orderNumber")}<input name="orderId" value="${rememberedLookup}" placeholder="AP-DEMO-1001" required /></label>
           <button class="button primary" type="submit">${t("lookupOrder")}</button>
         </form>
-        ${result ? orderCard(result) : ""}
+        ${rememberedResult ? orderCard(rememberedResult) : ""}
       </section>
     </main>
     ${footer()}
@@ -1567,8 +1629,9 @@ function render() {
       const data = Object.fromEntries(new FormData(lookupForm));
       const order = findOrder(data.orderId || "");
       if (!order) sessionStorage.setItem("atelier-lookup-error", t("orderNotFound"));
-      app.innerHTML = orderLookupPage(order, order ? "" : t("orderNotFound"));
-      document.documentElement.lang = currentLang;
+      if (order) sessionStorage.setItem("atelier-lookup-order", order.id);
+      else sessionStorage.removeItem("atelier-lookup-order");
+      render();
     });
   }
   window.scrollTo({ top: 0, behavior: "instant" });
