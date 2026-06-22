@@ -35,6 +35,7 @@ const products = [
     type: "Physical Product",
     category: "desk",
     price: 32,
+    imageIndex: 0,
     badge: "Made to order",
     summary: "A weighted modular dock for phone, watch, pen, and cable parking.",
     specs: ["Matte graphite PLA blend", "Approx. 18 x 9 x 4 cm", "Non-slip cork base included"],
@@ -48,6 +49,7 @@ const products = [
     type: "Physical Product",
     category: "desk",
     price: 18,
+    imageIndex: 1,
     badge: "Desk utility",
     summary: "A clean spiral cable organizer for USB-C, audio, and charging cables.",
     specs: ["Set of 4 organizers", "Fits most 3-5 mm cables", "Soft sandstone, ink, or cloud finish"],
@@ -61,6 +63,7 @@ const products = [
     type: "Physical Product",
     category: "home",
     price: 46,
+    imageIndex: 2,
     badge: "Modular",
     summary: "A stackable micro shelf for small plants, collectibles, keys, and entryway objects.",
     specs: ["Two interlocking shelf blocks", "Approx. 22 x 12 x 16 cm assembled", "Printed in recycled PETG by request"],
@@ -74,6 +77,7 @@ const products = [
     type: "Custom Print",
     category: "pet",
     price: 58,
+    imageIndex: 3,
     badge: "Personalized",
     summary: "A minimalist pet name plinth with optional date engraving and soft architectural lines.",
     specs: ["Personalized name text", "Optional short date line", "Proof sent before production"],
@@ -87,6 +91,7 @@ const products = [
     type: "Digital STL Pack",
     category: "stl",
     price: 24,
+    imageIndex: 4,
     badge: "Instant digital delivery",
     summary: "Original micro-architecture models for display shelves, dioramas, and print practice.",
     specs: ["12 STL files", "3MF layout files", "PDF print guide", "Personal-use license"],
@@ -100,6 +105,7 @@ const products = [
     type: "Digital STL Pack",
     category: "stl",
     price: 29,
+    imageIndex: 5,
     badge: "Ready to print",
     summary: "Five original mechanical-inspired desk toy models with snap-fit display bases.",
     specs: ["Pre-oriented STL files", "Optional 3MF scene plates", "Assembly PDF", "Test printed on 0.4 mm nozzle"],
@@ -113,6 +119,7 @@ const products = [
     type: "Commercial License",
     category: "license",
     price: 89,
+    imageIndex: 6,
     badge: "For small shops",
     summary: "Permission for one small business to sell physical prints from eligible Atelier Printworks STL packs.",
     specs: ["Covers one business entity", "Up to 500 physical units per year", "Digital resale prohibited"],
@@ -126,6 +133,7 @@ const products = [
     type: "Custom Print",
     category: "custom",
     price: 72,
+    imageIndex: 7,
     badge: "Quote reviewed",
     summary: "A starter service for small utility parts, display models, and original prototype prints.",
     specs: ["Includes printability review", "One material recommendation", "Up to 160 g print volume"],
@@ -139,6 +147,7 @@ const products = [
     type: "Physical Product",
     category: "home",
     price: 34,
+    imageIndex: 8,
     badge: "Home object",
     summary: "A softly faceted planter with a removable drainage tray for small indoor plants.",
     specs: ["Approx. 12 x 12 x 11 cm", "PLA matte ceramic finish", "Removable drainage saucer"],
@@ -152,6 +161,7 @@ const products = [
     type: "Digital STL Pack",
     category: "stl",
     price: 19,
+    imageIndex: 9,
     badge: "STL + 3MF",
     summary: "A focused set of cable clips, riser feet, pen cups, and micro trays for personal desk printing.",
     specs: ["18 STL files", "3MF build plates", "PDF print guide", "Personal-use license"],
@@ -165,6 +175,7 @@ const products = [
     type: "Custom Print",
     category: "custom",
     price: 66,
+    imageIndex: 10,
     badge: "Proof required",
     summary: "A clean desk sign for original business names, studio names, or personal maker labels.",
     specs: ["One text/logo review", "Two color options", "Proof before production"],
@@ -178,6 +189,7 @@ const products = [
     type: "Commercial License",
     category: "license",
     price: 39,
+    imageIndex: 11,
     badge: "One design",
     summary: "Commercial permission to sell physical prints from one eligible Atelier Printworks digital product.",
     specs: ["Covers one eligible digital product", "Up to 150 physical units per year", "One business entity"],
@@ -872,21 +884,15 @@ function money(value) {
 
 function renderIllustration(product, index = 0) {
   const productLabel = productText(product).name;
-  const colors = [
-    ["#eef2f0", "#82908a", "#1b2732"],
-    ["#f2eee7", "#b8a88e", "#253245"],
-    ["#edf0f4", "#7c91a8", "#111827"],
-    ["#f5eee8", "#c4a484", "#273238"],
-    ["#edf3ef", "#8bb3a3", "#17212b"]
-  ][index % 5];
+  const imageIndex = Number.isInteger(product.imageIndex) ? product.imageIndex : index;
+  const col = imageIndex % 4;
+  const row = Math.floor(imageIndex / 4);
+  const x = col * 33.333333;
+  const y = row * 50;
 
   return `
-    <div class="render-card" aria-label="${t("originalRender")} ${productLabel}">
-      <div class="render-grid"></div>
-      <div class="render-orbit" style="background: ${colors[0]}"></div>
-      <div class="render-block render-block-a" style="background: linear-gradient(135deg, ${colors[1]}, ${colors[2]})"></div>
-      <div class="render-block render-block-b"></div>
-      <div class="render-block render-block-c"></div>
+    <div class="render-card product-photo" aria-label="${t("originalRender")} ${productLabel}" style="--image-x: ${x}%; --image-y: ${y}%;">
+      <div class="product-photo-image" role="img" aria-label="${productLabel}"></div>
       <span class="render-type">${product.type}</span>
     </div>
   `;

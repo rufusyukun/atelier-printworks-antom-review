@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
+import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
 const main = readFileSync(join(root, "src/main.js"), "utf8");
 const html = readFileSync(join(root, "index.html"), "utf8");
+const css = readFileSync(join(root, "src/styles.css"), "utf8");
 
 const checks = [
   {
@@ -33,6 +35,14 @@ const checks = [
   {
     name: "SEO metadata includes Open Graph",
     pass: html.includes('property="og:title"') && html.includes('property="og:description"')
+  },
+  {
+    name: "generated ecommerce product image asset exists",
+    pass: existsSync(join(root, "src/assets/product-sheet.png")) && statSync(join(root, "src/assets/product-sheet.png")).size > 100000
+  },
+  {
+    name: "products are mapped to image indexes",
+    pass: (main.match(/imageIndex:/g) || []).length >= 12 && css.includes("assets/product-sheet.png")
   }
 ];
 
