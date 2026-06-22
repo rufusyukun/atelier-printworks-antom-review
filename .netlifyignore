@@ -1,0 +1,10 @@
+.git
+.git/**
+.DS_Store
+node_modules
+node_modules/**
+.npm
+.npm/**
+*.log
+tmp
+tmp/**
