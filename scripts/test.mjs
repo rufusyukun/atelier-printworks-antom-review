@@ -38,15 +38,15 @@ const checks = [
   },
   {
     name: "generated ecommerce product image asset exists",
-    pass: existsSync(join(root, "src/assets/product-sheet.png")) && statSync(join(root, "src/assets/product-sheet.png")).size > 100000
+    pass: existsSync(join(root, "src/assets/product-sheet.webp")) && statSync(join(root, "src/assets/product-sheet.webp")).size > 50000
   },
   {
     name: "premium generated product image asset exists",
-    pass: existsSync(join(root, "src/assets/product-premium-sheet.png")) && statSync(join(root, "src/assets/product-premium-sheet.png")).size > 100000
+    pass: existsSync(join(root, "src/assets/product-premium-sheet.webp")) && statSync(join(root, "src/assets/product-premium-sheet.webp")).size > 50000
   },
   {
     name: "products are mapped to image indexes",
-    pass: (main.match(/imageIndex:/g) || []).length >= 16 && css.includes("assets/product-sheet.png") && css.includes("assets/product-premium-sheet.png")
+    pass: (main.match(/imageIndex:/g) || []).length >= 16 && css.includes("assets/product-sheet.webp") && css.includes("assets/product-premium-sheet.webp")
   },
   {
     name: "cart migration prevents stale default cart items",

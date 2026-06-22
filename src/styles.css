@@ -273,7 +273,7 @@ h3 {
 }
 
 .product-photo-image {
-  background-image: url("assets/product-sheet.png");
+  background-image: url("assets/product-sheet.webp");
   background-position: var(--image-x) var(--image-y);
   background-repeat: no-repeat;
   background-size: var(--image-size, 400% 300%);
@@ -282,7 +282,7 @@ h3 {
 }
 
 .premium-photo .product-photo-image {
-  background-image: url("assets/product-premium-sheet.png");
+  background-image: url("assets/product-premium-sheet.webp");
 }
 
 .product-photo::after {
