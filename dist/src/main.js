@@ -1060,7 +1060,7 @@ function nav() {
         <select class="language-select" aria-label="Language selector">
           ${languages.map(([code, label]) => `<option value="${code}" ${currentLang === code ? "selected" : ""}>${label}</option>`).join("")}
         </select>
-        <a class="cart-link" href="#/cart" aria-label="${t("cart")}">${t("cart")} <span>${cartBadgeCount()}</span></a>
+        <a class="cart-link" href="#/cart" aria-label="${t("cart")}">${t("cart")} <span data-cart-count aria-live="polite">${cartBadgeCount()}</span></a>
       </div>
     </header>
   `;

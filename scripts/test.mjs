@@ -51,6 +51,10 @@ const checks = [
   {
     name: "cart migration prevents stale default cart items",
     pass: main.includes("atelier-cart-version") && main.includes("localStorage.removeItem(\"atelier-cart\")")
+  },
+  {
+    name: "cart badge exposes a stable QA hook",
+    pass: main.includes("data-cart-count") && main.includes("aria-live=\"polite\"")
   }
 ];
 
