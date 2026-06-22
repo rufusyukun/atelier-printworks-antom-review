@@ -196,6 +196,66 @@ const products = [
     delivery: "License certificate is delivered by email and attached to the order record after purchase.",
     refund: "Non-refundable after certificate delivery unless duplicate payment or order error is confirmed.",
     license: "Allows physical print resale only. Digital files may not be shared, resold, uploaded, or sublicensed."
+  },
+  {
+    id: "observatory-desk-command-center",
+    name: "Observatory Desk Command Center",
+    type: "Physical Product",
+    category: "desk",
+    price: 128,
+    imageSheet: "premium",
+    imageIndex: 0,
+    badge: "Premium workspace",
+    summary: "A multi-level modular command center with dock, drawers, pen rail, and hidden cable channels.",
+    specs: ["Four-module desktop system", "Approx. 32 x 18 x 12 cm assembled", "Matte graphite and ivory finish", "Optional cork feet"],
+    delivery: "Made to order due to long print time. Production takes 5-10 business days and shipping normally takes 7-15 business days depending on destination.",
+    refund: "Eligible for replacement or refund if damaged, defective, or materially different from the approved listing. Made-to-order production is not eligible for no-reason cancellation after printing begins.",
+    license: "Physical product only. STL files and commercial reproduction rights are not included."
+  },
+  {
+    id: "kinetic-orbit-display-toy",
+    name: "Kinetic Orbit Display Toy",
+    type: "Physical Product",
+    category: "home",
+    price: 96,
+    imageSheet: "premium",
+    imageIndex: 1,
+    badge: "Mechanical art",
+    summary: "An original mechanical desk sculpture with interlocking orbit rings and a display base.",
+    specs: ["Original kinetic-inspired design", "Approx. 16 x 16 x 19 cm", "Printed assembly with display base", "Decorative motion model, not a child toy"],
+    delivery: "Made to order in 5-9 business days. Shipping usually takes 7-15 business days depending on destination.",
+    refund: "Damaged, defective, wrong, or missing parts are covered by support review. No no-reason returns after production begins.",
+    license: "Physical decorative item only. No digital design files or resale rights are included."
+  },
+  {
+    id: "custom-architectural-memory-model",
+    name: "Custom Architectural Memory Model",
+    type: "Custom Print",
+    category: "custom",
+    price: 189,
+    imageSheet: "premium",
+    imageIndex: 2,
+    badge: "High-detail custom",
+    summary: "A bespoke miniature building or room-memory model for original homes, studios, and personal spaces.",
+    specs: ["Includes design review", "Proof before production", "One revision round", "Display plinth included"],
+    delivery: "Support reviews the brief within 1-2 business days. Modeling and proofing usually takes 5-12 business days before production. Printing takes 4-8 business days after approval.",
+    refund: "Refunds depend on project stage. Unstarted work can be canceled; approved custom modeling and printed custom work are not refundable unless defective or materially different from proof.",
+    license: "Customer must own or have permission to use submitted reference materials. We do not reproduce protected landmarks, logos, or third-party IP without authorization."
+  },
+  {
+    id: "maker-studio-pro-commercial-license",
+    name: "Maker Studio Pro Commercial License",
+    type: "Commercial License",
+    category: "license",
+    price: 249,
+    imageSheet: "premium",
+    imageIndex: 3,
+    badge: "Pro license",
+    summary: "A broader small-studio license for eligible STL packs with higher annual physical print limits.",
+    specs: ["One business entity", "Up to 2,000 physical units per year", "Covers eligible STL packs purchased by the same account", "Digital file resale prohibited"],
+    delivery: "License certificate is delivered by email and recorded on the order page after payment confirmation.",
+    refund: "Non-refundable after certificate delivery unless duplicate payment or clear order error is confirmed before use.",
+    license: "Allows sale of physical prints from eligible files. Does not allow digital resale, sharing, sublicensing, file upload, or transfer of source files."
   }
 ];
 
@@ -679,7 +739,11 @@ const localizedProducts = {
     "terra-minimal-plant-pot": ["Terra 极简植物盆", "带可拆卸托盘的柔和切面小花盆，适合室内小植物。"],
     "desk-setup-stl-pack": ["桌面布置 STL 包", "包含线夹、增高脚、笔筒和小托盘的桌面打印文件组合。"],
     "custom-logo-desk-sign": ["定制 Logo 桌牌", "用于原创企业名、工作室名或个人创作者标签的简洁桌牌。"],
-    "single-product-commercial-license": ["单品商业授权", "允许销售一个符合条件数字商品打印出的实体成品。"]
+    "single-product-commercial-license": ["单品商业授权", "允许销售一个符合条件数字商品打印出的实体成品。"],
+    "observatory-desk-command-center": ["Observatory 桌面指挥中心", "多层模块化桌面系统，集停靠座、抽屉、笔架和隐藏线槽于一体。"],
+    "kinetic-orbit-display-toy": ["Kinetic Orbit 机械摆件", "原创机械风桌面动态雕塑，带交错轨道环和展示底座。"],
+    "custom-architectural-memory-model": ["定制建筑记忆模型", "为原创住宅、工作室或私人空间制作的高细节微缩建筑模型。"],
+    "maker-studio-pro-commercial-license": ["Maker Studio Pro 商业授权", "面向小型工作室的更高额度实体打印销售授权。"]
   },
   "ja-JP": {
     "arc-desk-dock": ["Arcデスクドック", "スマホ、時計、ペン、ケーブルを置ける重みのあるモジュラードック。"],
@@ -693,7 +757,11 @@ const localizedProducts = {
     "terra-minimal-plant-pot": ["Terraミニマルプランター", "取り外し可能な受け皿付きの柔らかな面構成の小型プランター。"],
     "desk-setup-stl-pack": ["Desk Setup STLパック", "ケーブルクリップ、ライザー脚、ペンカップ、小型トレーのファイルセット。"],
     "custom-logo-desk-sign": ["カスタムロゴデスクサイン", "オリジナルの事業名、スタジオ名、メーカーネーム向けのクリーンなサイン。"],
-    "single-product-commercial-license": ["単品商用ライセンス", "対象デジタル商品1点から印刷した物理商品の販売許可。"]
+    "single-product-commercial-license": ["単品商用ライセンス", "対象デジタル商品1点から印刷した物理商品の販売許可。"],
+    "observatory-desk-command-center": ["Observatoryデスクコマンドセンター", "ドック、引き出し、ペンレール、隠しケーブル溝を備えた多層デスクシステム。"],
+    "kinetic-orbit-display-toy": ["Kinetic Orbitディスプレイトイ", "交差するリングと展示台を備えたオリジナル機械風デスクスカルプチャー。"],
+    "custom-architectural-memory-model": ["カスタム建築メモリーモデル", "住宅、スタジオ、個人空間のための高精細ミニチュア建築モデル。"],
+    "maker-studio-pro-commercial-license": ["Maker Studio Pro商用ライセンス", "小規模スタジオ向けの高上限フィジカル販売ライセンス。"]
   },
   "fr-FR": {
     "arc-desk-dock": ["Station de bureau Arc", "Un dock modulaire lesté pour téléphone, montre, stylo et câbles."],
@@ -707,7 +775,11 @@ const localizedProducts = {
     "terra-minimal-plant-pot": ["Pot minimal Terra", "Un petit pot facetté avec soucoupe amovible pour plantes d'intérieur."],
     "desk-setup-stl-pack": ["Pack STL Desk Setup", "Un ensemble de clips, pieds de rehausse, pots à crayons et micro-plateaux à imprimer."],
     "custom-logo-desk-sign": ["Panneau de bureau personnalisé", "Un panneau propre pour noms d'entreprise, studios ou labels de créateur originaux."],
-    "single-product-commercial-license": ["Licence commerciale mono-produit", "Autorisation de vendre des impressions physiques d'un produit numérique éligible."]
+    "single-product-commercial-license": ["Licence commerciale mono-produit", "Autorisation de vendre des impressions physiques d'un produit numérique éligible."],
+    "observatory-desk-command-center": ["Centre de bureau Observatory", "Système de bureau modulaire à plusieurs niveaux avec dock, tiroirs, rail à stylos et passages de câbles."],
+    "kinetic-orbit-display-toy": ["Sculpture Kinetic Orbit", "Sculpture de bureau mécanique originale avec anneaux orbitaux et socle de présentation."],
+    "custom-architectural-memory-model": ["Modèle architectural souvenir", "Miniature architecturale personnalisée pour maisons, studios et espaces personnels originaux."],
+    "maker-studio-pro-commercial-license": ["Licence commerciale Maker Studio Pro", "Licence de petit studio avec limites annuelles plus élevées pour impressions physiques éligibles."]
   },
   "es-ES": {
     "arc-desk-dock": ["Base de escritorio Arc", "Una base modular con peso para teléfono, reloj, bolígrafo y cables."],
@@ -721,7 +793,11 @@ const localizedProducts = {
     "terra-minimal-plant-pot": ["Maceta minimal Terra", "Una maceta suavemente facetada con bandeja extraíble para plantas pequeñas de interior."],
     "desk-setup-stl-pack": ["Pack STL Desk Setup", "Un set de clips de cable, elevadores, portalápices y microbandejas para imprimir."],
     "custom-logo-desk-sign": ["Letrero de escritorio personalizado", "Un letrero limpio para nombres de negocio, estudio o etiqueta personal original."],
-    "single-product-commercial-license": ["Licencia comercial de producto único", "Permiso para vender impresiones físicas de un producto digital elegible."]
+    "single-product-commercial-license": ["Licencia comercial de producto único", "Permiso para vender impresiones físicas de un producto digital elegible."],
+    "observatory-desk-command-center": ["Centro de escritorio Observatory", "Sistema modular multinivel con base, cajones, riel para bolígrafos y canales ocultos para cables."],
+    "kinetic-orbit-display-toy": ["Escultura Kinetic Orbit", "Escultura mecánica original de escritorio con anillos orbitales y base de exhibición."],
+    "custom-architectural-memory-model": ["Modelo arquitectónico personalizado", "Miniatura arquitectónica a medida para hogares, estudios y espacios personales originales."],
+    "maker-studio-pro-commercial-license": ["Licencia comercial Maker Studio Pro", "Licencia de estudio con límites anuales más altos para impresiones físicas elegibles."]
   }
 };
 
@@ -805,6 +881,11 @@ function labelFromFooter(label) {
 }
 
 function getCart() {
+  const cartVersion = "2026-06-22-premium-products";
+  if (localStorage.getItem("atelier-cart-version") !== cartVersion) {
+    localStorage.removeItem("atelier-cart");
+    localStorage.setItem("atelier-cart-version", cartVersion);
+  }
   try {
     return JSON.parse(localStorage.getItem("atelier-cart") || "[]");
   } catch {
@@ -927,13 +1008,18 @@ function money(value) {
 function renderIllustration(product, index = 0) {
   const productLabel = productText(product).name;
   const imageIndex = Number.isInteger(product.imageIndex) ? product.imageIndex : index;
-  const col = imageIndex % 4;
-  const row = Math.floor(imageIndex / 4);
-  const x = col * 33.333333;
-  const y = row * 50;
+  const isPremiumSheet = product.imageSheet === "premium";
+  const cols = isPremiumSheet ? 2 : 4;
+  const rows = isPremiumSheet ? 2 : 3;
+  const col = imageIndex % cols;
+  const row = Math.floor(imageIndex / cols);
+  const x = cols === 1 ? 0 : col * (100 / (cols - 1));
+  const y = rows === 1 ? 0 : row * (100 / (rows - 1));
+  const bgSize = `${cols * 100}% ${rows * 100}%`;
+  const sheetClass = isPremiumSheet ? "premium-photo" : "";
 
   return `
-    <div class="render-card product-photo" aria-label="${t("originalRender")} ${productLabel}" style="--image-x: ${x}%; --image-y: ${y}%;">
+    <div class="render-card product-photo ${sheetClass}" aria-label="${t("originalRender")} ${productLabel}" style="--image-x: ${x}%; --image-y: ${y}%; --image-size: ${bgSize};">
       <div class="product-photo-image" role="img" aria-label="${productLabel}"></div>
       <span class="render-type">${productTypeLabel(product.type)}</span>
     </div>

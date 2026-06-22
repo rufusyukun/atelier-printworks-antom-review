@@ -9,8 +9,8 @@ const css = readFileSync(join(root, "src/styles.css"), "utf8");
 
 const checks = [
   {
-    name: "catalog has at least 12 products",
-    pass: (main.match(/id: "/g) || []).length >= 12
+    name: "catalog has at least 16 products",
+    pass: (main.match(/id: "/g) || []).length >= 16
   },
   {
     name: "cart state is implemented",
@@ -41,8 +41,16 @@ const checks = [
     pass: existsSync(join(root, "src/assets/product-sheet.png")) && statSync(join(root, "src/assets/product-sheet.png")).size > 100000
   },
   {
+    name: "premium generated product image asset exists",
+    pass: existsSync(join(root, "src/assets/product-premium-sheet.png")) && statSync(join(root, "src/assets/product-premium-sheet.png")).size > 100000
+  },
+  {
     name: "products are mapped to image indexes",
-    pass: (main.match(/imageIndex:/g) || []).length >= 12 && css.includes("assets/product-sheet.png")
+    pass: (main.match(/imageIndex:/g) || []).length >= 16 && css.includes("assets/product-sheet.png") && css.includes("assets/product-premium-sheet.png")
+  },
+  {
+    name: "cart migration prevents stale default cart items",
+    pass: main.includes("atelier-cart-version") && main.includes("localStorage.removeItem(\"atelier-cart\")")
   }
 ];
 

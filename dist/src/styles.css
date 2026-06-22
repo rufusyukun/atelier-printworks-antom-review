@@ -276,9 +276,13 @@ h3 {
   background-image: url("assets/product-sheet.png");
   background-position: var(--image-x) var(--image-y);
   background-repeat: no-repeat;
-  background-size: 400% 300%;
+  background-size: var(--image-size, 400% 300%);
   inset: 0;
   position: absolute;
+}
+
+.premium-photo .product-photo-image {
+  background-image: url("assets/product-premium-sheet.png");
 }
 
 .product-photo::after {
