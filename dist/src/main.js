@@ -1120,7 +1120,15 @@ function productCard(product, index) {
 }
 
 function homePage() {
-  const featured = products.slice(0, 6);
+  const featuredIds = [
+    "observatory-desk-command-center",
+    "custom-architectural-memory-model",
+    "maker-studio-pro-commercial-license",
+    "kinetic-orbit-display-toy",
+    "urban-nook-stl-pack",
+    "quiet-paws-keepsake"
+  ];
+  const featured = featuredIds.map(id => products.find(product => product.id === id)).filter(Boolean);
   return `
     ${nav()}
     <main>
@@ -1143,7 +1151,20 @@ function homePage() {
         </div>
       </section>
 
-      <section class="section">
+      <section class="section muted product-showcase">
+        <div class="section-heading with-action">
+          <div>
+            <span class="eyebrow">${t("featured")}</span>
+            <h2>${t("featuredTitle")}</h2>
+          </div>
+          <a class="button secondary" href="#/products">${t("viewAll")}</a>
+        </div>
+        <div class="product-grid">
+          ${featured.map(productCard).join("")}
+        </div>
+      </section>
+
+      <section class="section purpose-section">
         <div class="section-heading">
           <span class="eyebrow">${t("purpose")}</span>
           <h2>${t("workflowTitle")}</h2>
@@ -1158,19 +1179,6 @@ function homePage() {
             </a>
           `;
           }).join("")}
-        </div>
-      </section>
-
-      <section class="section muted">
-        <div class="section-heading with-action">
-          <div>
-            <span class="eyebrow">${t("featured")}</span>
-            <h2>${t("featuredTitle")}</h2>
-          </div>
-          <a class="button secondary" href="#/products">${t("viewAll")}</a>
-        </div>
-        <div class="product-grid">
-          ${featured.map(productCard).join("")}
         </div>
       </section>
 
