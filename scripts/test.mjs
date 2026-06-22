@@ -49,6 +49,10 @@ const checks = [
     pass: (main.match(/imageIndex:/g) || []).length >= 16 && css.includes("assets/product-sheet.webp") && css.includes("assets/product-premium-sheet.webp")
   },
   {
+    name: "catalog prices support premium positioning",
+    pass: !/price: ([1-4][0-9]|[1-9]),/.test(main) && main.includes("price: 54") && main.includes("price: 747") && main.includes("total: 131")
+  },
+  {
     name: "cart migration prevents stale default cart items",
     pass: main.includes("atelier-cart-version") && main.includes("localStorage.removeItem(\"atelier-cart\")")
   },
