@@ -1062,6 +1062,12 @@ function nav() {
           ${languages.map(([code, label]) => `<option value="${code}" ${currentLang === code ? "selected" : ""}>${label}</option>`).join("")}
         </select>
         <a class="cart-link" href="#/cart" aria-label="${t("cart")}">${t("cart")} <span data-cart-count aria-live="polite">${cartBadgeCount()}</span></a>
+        <details class="mobile-menu">
+          <summary aria-label="Open navigation menu"><span></span><span></span><span></span></summary>
+          <nav aria-label="Mobile navigation">
+            ${navLinks.map(([href, label]) => `<a class="${isActive(href) ? "active" : ""}" ${isActive(href) ? "aria-current=\"page\"" : ""} href="${href}">${label}</a>`).join("")}
+          </nav>
+        </details>
       </div>
     </header>
   `;

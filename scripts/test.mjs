@@ -62,6 +62,10 @@ const checks = [
     pass: main.includes("data-cart-count") && main.includes("aria-live=\"polite\"")
   },
   {
+    name: "mobile navigation is compact",
+    pass: main.includes("class=\"mobile-menu\"") && css.includes(".main-nav {\n    display: none;") && css.includes(".mobile-menu {\n    display: block;")
+  },
+  {
     name: "storefront avoids naming specific payment review brands",
     pass: !specificPaymentReviewBrand.test(`${main}\n${html}\n${css}`)
   },
