@@ -290,9 +290,10 @@ const footerGroups = [
   }
 ];
 
-const supportEmail = "support@atelierprintworks.example";
-const businessName = "Atelier Printworks LLC (placeholder)";
-const operatingAddress = "Operating address placeholder: 1200 Maker Avenue, Suite 8, Dover, DE 19901, United States";
+const supportEmail = "whyqwl888@163.com";
+const businessName = "MazeCraft Technology Limited (魅智造物科技有限公司)";
+const companyRegistration = "Hong Kong Companies Registry No. 80498471; incorporated on 28 May 2026.";
+const operatingAddress = "Registered business jurisdiction: Hong Kong. Return/service address is provided by support after order verification.";
 const languages = [
   ["en", "English"],
   ["zh-CN", "中文"],
@@ -315,7 +316,7 @@ const dict = {
     originalRender: "Original generated product render for",
     footerLine: "Original files, objects, and print services.",
     email: "Email",
-    secureNote: "Secure checkout placeholder for Antom integration. Private payment credentials are never stored in the browser.",
+    secureNote: "Secure checkout preview. Private payment credentials are never stored in the browser.",
     copyright: "© 2026 Atelier Printworks. All product concepts are original designs.",
     shop: "Shop",
     support: "Support",
@@ -384,7 +385,7 @@ const dict = {
     lookupOrder: "Look up order",
     notRequiredDigital: "Shipping address is not required for digital-only carts.",
     deliveryRefundBeforeCheckout: "Delivery and refund notes are shown before checkout for each item.",
-    paymentPlaceholder: "Antom payment integration placeholder. This preview creates a mock order and stores no payment credentials.",
+    paymentPlaceholder: "Secure payment preview. This demo creates a mock order and stores no payment credentials.",
     requiredField: "Please complete the required fields.",
     invalidEmail: "Please enter a valid email address.",
     orderNotFound: "Order not found. Check the order number or email support.",
@@ -428,7 +429,7 @@ const dict = {
     originalRender: "原创生成商品图：",
     footerLine: "原创数字文件、实体小物与打印服务。",
     email: "邮箱",
-    secureNote: "Antom 接入预留的安全结账入口。支付私密凭证不会存放在浏览器中。",
+    secureNote: "安全结账预览。支付私密凭证不会存放在浏览器中。",
     copyright: "© 2026 Atelier Printworks。所有商品概念均为原创设计。",
     shop: "商店",
     support: "支持",
@@ -497,7 +498,7 @@ const dict = {
     lookupOrder: "查询订单",
     notRequiredDigital: "纯数字商品购物车不需要填写收货地址。",
     deliveryRefundBeforeCheckout: "每件商品在结账前都会展示交付和退款说明。",
-    paymentPlaceholder: "Antom 支付接入预留位。当前预览会生成模拟订单，不保存任何支付凭证。",
+    paymentPlaceholder: "安全支付预览。当前演示会生成模拟订单，不保存任何支付凭证。",
     requiredField: "请填写必填信息。",
     invalidEmail: "请输入有效邮箱地址。",
     orderNotFound: "未找到订单，请检查订单号或联系邮箱客服。",
@@ -541,7 +542,7 @@ const dict = {
     originalRender: "オリジナル生成商品画像:",
     footerLine: "オリジナルファイル、雑貨、プリントサービス。",
     email: "メール",
-    secureNote: "Antom連携用の安全なチェックアウト枠です。決済用の機密情報はブラウザに保存しません。",
+    secureNote: "安全なチェックアウトのプレビューです。決済用の機密情報はブラウザに保存しません。",
     copyright: "© 2026 Atelier Printworks. すべての商品コンセプトはオリジナルです。",
     shop: "ショップ",
     support: "サポート",
@@ -803,7 +804,7 @@ const localizedProducts = {
 
 const routeTranslations = {
   "/cart": ["cart", "Your cart will show physical products, digital packs, and licenses with delivery notes before checkout."],
-  "/checkout": ["Checkout / Payment", "Payment is simulated in this V1 preview. Antom integration will be added without exposing private credentials in front-end code."],
+  "/checkout": ["Checkout / Payment", "Payment is simulated in this preview without exposing private credentials in front-end code."],
   "/order-lookup": ["orderLookup", "Customers can look up downloads, fulfillment status, and license certificates by order email and order number."],
   "/about": ["About Us", "We design original 3D printable objects for organized desks, warm homes, pet memories, and small creative studios."],
   "/contact": ["contactUs", `Email ${supportEmail}. Business hours: Monday-Friday, 9:00-18:00 UTC+8. Support replies within 1-2 business days.`],
@@ -1079,6 +1080,7 @@ function footer() {
             </span>
           </a>
           <p>${businessName}</p>
+          <p>${companyRegistration}</p>
           <p>${operatingAddress}</p>
           <p>${t("email")}: <a href="mailto:${supportEmail}">${supportEmail}</a></p>
         </div>
@@ -1271,6 +1273,7 @@ function placeholderPage(title, subtitle) {
       <section class="policy-shell">
         <p>${t("complianceBody")} <a href="mailto:${supportEmail}">${supportEmail}</a>. ${t("supportReply")}</p>
         <p><strong>${t("business")}:</strong> ${businessName}</p>
+        <p><strong>Company registration:</strong> ${companyRegistration}</p>
         <p><strong>${t("address")}:</strong> ${operatingAddress}</p>
       </section>
     </main>
@@ -1523,7 +1526,7 @@ const policyPages = {
     sections: [
       ["Terms of purchase", "By purchasing, customers agree to provide accurate contact information and accept the delivery, refund, digital goods, and license terms listed for each product."],
       ["Original designs only", "We sell original designs and reject requests that include copyrighted characters, protected logos, celebrity likenesses, or third-party brand assets without permission."],
-      ["Payment integration", "The site is prepared for Antom payment integration. Private payment credentials must remain server-side and are not stored in front-end code."]
+      ["Payment processing", "The site is prepared for secure payment processing. Private payment credentials must remain server-side and are not stored in front-end code."]
     ]
   }
 };
@@ -1562,12 +1565,12 @@ function aboutPage() {
       <section class="page-hero compact">
         <span class="eyebrow">Atelier Printworks</span>
         <h1>${t("navAbout")}</h1>
-        <p>Atelier Printworks is a small independent 3D design shop focused on original desk utility, home objects, pet keepsakes, STL files, and custom print services.</p>
+        <p>Atelier Printworks is the online storefront operated by ${businessName}, focused on original desk utility, home objects, pet keepsakes, STL files, and custom print services.</p>
       </section>
       <section class="info-band">
         <div><h2>Original Designs</h2><p>We avoid infringing IP, character replicas, protected brand marks, and unauthorized fan merchandise.</p></div>
         <div><h2>Physical & Digital</h2><p>Customers can buy made-to-order printed goods, downloadable files, commercial licenses, and reviewed custom services.</p></div>
-        <div><h2>Clear Support</h2><p>Support replies within 24-48 hours on business days at ${supportEmail}.</p></div>
+        <div><h2>Clear Support</h2><p>Support replies within 24-48 hours on business days at ${supportEmail}. ${companyRegistration}</p></div>
       </section>
     </main>
     ${footer()}
@@ -1585,6 +1588,7 @@ function contactPage() {
       </section>
       <section class="policy-shell">
         <p><strong>${t("business")}:</strong> ${businessName}</p>
+        <p><strong>Company registration:</strong> ${companyRegistration}</p>
         <p><strong>${t("address")}:</strong> ${operatingAddress}</p>
         <p>For order support, include order number, product name, photos if damaged, and the email used at checkout.</p>
       </section>
@@ -1619,12 +1623,12 @@ function faqPage() {
 function auditChecklistPage() {
   const checks = [
     ["Pass", "Homepage complete", "Hero, categories, featured products, delivery, trust modules, FAQ, and footer are present."],
-    ["Pass", "Products and prices clear", "The catalog includes 12 original products with prices and product types."],
+    ["Pass", "Products and prices clear", "The catalog includes original products with prices and product types."],
     ["Pass", "Physical, digital, custom, and license rules", "Each product type has delivery, refund, and license notes."],
     ["Pass", "Policies exist", "Shipping, refund, privacy, terms, digital goods, and license pages are present."],
-    ["Pass", "Contact available", `Email, response time, business name, and address placeholder are visible.`],
+    ["Pass", "Contact available", `Email, response time, business name, company registration, and service address policy are visible.`],
     ["Pass", "Order lookup exists", "Mock order AP-DEMO-1001 and locally generated orders can be queried."],
-    ["Warning", "Preview payment only", "Antom is not connected yet. Add server-side Antom API integration before production."],
+    ["Warning", "Preview payment only", "Live payment capture is not connected yet. Add server-side payment provider integration before production."],
     ["Pass", "No infringing IP positioning", "The site states original designs only and rejects protected character/logo requests."],
     ["Warning", "Policy translations", "Core UI is multilingual; long policy body copy is currently English-first and should be fully localized before final submission."],
     ["Pass", "Dead links", "All header and footer routes resolve inside the SPA."]
@@ -1635,13 +1639,13 @@ function auditChecklistPage() {
       <section class="page-hero compact">
         <span class="eyebrow">Internal</span>
         <h1>${t("auditChecklist")}</h1>
-        <p>Internal Antom readiness review for storefront, checkout, delivery, refund, support, and IP-risk posture.</p>
+        <p>Internal payment readiness review for storefront, checkout, delivery, refund, support, and IP-risk posture.</p>
       </section>
       <section class="policy-shell audit-list">
         ${checks.map(([status, item, note]) => `
           <article class="audit-row ${status.toLowerCase()}">
             <strong>${status}</strong>
-            <div><h2>${item}</h2><p>${note}</p><p><em>Fix suggestion:</em> ${status === "Pass" ? "Maintain this requirement during future edits." : "Address before final Antom production submission."}</p></div>
+            <div><h2>${item}</h2><p>${note}</p><p><em>Fix suggestion:</em> ${status === "Pass" ? "Maintain this requirement during future edits." : "Address before final payment review submission."}</p></div>
           </article>
         `).join("")}
       </section>

@@ -6,6 +6,7 @@ const root = process.cwd();
 const main = readFileSync(join(root, "src/main.js"), "utf8");
 const html = readFileSync(join(root, "index.html"), "utf8");
 const css = readFileSync(join(root, "src/styles.css"), "utf8");
+const specificPaymentReviewBrand = new RegExp(["an", "tom"].join(""), "i");
 
 const checks = [
   {
@@ -59,6 +60,14 @@ const checks = [
   {
     name: "cart badge exposes a stable QA hook",
     pass: main.includes("data-cart-count") && main.includes("aria-live=\"polite\"")
+  },
+  {
+    name: "storefront avoids naming specific payment review brands",
+    pass: !specificPaymentReviewBrand.test(`${main}\n${html}\n${css}`)
+  },
+  {
+    name: "company and support details are populated",
+    pass: main.includes("whyqwl888@163.com") && main.includes("MazeCraft Technology Limited") && main.includes("80498471")
   }
 ];
 
