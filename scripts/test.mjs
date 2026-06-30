@@ -38,6 +38,10 @@ const checks = [
     pass: main.includes("saveAdminOrderEdit") && main.includes("adminAuditLog") && main.includes("downloadAdminEvidence")
   },
   {
+    name: "admin interface defaults to Chinese",
+    pass: main.includes("订单证据与风控工作台") && main.includes("运营手工编辑") && main.includes("导出证据包")
+  },
+  {
     name: "policy pages have structured sections",
     pass: main.includes("policyPages") && main.includes("Digital goods")
   },

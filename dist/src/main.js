@@ -985,10 +985,10 @@ const mockOrders = [
     email: "customer@example.com",
     createdAt: "2026-06-24T04:16:00.000Z",
     address: "1-12-4 Jingumae, Shibuya-ku, Tokyo 150-0001, Japan",
-    notes: "Customer requested Japanese delivery updates and romanized address on carrier label.",
+    notes: "客户要求使用日文物流通知，并在面单上保留罗马字地址。",
     total: 131,
-    delivery: "Download access · License Agreement",
-    status: "Digital files available",
+    delivery: "下载访问 · 授权协议",
+    status: "数字文件可用",
     items: [
       { id: "urban-nook-stl-pack", qty: 1, price: 72 },
       { id: "desk-setup-stl-pack", qty: 1, price: 59 }
@@ -999,10 +999,10 @@ const mockOrders = [
     email: "studio-buyer@example.fr",
     createdAt: "2026-06-25T09:42:00.000Z",
     address: "14 Rue des Petits Champs, 75002 Paris, France",
-    notes: "Physical premium desk item. Carrier label should use French address formatting.",
+    notes: "高客单价实体桌面商品，快递面单应使用法语地址格式。",
     total: 384,
-    delivery: "Shipping required",
-    status: "Production review",
+    delivery: "需要配送",
+    status: "生产审核",
     items: [
       { id: "observatory-desk-command-center", qty: 1, price: 384 }
     ]
@@ -1012,10 +1012,10 @@ const mockOrders = [
     email: "maker-team@example.es",
     createdAt: "2026-06-26T11:08:00.000Z",
     address: "Carrer de Mallorca 214, 08008 Barcelona, Spain",
-    notes: "Commercial license order. Manual review required before certificate release.",
+    notes: "商业授权订单，证书发放前需要人工复核。",
     total: 747,
-    delivery: "License Agreement",
-    status: "Risk review",
+    delivery: "授权协议",
+    status: "风控复核",
     items: [
       { id: "maker-studio-pro-commercial-license", qty: 1, price: 747 }
     ]
@@ -1091,13 +1091,13 @@ function defaultOperationalFields(order) {
       postalCode: "150-0001",
       addressLocal: "〒150-0001 東京都渋谷区神宮前1-12-4",
       addressEnglish: "1-12-4 Jingumae, Shibuya-ku, Tokyo 150-0001, Japan",
-      carrier: "Digital delivery",
+      carrier: "数字交付",
       trackingNumber: "",
       trackingUrl: "",
-      fulfillmentStatus: "Digital access released",
-      deliveryNotes: "Customer prefers Japanese notifications. Digital files are available from order lookup.",
-      supportNotes: "No support issue reported.",
-      riskDecision: "Approved"
+      fulfillmentStatus: "数字文件已开放访问",
+      deliveryNotes: "客户偏好日文通知。数字文件可通过订单查询页访问。",
+      supportNotes: "暂无客服问题。",
+      riskDecision: "已通过"
     },
     "AP-DEMO-1002": {
       customerName: "Luc Martin",
@@ -1113,10 +1113,10 @@ function defaultOperationalFields(order) {
       carrier: "La Poste / Colissimo",
       trackingNumber: "COL-DEMO-1002",
       trackingUrl: "https://www.laposte.fr/outils/suivre-vos-envois",
-      fulfillmentStatus: "Made to order - production queued",
-      deliveryNotes: "Use French carrier label and include apartment/company line if customer replies.",
-      supportNotes: "Production photos should be attached before shipment.",
-      riskDecision: "Approved"
+      fulfillmentStatus: "按订单制作 - 已进入生产排队",
+      deliveryNotes: "使用法语快递面单；如客户回复公寓/公司信息，需要补充到面单地址。",
+      supportNotes: "发货前应上传生产照片和包装照片。",
+      riskDecision: "已通过"
     },
     "AP-DEMO-1003": {
       customerName: "Maker Team SL",
@@ -1129,13 +1129,13 @@ function defaultOperationalFields(order) {
       postalCode: "08008",
       addressLocal: "Carrer de Mallorca 214, 08008 Barcelona, Espana",
       addressEnglish: "Carrer de Mallorca 214, 08008 Barcelona, Spain",
-      carrier: "License certificate email",
+      carrier: "授权证书邮件",
       trackingNumber: "",
       trackingUrl: "",
-      fulfillmentStatus: "Manual license review",
-      deliveryNotes: "Confirm business entity name before sending commercial certificate.",
-      supportNotes: "High-value license. Keep review notes for evidence package.",
-      riskDecision: "Manual review"
+      fulfillmentStatus: "商业授权人工复核",
+      deliveryNotes: "发送商业授权证书前，需要确认购买方经营主体名称。",
+      supportNotes: "高金额授权订单，保留审核备注用于后续证据包。",
+      riskDecision: "人工复核"
     }
   };
 
@@ -1153,10 +1153,10 @@ function defaultOperationalFields(order) {
     carrier: "",
     trackingNumber: "",
     trackingUrl: "",
-    fulfillmentStatus: order.status || "New order",
+    fulfillmentStatus: order.status || "新订单",
     deliveryNotes: order.delivery || "",
     supportNotes: order.notes || "",
-    riskDecision: "Pending review"
+    riskDecision: "待审核"
   };
 }
 
@@ -1174,13 +1174,27 @@ function adminOrderRisk(order, operational = adminOrderState(order)) {
   const types = orderTypes(order);
   const logs = adminAuditLog().filter(log => log.orderId === order.id);
   const risks = [];
-  if ((order.total || 0) >= 500) risks.push(["High", "High value order"]);
-  if (types.includes("Commercial License")) risks.push(["Medium", "Commercial license requires entity review"]);
-  if (types.includes("Digital STL Pack") && /refund/i.test(operational.supportNotes || "")) risks.push(["High", "Refund mention after digital delivery"]);
-  if (logs.some(log => /country|address|customerEmail|phone/i.test((log.fields || []).join(",")))) risks.push(["Medium", "Sensitive customer or shipping field edited"]);
-  if (!operational.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(operational.customerEmail)) risks.push(["High", "Operational email is missing or invalid"]);
-  if (!risks.length) risks.push(["Low", "No major risk rules matched"]);
+  if ((order.total || 0) >= 500) risks.push(["High", "高金额订单"]);
+  if (types.includes("Commercial License")) risks.push(["Medium", "商业授权订单需要核验经营主体"]);
+  if (types.includes("Digital STL Pack") && /refund|退款/i.test(operational.supportNotes || "")) risks.push(["High", "数字商品交付后出现退款诉求"]);
+  if (logs.some(log => /country|address|customerEmail|phone/i.test((log.fields || []).join(",")))) risks.push(["Medium", "客户或物流敏感字段被编辑"]);
+  if (!operational.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(operational.customerEmail)) risks.push(["High", "运营邮箱缺失或格式无效"]);
+  if (!risks.length) risks.push(["Low", "未命中主要风险规则"]);
   return risks;
+}
+
+function adminRiskLevelLabel(level) {
+  return { High: "高风险", Medium: "中风险", Low: "低风险" }[level] || level;
+}
+
+function adminProductTypeLabel(type) {
+  return {
+    "Physical Product": "实体商品",
+    "Digital STL Pack": "数字 STL 文件包",
+    "Custom Print": "定制打印",
+    "Commercial License": "商业授权",
+    Unknown: "未知类型"
+  }[type] || type;
 }
 
 function adminDigitalDelivery(order) {
@@ -1188,26 +1202,38 @@ function adminDigitalDelivery(order) {
     .filter(item => ["Digital STL Pack", "Commercial License"].includes(item.product?.type))
     .map((item, index) => ({
       name: item.product?.name || item.id,
-      format: item.product?.type === "Commercial License" ? "PDF License Certificate" : "STL, 3MF, PDF Guide",
-      status: order.status || "Pending",
-      firstAccess: order.id === "AP-DEMO-1001" ? "2026-06-24 04:22 UTC" : "Pending release",
-      firstDownload: order.id === "AP-DEMO-1001" ? "2026-06-24 04:24 UTC" : "Not downloaded",
+      format: item.product?.type === "Commercial License" ? "PDF 授权证书" : "STL, 3MF, PDF 指南",
+      status: order.status || "待处理",
+      firstAccess: order.id === "AP-DEMO-1001" ? "2026-06-24 04:22 UTC" : "待开放",
+      firstDownload: order.id === "AP-DEMO-1001" ? "2026-06-24 04:24 UTC" : "未下载",
       downloads: order.id === "AP-DEMO-1001" ? index + 1 : 0,
-      downloadIp: order.id === "AP-DEMO-1001" ? "203.0.113.42" : "Not recorded"
+      downloadIp: order.id === "AP-DEMO-1001" ? "203.0.113.42" : "未记录"
     }));
 }
 
 function adminFulfillmentEvidence(order, operational = adminOrderState(order)) {
   const physical = orderTypes(order).some(type => ["Physical Product", "Custom Print"].includes(type));
   return {
-    productionStatus: physical ? operational.fulfillmentStatus : "No physical shipment required",
-    carrier: operational.carrier || "Not assigned",
-    trackingNumber: operational.trackingNumber || "Not assigned",
+    productionStatus: physical ? operational.fulfillmentStatus : "无需实体配送",
+    carrier: operational.carrier || "未分配",
+    trackingNumber: operational.trackingNumber || "未分配",
     trackingUrl: operational.trackingUrl || "",
-    carrierAddress: operational.addressLocal || operational.addressEnglish || "Not set",
+    carrierAddress: operational.addressLocal || operational.addressEnglish || "未设置",
     labelLanguage: operational.preferredLanguage || "en",
-    photos: physical ? "Production and package photos should be attached before shipment." : "Not applicable"
+    photos: physical ? "发货前应附加生产照片和包装照片。" : "不适用"
   };
+}
+
+function adminFulfillmentLabel(key) {
+  return {
+    productionStatus: "生产/履约状态",
+    carrier: "物流商/交付渠道",
+    trackingNumber: "物流单号",
+    trackingUrl: "物流查询链接",
+    carrierAddress: "面单地址",
+    labelLanguage: "面单/通知语言",
+    photos: "照片证据"
+  }[key] || key;
 }
 
 function saveAdminOrderEdit(orderId, formData) {
@@ -1238,7 +1264,7 @@ function saveAdminOrderEdit(orderId, formData) {
   edits[orderId] = {
     operational,
     updatedAt: new Date().toISOString(),
-    updatedBy: "Local admin preview"
+    updatedBy: "本地后台预览管理员"
   };
   saveAdminStoredEdits(edits);
 
@@ -1248,8 +1274,8 @@ function saveAdminOrderEdit(orderId, formData) {
       id: `LOG-${Date.now()}`,
       orderId,
       at: new Date().toISOString(),
-      by: "Local admin preview",
-      reason: formData.editReason || "Operational correction",
+      by: "本地后台预览管理员",
+      reason: formData.editReason || "运营字段修正",
       fields: changedFields,
       before: Object.fromEntries(changedFields.map(key => [key, previous[key] || ""])),
       after: Object.fromEntries(changedFields.map(key => [key, operational[key] || ""]))
@@ -1949,39 +1975,39 @@ function faqPage() {
 }
 
 function adminStatusPill(label, value) {
-  return `<span class="admin-pill ${label.toLowerCase()}"><strong>${label}</strong>${escapeHtml(value)}</span>`;
+  return `<span class="admin-pill ${label.toLowerCase()}"><strong>${adminRiskLevelLabel(label)}</strong>${escapeHtml(value)}</span>`;
 }
 
 function adminOrdersPage() {
   const orders = adminAllOrders();
-  const pending = orders.filter(order => /review|queued|created|pending/i.test(order.status || "")).length;
+  const pending = orders.filter(order => /review|queued|created|pending|审核|复核|排队|待/i.test(order.status || "")).length;
   const highRisk = orders.filter(order => adminOrderRisk(order).some(([level]) => level === "High")).length;
   const digital = orders.filter(order => orderTypes(order).some(type => ["Digital STL Pack", "Commercial License"].includes(type))).length;
   return `
     ${nav()}
     <main class="admin-shell">
       <section class="admin-hero">
-        <span class="eyebrow">Operations Back Office</span>
-        <h1>Order evidence and risk console</h1>
-        <p>Internal preview for order operations, manual localization edits, delivery records, risk notes, audit history, and dispute evidence packages.</p>
+        <span class="eyebrow">运营后台</span>
+        <h1>订单证据与风控工作台</h1>
+        <p>用于订单运营、地址本地化编辑、交付记录、风控备注、审计日志和纠纷证据包的内部预览后台。</p>
       </section>
       <section class="admin-metrics">
-        <div><span>Total orders</span><strong>${orders.length}</strong></div>
-        <div><span>Pending operations</span><strong>${pending}</strong></div>
-        <div><span>Digital/license orders</span><strong>${digital}</strong></div>
-        <div><span>High-risk flags</span><strong>${highRisk}</strong></div>
+        <div><span>订单总数</span><strong>${orders.length}</strong></div>
+        <div><span>待处理订单</span><strong>${pending}</strong></div>
+        <div><span>数字/授权订单</span><strong>${digital}</strong></div>
+        <div><span>高风险标记</span><strong>${highRisk}</strong></div>
       </section>
       <section class="admin-panel">
         <div class="admin-panel-heading">
           <div>
-            <span class="eyebrow">P0 module</span>
-            <h2>Orders</h2>
+            <span class="eyebrow">P0 模块</span>
+            <h2>订单列表</h2>
           </div>
-          <a class="button secondary" href="#/audit-checklist">Readiness checklist</a>
+          <a class="button secondary" href="#/audit-checklist">审核自检清单</a>
         </div>
-        <div class="admin-table" role="table" aria-label="Admin orders">
+        <div class="admin-table" role="table" aria-label="后台订单">
           <div class="admin-table-row admin-table-head" role="row">
-            <span>Order</span><span>Customer</span><span>Type</span><span>Total</span><span>Risk</span><span>Status</span><span></span>
+            <span>订单</span><span>客户</span><span>类型</span><span>金额</span><span>风险</span><span>状态</span><span></span>
           </div>
           ${orders.map(order => {
             const operational = adminOrderState(order);
@@ -1989,12 +2015,12 @@ function adminOrdersPage() {
             return `
               <article class="admin-table-row" role="row">
                 <span><strong>${order.id}</strong><small>${escapeHtml(new Date(order.createdAt || Date.now()).toLocaleString("en-US"))}</small></span>
-                <span>${escapeHtml(operational.customerEmail || order.email)}<small>${escapeHtml(operational.country || "Country not set")}</small></span>
-                <span>${orderTypes(order).map(type => `<small>${escapeHtml(type)}</small>`).join("")}</span>
+                <span>${escapeHtml(operational.customerEmail || order.email)}<small>${escapeHtml(operational.country || "未设置国家")}</small></span>
+                <span>${orderTypes(order).map(type => `<small>${escapeHtml(adminProductTypeLabel(type))}</small>`).join("")}</span>
                 <span><strong>${money(order.total || 0)}</strong></span>
                 <span>${adminStatusPill(risk[0], risk[1])}</span>
-                <span>${escapeHtml(operational.fulfillmentStatus || order.status || "New")}</span>
-                <span><a class="button secondary compact-button" href="#/admin/orders/${order.id}">Open</a></span>
+                <span>${escapeHtml(operational.fulfillmentStatus || order.status || "新订单")}</span>
+                <span><a class="button secondary compact-button" href="#/admin/orders/${order.id}">打开</a></span>
               </article>
             `;
           }).join("")}
@@ -2014,7 +2040,7 @@ function adminField(name, label, value, type = "text") {
 
 function adminOrderDetailPage(orderId) {
   const order = findOrder(orderId);
-  if (!order) return placeholderPage("Admin order not found", "The requested order record does not exist.");
+  if (!order) return placeholderPage("后台订单不存在", "请求的订单记录不存在。");
   const operational = adminOrderState(order);
   const risks = adminOrderRisk(order, operational);
   const digitalDelivery = adminDigitalDelivery(order);
@@ -2024,85 +2050,85 @@ function adminOrderDetailPage(orderId) {
     ${nav()}
     <main class="admin-shell">
       <section class="admin-hero compact-admin-hero">
-        <span class="eyebrow">Order Operations</span>
+        <span class="eyebrow">订单运营</span>
         <h1>${order.id}</h1>
-        <p>Original customer data is preserved. Operational fields can be localized for carrier labels, customer support, and dispute evidence.</p>
+        <p>客户原始下单信息会被保留；运营字段可用于快递面单本地化、客服处理和纠纷证据说明。</p>
         <div class="hero-actions">
-          <a class="button secondary" href="#/admin">Back to admin</a>
-          <button class="button primary" data-export-evidence="${order.id}" type="button">Export evidence package</button>
+          <a class="button secondary" href="#/admin">返回后台</a>
+          <button class="button primary" data-export-evidence="${order.id}" type="button">导出证据包</button>
         </div>
       </section>
       <section class="admin-detail-grid">
         <aside class="admin-panel">
-          <span class="eyebrow">Original order snapshot</span>
-          <h2>Immutable record</h2>
+          <span class="eyebrow">原始订单快照</span>
+          <h2>不可变记录</h2>
           <dl class="admin-dl">
-            <div><dt>Original email</dt><dd>${escapeHtml(order.email)}</dd></div>
-            <div><dt>Original address</dt><dd>${escapeHtml(order.address || "Not provided")}</dd></div>
-            <div><dt>Original notes</dt><dd>${escapeHtml(order.notes || "None")}</dd></div>
-            <div><dt>Total</dt><dd>${money(order.total || 0)}</dd></div>
-            <div><dt>Status</dt><dd>${escapeHtml(order.status || "New")}</dd></div>
+            <div><dt>原始邮箱</dt><dd>${escapeHtml(order.email)}</dd></div>
+            <div><dt>原始地址</dt><dd>${escapeHtml(order.address || "未提供")}</dd></div>
+            <div><dt>原始备注</dt><dd>${escapeHtml(order.notes || "无")}</dd></div>
+            <div><dt>订单金额</dt><dd>${money(order.total || 0)}</dd></div>
+            <div><dt>订单状态</dt><dd>${escapeHtml(order.status || "新订单")}</dd></div>
           </dl>
-          <h3>Products</h3>
+          <h3>商品</h3>
           <ul class="admin-list">
-            ${orderProducts(order).map(item => `<li><strong>${escapeHtml(item.product?.name || item.id)}</strong><span>${escapeHtml(item.product?.type || "Unknown")} · ${item.qty} × ${money(item.price || 0)}</span></li>`).join("")}
+            ${orderProducts(order).map(item => `<li><strong>${escapeHtml(item.product?.name || item.id)}</strong><span>${escapeHtml(adminProductTypeLabel(item.product?.type || "Unknown"))} · ${item.qty} × ${money(item.price || 0)}</span></li>`).join("")}
           </ul>
         </aside>
         <section class="admin-panel">
-          <span class="eyebrow">Manual operations edit</span>
-          <h2>Localized fulfillment fields</h2>
+          <span class="eyebrow">运营手工编辑</span>
+          <h2>本地化履约字段</h2>
           <form class="admin-form" data-admin-order-form>
             <input type="hidden" name="orderId" value="${order.id}" />
             <div class="admin-form-grid">
-              ${adminField("customerName", "Customer / entity name", operational.customerName)}
-              ${adminField("customerEmail", "Operational email", operational.customerEmail)}
-              <label>Preferred language
+              ${adminField("customerName", "客户/经营主体名称", operational.customerName)}
+              ${adminField("customerEmail", "运营联系邮箱", operational.customerEmail)}
+              <label>客户偏好语言
                 <select name="preferredLanguage">
                   ${languages.map(([code, label]) => `<option value="${code}" ${operational.preferredLanguage === code ? "selected" : ""}>${label}</option>`).join("")}
                 </select>
               </label>
-              ${adminField("phone", "Phone", operational.phone)}
-              ${adminField("country", "Country", operational.country)}
-              ${adminField("region", "Region / state / prefecture", operational.region)}
-              ${adminField("city", "City", operational.city)}
-              ${adminField("postalCode", "Postal code", operational.postalCode)}
-              ${adminField("addressLocal", "Local language / carrier address", operational.addressLocal, "textarea")}
-              ${adminField("addressEnglish", "English address", operational.addressEnglish, "textarea")}
-              ${adminField("carrier", "Carrier / delivery channel", operational.carrier)}
-              ${adminField("trackingNumber", "Tracking number", operational.trackingNumber)}
-              ${adminField("trackingUrl", "Tracking URL", operational.trackingUrl)}
-              ${adminField("fulfillmentStatus", "Fulfillment status", operational.fulfillmentStatus)}
-              ${adminField("deliveryNotes", "Delivery / production notes", operational.deliveryNotes, "textarea")}
-              ${adminField("supportNotes", "Support / dispute notes", operational.supportNotes, "textarea")}
-              ${adminField("riskDecision", "Risk decision", operational.riskDecision)}
-              <label>Edit reason<span class="required-dot">Required for audit log</span><textarea name="editReason" required placeholder="Carrier label localization, customer correction, postal code normalization, risk review note..."></textarea></label>
+              ${adminField("phone", "电话", operational.phone)}
+              ${adminField("country", "国家/地区", operational.country)}
+              ${adminField("region", "省/州/都道府县", operational.region)}
+              ${adminField("city", "城市", operational.city)}
+              ${adminField("postalCode", "邮编", operational.postalCode)}
+              ${adminField("addressLocal", "当地语言/快递面单地址", operational.addressLocal, "textarea")}
+              ${adminField("addressEnglish", "英文地址", operational.addressEnglish, "textarea")}
+              ${adminField("carrier", "物流商/交付渠道", operational.carrier)}
+              ${adminField("trackingNumber", "物流单号", operational.trackingNumber)}
+              ${adminField("trackingUrl", "物流查询链接", operational.trackingUrl)}
+              ${adminField("fulfillmentStatus", "履约状态", operational.fulfillmentStatus)}
+              ${adminField("deliveryNotes", "配送/生产备注", operational.deliveryNotes, "textarea")}
+              ${adminField("supportNotes", "客服/纠纷备注", operational.supportNotes, "textarea")}
+              ${adminField("riskDecision", "风控处理结论", operational.riskDecision)}
+              <label>编辑原因<span class="required-dot">审计日志必填</span><textarea name="editReason" required placeholder="例如：快递面单本地化、客户更正地址、邮编规范化、风控复核备注..."></textarea></label>
             </div>
-            <button class="button primary" type="submit">Save operational edit</button>
+            <button class="button primary" type="submit">保存运营修改</button>
           </form>
         </section>
       </section>
       <section class="admin-evidence-grid">
         <article class="admin-panel">
-          <span class="eyebrow">Risk review</span>
-          <h2>Flags</h2>
+          <span class="eyebrow">风控复核</span>
+          <h2>风险标记</h2>
           ${risks.map(([level, note]) => adminStatusPill(level, note)).join("")}
         </article>
         <article class="admin-panel">
-          <span class="eyebrow">Digital delivery</span>
-          <h2>Download/license records</h2>
-          ${digitalDelivery.length ? `<ul class="admin-list">${digitalDelivery.map(item => `<li><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.format)} · ${escapeHtml(item.status)} · Downloads: ${item.downloads} · IP: ${escapeHtml(item.downloadIp)}</span></li>`).join("")}</ul>` : `<p>No digital delivery required for this order.</p>`}
+          <span class="eyebrow">数字交付</span>
+          <h2>下载/授权记录</h2>
+          ${digitalDelivery.length ? `<ul class="admin-list">${digitalDelivery.map(item => `<li><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.format)} · ${escapeHtml(item.status)} · 下载次数: ${item.downloads} · IP: ${escapeHtml(item.downloadIp)}</span></li>`).join("")}</ul>` : `<p>该订单不需要数字交付。</p>`}
         </article>
         <article class="admin-panel">
-          <span class="eyebrow">Fulfillment</span>
-          <h2>Shipment evidence</h2>
+          <span class="eyebrow">履约记录</span>
+          <h2>物流/交付证据</h2>
           <dl class="admin-dl">
-            ${Object.entries(fulfillment).map(([key, value]) => `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
+            ${Object.entries(fulfillment).map(([key, value]) => `<div><dt>${escapeHtml(adminFulfillmentLabel(key))}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
           </dl>
         </article>
         <article class="admin-panel">
-          <span class="eyebrow">Audit log</span>
-          <h2>Edit history</h2>
-          ${audit.length ? `<ul class="admin-list">${audit.map(log => `<li><strong>${escapeHtml(log.at)}</strong><span>${escapeHtml(log.reason)} · Fields: ${escapeHtml((log.fields || []).join(", "))}</span></li>`).join("")}</ul>` : `<p>No operational edits recorded yet.</p>`}
+          <span class="eyebrow">审计日志</span>
+          <h2>编辑历史</h2>
+          ${audit.length ? `<ul class="admin-list">${audit.map(log => `<li><strong>${escapeHtml(log.at)}</strong><span>${escapeHtml(log.reason)} · 修改字段: ${escapeHtml((log.fields || []).join(", "))}</span></li>`).join("")}</ul>` : `<p>暂无运营编辑记录。</p>`}
         </article>
       </section>
     </main>
