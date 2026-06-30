@@ -983,6 +983,9 @@ const mockOrders = [
   {
     id: "AP-DEMO-1001",
     email: "customer@example.com",
+    createdAt: "2026-06-24T04:16:00.000Z",
+    address: "1-12-4 Jingumae, Shibuya-ku, Tokyo 150-0001, Japan",
+    notes: "Customer requested Japanese delivery updates and romanized address on carrier label.",
     total: 131,
     delivery: "Download access · License Agreement",
     status: "Digital files available",
@@ -990,12 +993,331 @@ const mockOrders = [
       { id: "urban-nook-stl-pack", qty: 1, price: 72 },
       { id: "desk-setup-stl-pack", qty: 1, price: 59 }
     ]
+  },
+  {
+    id: "AP-DEMO-1002",
+    email: "studio-buyer@example.fr",
+    createdAt: "2026-06-25T09:42:00.000Z",
+    address: "14 Rue des Petits Champs, 75002 Paris, France",
+    notes: "Physical premium desk item. Carrier label should use French address formatting.",
+    total: 384,
+    delivery: "Shipping required",
+    status: "Production review",
+    items: [
+      { id: "observatory-desk-command-center", qty: 1, price: 384 }
+    ]
+  },
+  {
+    id: "AP-DEMO-1003",
+    email: "maker-team@example.es",
+    createdAt: "2026-06-26T11:08:00.000Z",
+    address: "Carrer de Mallorca 214, 08008 Barcelona, Spain",
+    notes: "Commercial license order. Manual review required before certificate release.",
+    total: 747,
+    delivery: "License Agreement",
+    status: "Risk review",
+    items: [
+      { id: "maker-studio-pro-commercial-license", qty: 1, price: 747 }
+    ]
   }
 ];
 
 function findOrder(orderId) {
   const normalized = orderId.trim().toUpperCase();
   return [...getOrders(), ...mockOrders].find(order => order.id.toUpperCase() === normalized);
+}
+
+function escapeHtml(value = "") {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function adminStoredEdits() {
+  try {
+    return JSON.parse(localStorage.getItem("atelier-admin-order-edits") || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function saveAdminStoredEdits(edits) {
+  localStorage.setItem("atelier-admin-order-edits", JSON.stringify(edits));
+}
+
+function adminAuditLog() {
+  try {
+    return JSON.parse(localStorage.getItem("atelier-admin-audit-log") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveAdminAuditLog(logs) {
+  localStorage.setItem("atelier-admin-audit-log", JSON.stringify(logs.slice(0, 200)));
+}
+
+function adminAllOrders() {
+  const merged = [...getOrders(), ...mockOrders];
+  return merged
+    .filter((order, index, list) => list.findIndex(item => item.id === order.id) === index)
+    .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+function orderProducts(order) {
+  return (order.items || []).map(item => ({
+    ...item,
+    product: products.find(product => product.id === item.id)
+  }));
+}
+
+function orderTypes(order) {
+  return [...new Set(orderProducts(order).map(item => item.product?.type || "Unknown"))];
+}
+
+function defaultOperationalFields(order) {
+  const demoDefaults = {
+    "AP-DEMO-1001": {
+      customerName: "Mina Hart",
+      customerEmail: order.email,
+      preferredLanguage: "ja-JP",
+      phone: "+81 90 0000 1001",
+      country: "Japan",
+      region: "Tokyo",
+      city: "Shibuya-ku",
+      postalCode: "150-0001",
+      addressLocal: "〒150-0001 東京都渋谷区神宮前1-12-4",
+      addressEnglish: "1-12-4 Jingumae, Shibuya-ku, Tokyo 150-0001, Japan",
+      carrier: "Digital delivery",
+      trackingNumber: "",
+      trackingUrl: "",
+      fulfillmentStatus: "Digital access released",
+      deliveryNotes: "Customer prefers Japanese notifications. Digital files are available from order lookup.",
+      supportNotes: "No support issue reported.",
+      riskDecision: "Approved"
+    },
+    "AP-DEMO-1002": {
+      customerName: "Luc Martin",
+      customerEmail: order.email,
+      preferredLanguage: "fr-FR",
+      phone: "+33 6 00 00 10 02",
+      country: "France",
+      region: "Ile-de-France",
+      city: "Paris",
+      postalCode: "75002",
+      addressLocal: "14 Rue des Petits Champs, 75002 Paris, France",
+      addressEnglish: "14 Rue des Petits Champs, 75002 Paris, France",
+      carrier: "La Poste / Colissimo",
+      trackingNumber: "COL-DEMO-1002",
+      trackingUrl: "https://www.laposte.fr/outils/suivre-vos-envois",
+      fulfillmentStatus: "Made to order - production queued",
+      deliveryNotes: "Use French carrier label and include apartment/company line if customer replies.",
+      supportNotes: "Production photos should be attached before shipment.",
+      riskDecision: "Approved"
+    },
+    "AP-DEMO-1003": {
+      customerName: "Maker Team SL",
+      customerEmail: order.email,
+      preferredLanguage: "es-ES",
+      phone: "+34 600 000 103",
+      country: "Spain",
+      region: "Catalonia",
+      city: "Barcelona",
+      postalCode: "08008",
+      addressLocal: "Carrer de Mallorca 214, 08008 Barcelona, Espana",
+      addressEnglish: "Carrer de Mallorca 214, 08008 Barcelona, Spain",
+      carrier: "License certificate email",
+      trackingNumber: "",
+      trackingUrl: "",
+      fulfillmentStatus: "Manual license review",
+      deliveryNotes: "Confirm business entity name before sending commercial certificate.",
+      supportNotes: "High-value license. Keep review notes for evidence package.",
+      riskDecision: "Manual review"
+    }
+  };
+
+  return demoDefaults[order.id] || {
+    customerName: "",
+    customerEmail: order.email || "",
+    preferredLanguage: currentLang,
+    phone: "",
+    country: "",
+    region: "",
+    city: "",
+    postalCode: "",
+    addressLocal: order.address || "",
+    addressEnglish: order.address || "",
+    carrier: "",
+    trackingNumber: "",
+    trackingUrl: "",
+    fulfillmentStatus: order.status || "New order",
+    deliveryNotes: order.delivery || "",
+    supportNotes: order.notes || "",
+    riskDecision: "Pending review"
+  };
+}
+
+function adminOrderState(order) {
+  const edit = adminStoredEdits()[order.id] || {};
+  return {
+    ...defaultOperationalFields(order),
+    ...(edit.operational || {}),
+    updatedAt: edit.updatedAt || "",
+    updatedBy: edit.updatedBy || ""
+  };
+}
+
+function adminOrderRisk(order, operational = adminOrderState(order)) {
+  const types = orderTypes(order);
+  const logs = adminAuditLog().filter(log => log.orderId === order.id);
+  const risks = [];
+  if ((order.total || 0) >= 500) risks.push(["High", "High value order"]);
+  if (types.includes("Commercial License")) risks.push(["Medium", "Commercial license requires entity review"]);
+  if (types.includes("Digital STL Pack") && /refund/i.test(operational.supportNotes || "")) risks.push(["High", "Refund mention after digital delivery"]);
+  if (logs.some(log => /country|address|customerEmail|phone/i.test((log.fields || []).join(",")))) risks.push(["Medium", "Sensitive customer or shipping field edited"]);
+  if (!operational.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(operational.customerEmail)) risks.push(["High", "Operational email is missing or invalid"]);
+  if (!risks.length) risks.push(["Low", "No major risk rules matched"]);
+  return risks;
+}
+
+function adminDigitalDelivery(order) {
+  return orderProducts(order)
+    .filter(item => ["Digital STL Pack", "Commercial License"].includes(item.product?.type))
+    .map((item, index) => ({
+      name: item.product?.name || item.id,
+      format: item.product?.type === "Commercial License" ? "PDF License Certificate" : "STL, 3MF, PDF Guide",
+      status: order.status || "Pending",
+      firstAccess: order.id === "AP-DEMO-1001" ? "2026-06-24 04:22 UTC" : "Pending release",
+      firstDownload: order.id === "AP-DEMO-1001" ? "2026-06-24 04:24 UTC" : "Not downloaded",
+      downloads: order.id === "AP-DEMO-1001" ? index + 1 : 0,
+      downloadIp: order.id === "AP-DEMO-1001" ? "203.0.113.42" : "Not recorded"
+    }));
+}
+
+function adminFulfillmentEvidence(order, operational = adminOrderState(order)) {
+  const physical = orderTypes(order).some(type => ["Physical Product", "Custom Print"].includes(type));
+  return {
+    productionStatus: physical ? operational.fulfillmentStatus : "No physical shipment required",
+    carrier: operational.carrier || "Not assigned",
+    trackingNumber: operational.trackingNumber || "Not assigned",
+    trackingUrl: operational.trackingUrl || "",
+    carrierAddress: operational.addressLocal || operational.addressEnglish || "Not set",
+    labelLanguage: operational.preferredLanguage || "en",
+    photos: physical ? "Production and package photos should be attached before shipment." : "Not applicable"
+  };
+}
+
+function saveAdminOrderEdit(orderId, formData) {
+  const order = findOrder(orderId);
+  if (!order) return;
+  const previous = adminOrderState(order);
+  const operational = {
+    customerName: formData.customerName || "",
+    customerEmail: formData.customerEmail || "",
+    preferredLanguage: formData.preferredLanguage || "en",
+    phone: formData.phone || "",
+    country: formData.country || "",
+    region: formData.region || "",
+    city: formData.city || "",
+    postalCode: formData.postalCode || "",
+    addressLocal: formData.addressLocal || "",
+    addressEnglish: formData.addressEnglish || "",
+    carrier: formData.carrier || "",
+    trackingNumber: formData.trackingNumber || "",
+    trackingUrl: formData.trackingUrl || "",
+    fulfillmentStatus: formData.fulfillmentStatus || "",
+    deliveryNotes: formData.deliveryNotes || "",
+    supportNotes: formData.supportNotes || "",
+    riskDecision: formData.riskDecision || "Pending review"
+  };
+  const changedFields = Object.keys(operational).filter(key => String(previous[key] || "") !== String(operational[key] || ""));
+  const edits = adminStoredEdits();
+  edits[orderId] = {
+    operational,
+    updatedAt: new Date().toISOString(),
+    updatedBy: "Local admin preview"
+  };
+  saveAdminStoredEdits(edits);
+
+  if (changedFields.length) {
+    const logs = adminAuditLog();
+    logs.unshift({
+      id: `LOG-${Date.now()}`,
+      orderId,
+      at: new Date().toISOString(),
+      by: "Local admin preview",
+      reason: formData.editReason || "Operational correction",
+      fields: changedFields,
+      before: Object.fromEntries(changedFields.map(key => [key, previous[key] || ""])),
+      after: Object.fromEntries(changedFields.map(key => [key, operational[key] || ""]))
+    });
+    saveAdminAuditLog(logs);
+  }
+}
+
+function adminEvidencePackage(orderId) {
+  const order = findOrder(orderId);
+  if (!order) return null;
+  const operational = adminOrderState(order);
+  return {
+    generatedAt: new Date().toISOString(),
+    business: {
+      storefront: "Atelier Printworks",
+      legalEntity: businessName,
+      registration: companyRegistration,
+      supportEmail
+    },
+    order: {
+      id: order.id,
+      createdAt: order.createdAt || "",
+      originalEmail: order.email,
+      originalAddress: order.address || "",
+      originalNotes: order.notes || "",
+      total: order.total,
+      status: order.status,
+      delivery: order.delivery,
+      items: orderProducts(order).map(item => ({
+        id: item.id,
+        name: item.product?.name || item.id,
+        type: item.product?.type || "Unknown",
+        qty: item.qty,
+        price: item.price,
+        snapshot: item.product ? {
+          summary: item.product.summary,
+          delivery: item.product.delivery,
+          refund: item.product.refund,
+          license: item.product.license
+        } : {}
+      }))
+    },
+    operational,
+    risk: adminOrderRisk(order, operational),
+    digitalDelivery: adminDigitalDelivery(order),
+    fulfillment: adminFulfillmentEvidence(order, operational),
+    auditLog: adminAuditLog().filter(log => log.orderId === order.id),
+    policySnapshot: {
+      refund: policyPages["/refund-policy"].sections,
+      digitalGoods: policyPages["/digital-goods-policy"].sections,
+      terms: policyPages["/terms-of-service"].sections
+    }
+  };
+}
+
+function downloadAdminEvidence(orderId) {
+  const evidence = adminEvidencePackage(orderId);
+  if (!evidence) return;
+  const blob = new Blob([JSON.stringify(evidence, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${orderId}-evidence-package.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function cartBadgeCount() {
@@ -1626,6 +1948,167 @@ function faqPage() {
   `;
 }
 
+function adminStatusPill(label, value) {
+  return `<span class="admin-pill ${label.toLowerCase()}"><strong>${label}</strong>${escapeHtml(value)}</span>`;
+}
+
+function adminOrdersPage() {
+  const orders = adminAllOrders();
+  const pending = orders.filter(order => /review|queued|created|pending/i.test(order.status || "")).length;
+  const highRisk = orders.filter(order => adminOrderRisk(order).some(([level]) => level === "High")).length;
+  const digital = orders.filter(order => orderTypes(order).some(type => ["Digital STL Pack", "Commercial License"].includes(type))).length;
+  return `
+    ${nav()}
+    <main class="admin-shell">
+      <section class="admin-hero">
+        <span class="eyebrow">Operations Back Office</span>
+        <h1>Order evidence and risk console</h1>
+        <p>Internal preview for order operations, manual localization edits, delivery records, risk notes, audit history, and dispute evidence packages.</p>
+      </section>
+      <section class="admin-metrics">
+        <div><span>Total orders</span><strong>${orders.length}</strong></div>
+        <div><span>Pending operations</span><strong>${pending}</strong></div>
+        <div><span>Digital/license orders</span><strong>${digital}</strong></div>
+        <div><span>High-risk flags</span><strong>${highRisk}</strong></div>
+      </section>
+      <section class="admin-panel">
+        <div class="admin-panel-heading">
+          <div>
+            <span class="eyebrow">P0 module</span>
+            <h2>Orders</h2>
+          </div>
+          <a class="button secondary" href="#/audit-checklist">Readiness checklist</a>
+        </div>
+        <div class="admin-table" role="table" aria-label="Admin orders">
+          <div class="admin-table-row admin-table-head" role="row">
+            <span>Order</span><span>Customer</span><span>Type</span><span>Total</span><span>Risk</span><span>Status</span><span></span>
+          </div>
+          ${orders.map(order => {
+            const operational = adminOrderState(order);
+            const risk = adminOrderRisk(order, operational)[0];
+            return `
+              <article class="admin-table-row" role="row">
+                <span><strong>${order.id}</strong><small>${escapeHtml(new Date(order.createdAt || Date.now()).toLocaleString("en-US"))}</small></span>
+                <span>${escapeHtml(operational.customerEmail || order.email)}<small>${escapeHtml(operational.country || "Country not set")}</small></span>
+                <span>${orderTypes(order).map(type => `<small>${escapeHtml(type)}</small>`).join("")}</span>
+                <span><strong>${money(order.total || 0)}</strong></span>
+                <span>${adminStatusPill(risk[0], risk[1])}</span>
+                <span>${escapeHtml(operational.fulfillmentStatus || order.status || "New")}</span>
+                <span><a class="button secondary compact-button" href="#/admin/orders/${order.id}">Open</a></span>
+              </article>
+            `;
+          }).join("")}
+        </div>
+      </section>
+    </main>
+  `;
+}
+
+function adminField(name, label, value, type = "text") {
+  const safe = escapeHtml(value || "");
+  if (type === "textarea") {
+    return `<label>${label}<textarea name="${name}">${safe}</textarea></label>`;
+  }
+  return `<label>${label}<input name="${name}" value="${safe}" /></label>`;
+}
+
+function adminOrderDetailPage(orderId) {
+  const order = findOrder(orderId);
+  if (!order) return placeholderPage("Admin order not found", "The requested order record does not exist.");
+  const operational = adminOrderState(order);
+  const risks = adminOrderRisk(order, operational);
+  const digitalDelivery = adminDigitalDelivery(order);
+  const fulfillment = adminFulfillmentEvidence(order, operational);
+  const audit = adminAuditLog().filter(log => log.orderId === order.id);
+  return `
+    ${nav()}
+    <main class="admin-shell">
+      <section class="admin-hero compact-admin-hero">
+        <span class="eyebrow">Order Operations</span>
+        <h1>${order.id}</h1>
+        <p>Original customer data is preserved. Operational fields can be localized for carrier labels, customer support, and dispute evidence.</p>
+        <div class="hero-actions">
+          <a class="button secondary" href="#/admin">Back to admin</a>
+          <button class="button primary" data-export-evidence="${order.id}" type="button">Export evidence package</button>
+        </div>
+      </section>
+      <section class="admin-detail-grid">
+        <aside class="admin-panel">
+          <span class="eyebrow">Original order snapshot</span>
+          <h2>Immutable record</h2>
+          <dl class="admin-dl">
+            <div><dt>Original email</dt><dd>${escapeHtml(order.email)}</dd></div>
+            <div><dt>Original address</dt><dd>${escapeHtml(order.address || "Not provided")}</dd></div>
+            <div><dt>Original notes</dt><dd>${escapeHtml(order.notes || "None")}</dd></div>
+            <div><dt>Total</dt><dd>${money(order.total || 0)}</dd></div>
+            <div><dt>Status</dt><dd>${escapeHtml(order.status || "New")}</dd></div>
+          </dl>
+          <h3>Products</h3>
+          <ul class="admin-list">
+            ${orderProducts(order).map(item => `<li><strong>${escapeHtml(item.product?.name || item.id)}</strong><span>${escapeHtml(item.product?.type || "Unknown")} · ${item.qty} × ${money(item.price || 0)}</span></li>`).join("")}
+          </ul>
+        </aside>
+        <section class="admin-panel">
+          <span class="eyebrow">Manual operations edit</span>
+          <h2>Localized fulfillment fields</h2>
+          <form class="admin-form" data-admin-order-form>
+            <input type="hidden" name="orderId" value="${order.id}" />
+            <div class="admin-form-grid">
+              ${adminField("customerName", "Customer / entity name", operational.customerName)}
+              ${adminField("customerEmail", "Operational email", operational.customerEmail)}
+              <label>Preferred language
+                <select name="preferredLanguage">
+                  ${languages.map(([code, label]) => `<option value="${code}" ${operational.preferredLanguage === code ? "selected" : ""}>${label}</option>`).join("")}
+                </select>
+              </label>
+              ${adminField("phone", "Phone", operational.phone)}
+              ${adminField("country", "Country", operational.country)}
+              ${adminField("region", "Region / state / prefecture", operational.region)}
+              ${adminField("city", "City", operational.city)}
+              ${adminField("postalCode", "Postal code", operational.postalCode)}
+              ${adminField("addressLocal", "Local language / carrier address", operational.addressLocal, "textarea")}
+              ${adminField("addressEnglish", "English address", operational.addressEnglish, "textarea")}
+              ${adminField("carrier", "Carrier / delivery channel", operational.carrier)}
+              ${adminField("trackingNumber", "Tracking number", operational.trackingNumber)}
+              ${adminField("trackingUrl", "Tracking URL", operational.trackingUrl)}
+              ${adminField("fulfillmentStatus", "Fulfillment status", operational.fulfillmentStatus)}
+              ${adminField("deliveryNotes", "Delivery / production notes", operational.deliveryNotes, "textarea")}
+              ${adminField("supportNotes", "Support / dispute notes", operational.supportNotes, "textarea")}
+              ${adminField("riskDecision", "Risk decision", operational.riskDecision)}
+              <label>Edit reason<span class="required-dot">Required for audit log</span><textarea name="editReason" required placeholder="Carrier label localization, customer correction, postal code normalization, risk review note..."></textarea></label>
+            </div>
+            <button class="button primary" type="submit">Save operational edit</button>
+          </form>
+        </section>
+      </section>
+      <section class="admin-evidence-grid">
+        <article class="admin-panel">
+          <span class="eyebrow">Risk review</span>
+          <h2>Flags</h2>
+          ${risks.map(([level, note]) => adminStatusPill(level, note)).join("")}
+        </article>
+        <article class="admin-panel">
+          <span class="eyebrow">Digital delivery</span>
+          <h2>Download/license records</h2>
+          ${digitalDelivery.length ? `<ul class="admin-list">${digitalDelivery.map(item => `<li><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.format)} · ${escapeHtml(item.status)} · Downloads: ${item.downloads} · IP: ${escapeHtml(item.downloadIp)}</span></li>`).join("")}</ul>` : `<p>No digital delivery required for this order.</p>`}
+        </article>
+        <article class="admin-panel">
+          <span class="eyebrow">Fulfillment</span>
+          <h2>Shipment evidence</h2>
+          <dl class="admin-dl">
+            ${Object.entries(fulfillment).map(([key, value]) => `<div><dt>${escapeHtml(key)}</dt><dd>${escapeHtml(value)}</dd></div>`).join("")}
+          </dl>
+        </article>
+        <article class="admin-panel">
+          <span class="eyebrow">Audit log</span>
+          <h2>Edit history</h2>
+          ${audit.length ? `<ul class="admin-list">${audit.map(log => `<li><strong>${escapeHtml(log.at)}</strong><span>${escapeHtml(log.reason)} · Fields: ${escapeHtml((log.fields || []).join(", "))}</span></li>`).join("")}</ul>` : `<p>No operational edits recorded yet.</p>`}
+        </article>
+      </section>
+    </main>
+  `;
+}
+
 function auditChecklistPage() {
   const checks = [
     ["Pass", "Homepage complete", "Hero, categories, featured products, delivery, trust modules, FAQ, and footer are present."],
@@ -1664,12 +2147,15 @@ function route() {
   const raw = location.hash.replace("#", "") || "/";
   const path = raw.split("?")[0];
   const productMatch = path.match(/^\/products\/(.+)$/);
+  const adminOrderMatch = path.match(/^\/admin\/orders\/(.+)$/);
   if (path === "/") return homePage();
   if (path === "/products") return productsPage();
   if (path === "/cart") return cartPage();
   if (path === "/checkout") return checkoutPage();
   if (path === "/order-lookup") return orderLookupPage();
   if (path === "/order-success") return orderSuccessPage();
+  if (path === "/admin") return adminOrdersPage();
+  if (adminOrderMatch) return adminOrderDetailPage(adminOrderMatch[1]);
   if (path === "/audit-checklist") return auditChecklistPage();
   if (path === "/about") return aboutPage();
   if (path === "/contact") return contactPage();
@@ -1738,6 +2224,18 @@ function render() {
       render();
     });
   }
+  const adminOrderForm = app.querySelector("[data-admin-order-form]");
+  if (adminOrderForm) {
+    adminOrderForm.addEventListener("submit", event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(adminOrderForm));
+      saveAdminOrderEdit(data.orderId, data);
+      render();
+    });
+  }
+  app.querySelectorAll("[data-export-evidence]").forEach(button => {
+    button.addEventListener("click", () => downloadAdminEvidence(button.dataset.exportEvidence));
+  });
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 

@@ -30,6 +30,14 @@ const checks = [
     pass: main.includes("/audit-checklist") && main.includes("auditChecklistPage")
   },
   {
+    name: "admin back office routes exist",
+    pass: main.includes('path === "/admin"') && main.includes("adminOrdersPage") && main.includes("adminOrderDetailPage")
+  },
+  {
+    name: "admin operations preserve evidence trail",
+    pass: main.includes("saveAdminOrderEdit") && main.includes("adminAuditLog") && main.includes("downloadAdminEvidence")
+  },
+  {
     name: "policy pages have structured sections",
     pass: main.includes("policyPages") && main.includes("Digital goods")
   },
