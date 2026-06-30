@@ -42,6 +42,10 @@ const checks = [
     pass: main.includes("订单证据与风控工作台") && main.includes("运营手工编辑") && main.includes("导出证据包")
   },
   {
+    name: "membership page has safe plan structure",
+    pass: main.includes('path === "/membership"') && main.includes("Maker Monthly") && main.includes("$699") && main.includes("不能提现、转让、兑换现金")
+  },
+  {
     name: "policy pages have structured sections",
     pass: main.includes("policyPages") && main.includes("Digital goods")
   },

@@ -266,6 +266,7 @@ const footerGroups = [
       ["Products", "#/products"],
       ["Custom Print", "#/products?category=custom"],
       ["STL Packs", "#/products?category=stl"],
+      ["Membership", "#/membership"],
       ["Commercial License", "#/commercial-license"]
     ]
   },
@@ -309,6 +310,7 @@ const dict = {
     navProducts: "Products",
     navCustom: "Custom Print",
     navStl: "STL Packs",
+    navMembership: "Membership",
     navLicense: "Commercial License",
     navAbout: "About",
     navContact: "Contact",
@@ -325,6 +327,7 @@ const dict = {
     customPrint: "Custom Print",
     stlPacks: "STL Packs",
     commercialLicense: "Commercial License",
+    membership: "Membership",
     orderLookup: "Order Lookup",
     contactUs: "Contact Us",
     faq: "FAQ",
@@ -422,6 +425,7 @@ const dict = {
     navProducts: "商品",
     navCustom: "定制打印",
     navStl: "STL 文件包",
+    navMembership: "会员方案",
     navLicense: "商业授权",
     navAbout: "关于我们",
     navContact: "联系我们",
@@ -438,6 +442,7 @@ const dict = {
     customPrint: "定制打印",
     stlPacks: "STL 文件包",
     commercialLicense: "商业授权",
+    membership: "会员方案",
     orderLookup: "订单查询",
     contactUs: "联系我们",
     faq: "常见问题",
@@ -535,6 +540,7 @@ const dict = {
     navProducts: "商品",
     navCustom: "カスタムプリント",
     navStl: "STLパック",
+    navMembership: "メンバーシップ",
     navLicense: "商用ライセンス",
     navAbout: "会社情報",
     navContact: "お問い合わせ",
@@ -629,7 +635,8 @@ dict["fr-FR"] = {
   licenseAgreement: "Accord de licence",
   navProducts: "Produits",
   navCustom: "Impression sur mesure",
-  navStl: "Packs STL",
+    navStl: "Packs STL",
+  navMembership: "Adhésion",
   navLicense: "Licence commerciale",
   navAbout: "À propos",
   navContact: "Contact",
@@ -673,7 +680,8 @@ dict["es-ES"] = {
   licenseAgreement: "Acuerdo de licencia",
   navProducts: "Productos",
   navCustom: "Impresión personalizada",
-  navStl: "Packs STL",
+    navStl: "Packs STL",
+  navMembership: "Membresía",
   navLicense: "Licencia comercial",
   navAbout: "Sobre nosotros",
   navContact: "Contacto",
@@ -867,6 +875,7 @@ function labelFromFooter(label) {
     Products: "products",
     "Custom Print": "customPrint",
     "STL Packs": "stlPacks",
+    Membership: "membership",
     "Commercial License": "commercialLicense",
     "Order Lookup": "orderLookup",
     "Contact Us": "contactUs",
@@ -1389,6 +1398,7 @@ function nav() {
     ["#/products", t("navProducts")],
     ["#/products?category=custom", t("navCustom")],
     ["#/products?category=stl", t("navStl")],
+    ["#/membership", t("navMembership")],
     ["#/commercial-license", t("navLicense")],
     ["#/about", t("navAbout")],
     ["#/contact", t("navContact")]
@@ -1578,6 +1588,149 @@ function homePage() {
         <details>
           <summary>${t("q3")}</summary>
           <p>${t("a3")}</p>
+        </details>
+      </section>
+    </main>
+    ${footer()}
+  `;
+}
+
+function membershipPage() {
+  const plans = [
+    {
+      name: "Maker Monthly",
+      price: "$39",
+      period: "/ month",
+      audience: "For individual makers who want regular access to original STL releases and member-only previews.",
+      cnAudience: "适合希望定期获取原创 STL 文件和会员新品预览的个人创作者。",
+      benefits: [
+        "1 original STL Release Pack per paid month",
+        "STL, 3MF, and PDF Guide files where applicable",
+        "Member-only previews",
+        "10% discount on selected physical products",
+        "Priority custom print request review",
+        "Priority support within 24-48 business hours"
+      ]
+    },
+    {
+      name: "Maker Quarterly",
+      price: "$99",
+      period: "/ 3 months",
+      audience: "For regular 3D printing customers who prefer a 3-month release cycle and better member savings.",
+      cnAudience: "适合稳定打印用户，以 3 个月为周期获得原创模型内容和更高会员优惠。",
+      benefits: [
+        "3 paid membership months",
+        "3 original STL Release Packs in total",
+        "Member-only previews",
+        "15% discount on selected physical products",
+        "Priority custom print request review",
+        "10% discount on eligible Commercial License purchases",
+        "Priority support within 24-48 business hours"
+      ]
+    },
+    {
+      name: "Studio Annual",
+      price: "$699",
+      period: "/ year",
+      badge: "Best for Studios",
+      audience: "For small studios, advanced makers, and long-term 3D printing customers who need a full-year content pipeline.",
+      cnAudience: "适合小型工作室、高频创作者和长期 3D 打印客户，约为 4999 元级别年度会员。",
+      benefits: [
+        "12 paid membership months",
+        "12 monthly original STL Release Packs",
+        "4 quarterly Premium STL Bundles",
+        "20% discount on selected physical products",
+        "Priority custom print request review",
+        "2 small custom print design reviews per year",
+        "20% discount on eligible Commercial License purchases",
+        "PDF membership certificate"
+      ]
+    }
+  ];
+
+  return `
+    ${nav()}
+    <main>
+      <section class="membership-hero">
+        <div>
+          <span class="eyebrow">Atelier Maker Membership</span>
+          <h1>原创 STL 内容、会员预览和工作室优先支持。</h1>
+          <p>面向 3D 打印爱好者、小型工作室和长期创作者客户的数字会员服务。会员费用用于页面列明的数字访问和服务权益，不产生账户余额。</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#/membership-plans">查看会员方案</a>
+            <a class="button secondary" href="#/digital-goods-policy">数字商品政策</a>
+          </div>
+        </div>
+        <div class="membership-visual">
+          ${renderIllustration(products.find(product => product.id === "urban-nook-stl-pack") || products[4], 4)}
+          <div class="membership-visual-note">
+            <strong>Monthly STL access</strong>
+            <span>STL · 3MF · PDF Guide · Member previews</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section membership-section" id="membership-plans">
+        <div class="section-heading">
+          <span class="eyebrow">Membership Plans</span>
+          <h2>选择适合你的创作者会员。</h2>
+          <p>三档会员均为数字内容与服务权益，不是钱包、储值余额、礼品卡或可转让代金券。</p>
+        </div>
+        <div class="membership-grid">
+          ${plans.map(plan => `
+            <article class="membership-card ${plan.badge ? "featured-membership" : ""}">
+              ${plan.badge ? `<span class="membership-badge">${plan.badge}</span>` : ""}
+              <h3>${plan.name}</h3>
+              <p>${plan.cnAudience}</p>
+              <div class="membership-price"><strong>${plan.price}</strong><span>${plan.period}</span></div>
+              <ul>
+                ${plan.benefits.map(benefit => `<li>${benefit}</li>`).join("")}
+              </ul>
+              <a class="button ${plan.badge ? "primary" : "secondary"}" href="#/contact">联系开通</a>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+
+      <section class="membership-notice">
+        <strong>重要说明</strong>
+        <p>Atelier 创作者会员是一项数字会员服务，不是储值账户、钱包、充值余额、预付卡、礼品卡、现金积分、代币、虚拟币或可转让代金券。会员权益不能提现、转让、兑换现金、转售，也不能作为通用支付余额使用。</p>
+      </section>
+
+      <section class="membership-policy-grid">
+        <article>
+          <span class="eyebrow">Digital Delivery</span>
+          <h2>数字交付</h2>
+          <p>会员权益通过客户订单页和会员记录进行数字交付。STL 发布包会在每个已付费会员月开放；Studio 年度会员会按季度获得 Premium STL Bundle。</p>
+        </article>
+        <article>
+          <span class="eyebrow">Refund Rules</span>
+          <h2>退款规则</h2>
+          <p>如果尚未访问或使用任何会员文件、预览内容、折扣、会员证书或服务权益，可联系客服申请取消或退款审核。一旦访问或使用相关权益，该已付费会员周期原则上不支持无理由退款。</p>
+        </article>
+        <article>
+          <span class="eyebrow">Commercial Use</span>
+          <h2>商业使用</h2>
+          <p>会员 STL 文件默认仅限个人使用。若要销售由文件打印出的实体商品，需要另行购买商业授权。会员折扣不等于自动获得商业销售权。</p>
+        </article>
+      </section>
+
+      <section class="section faq-preview">
+        <div class="section-heading">
+          <span class="eyebrow">Membership FAQ</span>
+          <h2>会员常见问题。</h2>
+        </div>
+        <details open>
+          <summary>会员是储值余额或积分吗？</summary>
+          <p>不是。Atelier 创作者会员不是储值余额、钱包、礼品卡、积分、代币或充值账户。会员仅提供页面列明的数字访问和服务权益。</p>
+        </details>
+        <details>
+          <summary>会员权益可以提现吗或转让吗？</summary>
+          <p>不可以。会员权益不能提现、转让、兑换现金、转售，也不能作为通用支付余额使用。</p>
+        </details>
+        <details>
+          <summary>会员是否自动包含商业销售权？</summary>
+          <p>不包含。若要销售由 STL 文件打印出的实体商品，需要另行购买符合条件的 Commercial License。</p>
         </details>
       </section>
     </main>
@@ -2176,6 +2329,7 @@ function route() {
   const adminOrderMatch = path.match(/^\/admin\/orders\/(.+)$/);
   if (path === "/") return homePage();
   if (path === "/products") return productsPage();
+  if (path === "/membership") return membershipPage();
   if (path === "/cart") return cartPage();
   if (path === "/checkout") return checkoutPage();
   if (path === "/order-lookup") return orderLookupPage();
