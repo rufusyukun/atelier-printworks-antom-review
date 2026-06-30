@@ -22,6 +22,7 @@ ANTOM_CLIENT_ID=
 ANTOM_MERCHANT_ID=
 ANTOM_PRIVATE_KEY=
 ANTOM_PUBLIC_KEY=
+ANTOM_MERCHANT_PUBLIC_KEY=
 ANTOM_KEY_VERSION=1
 ANTOM_MERCHANT_REGION=HK
 
@@ -30,7 +31,15 @@ SUPABASE_SERVICE_ROLE_KEY=
 SUPABASE_ORDERS_TABLE=orders
 ```
 
-Use `PAYMENT_MODE=mock` for local development and non-payment QA.
+Use `PAYMENT_MODE=mock` for local development and non-payment QA. Use `PAYMENT_MODE=sandbox` for hosted-checkout sandbox testing after all required payment credentials are set. Use `PAYMENT_MODE=live` only after a successful low-value payment test.
+
+Check configuration without exposing secrets:
+
+```text
+/.netlify/functions/payment-config-check
+```
+
+This endpoint only returns mode, missing variable names, and basic key-shape checks. It never returns key values.
 
 ## Order Storage
 
@@ -64,6 +73,8 @@ The `payload` JSON stores the full order evidence package: merchant order ID, pa
 
 - Confirm the official account's API base URL and create-payment-session path.
 - Paste the private key and public key as Netlify secrets, preserving line breaks or using base64 body text.
+- Confirm `ANTOM_CLIENT_ID` and `ANTOM_MERCHANT_ID` from the sandbox account.
+- Set `PAYMENT_MODE=sandbox` and verify `/.netlify/functions/payment-config-check` returns `readyForApi: true`.
 - Run one low-value live payment with a digital-only cart.
 - Verify the order moves from `pending_payment` to `paid` through webhook.
 - Verify the operations dashboard can see the payment evidence fields.

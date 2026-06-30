@@ -12,6 +12,7 @@ const orderCreatePath = join(root, "netlify/functions/orders-create.mjs");
 const paymentSessionPath = join(root, "netlify/functions/payment-session.mjs");
 const paymentWebhookPath = join(root, "netlify/functions/payment-webhook.mjs");
 const ordersGetPath = join(root, "netlify/functions/orders-get.mjs");
+const paymentConfigCheckPath = join(root, "netlify/functions/payment-config-check.mjs");
 const orderService = existsSync(orderServicePath) ? readFileSync(orderServicePath, "utf8") : "";
 const specificPaymentReviewBrand = new RegExp(["an", "tom"].join(""), "i");
 
@@ -105,7 +106,7 @@ const checks = [
   },
   {
     name: "payment-ready Netlify functions exist",
-    pass: [orderServicePath, orderCreatePath, paymentSessionPath, paymentWebhookPath, ordersGetPath].every(file => existsSync(file))
+    pass: [orderServicePath, orderCreatePath, paymentSessionPath, paymentWebhookPath, ordersGetPath, paymentConfigCheckPath].every(file => existsSync(file))
   },
   {
     name: "server order service defines durable payment states and evidence fields",
@@ -121,8 +122,17 @@ const checks = [
     pass: orderService.includes("signApiRequest") &&
       orderService.includes("verifyApiSignature") &&
       orderService.includes("ANTOM_PRIVATE_KEY") &&
+      orderService.includes("ANTOM_MERCHANT_PUBLIC_KEY") &&
+      orderService.includes("paymentConfigStatus") &&
       !main.includes("ANTOM_PRIVATE_KEY") &&
       !main.includes("ANTOM_CLIENT_ID")
+  },
+  {
+    name: "payment API supports sandbox and live without exposing keys",
+    pass: orderService.includes("[\"sandbox\", \"live\"]") &&
+      existsSync(paymentConfigCheckPath) &&
+      !html.includes("ANTOM_PRIVATE_KEY") &&
+      !css.includes("ANTOM_PRIVATE_KEY")
   },
   {
     name: "checkout creates server order before hosted payment session",

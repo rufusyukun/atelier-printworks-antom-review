@@ -39,6 +39,10 @@ function normalizePemKey(key, label) {
   return `-----BEGIN ${label}-----\n${wrapped}\n-----END ${label}-----`;
 }
 
+function hasPlaceholder(value = "") {
+  return !value || String(value).includes("...");
+}
+
 export function jsonResponse(statusCode, body) {
   return {
     statusCode,
@@ -251,6 +255,10 @@ export function paymentMode() {
   return env("PAYMENT_MODE") || "mock";
 }
 
+export function paymentApiEnabled() {
+  return ["sandbox", "live"].includes(paymentMode());
+}
+
 export function siteUrl() {
   return (env("SITE_URL") || "https://atelier-printworks-store.netlify.app").replace(/\/$/, "");
 }
@@ -263,8 +271,28 @@ export function antomConfig() {
     merchantId: env("ANTOM_MERCHANT_ID"),
     privateKey: env("ANTOM_PRIVATE_KEY"),
     publicKey: env("ANTOM_PUBLIC_KEY"),
+    merchantPublicKey: env("ANTOM_MERCHANT_PUBLIC_KEY"),
     keyVersion: env("ANTOM_KEY_VERSION") || "1",
     merchantRegion: env("ANTOM_MERCHANT_REGION") || "HK"
+  };
+}
+
+export function paymentConfigStatus() {
+  const config = antomConfig();
+  const requiredForApi = ["apiBaseUrl", "clientId", "merchantId", "privateKey", "publicKey"];
+  const missing = requiredForApi.filter(key => hasPlaceholder(config[key]));
+  const privateKeyLooksValid = !hasPlaceholder(config.privateKey) && /^MII[A-Za-z0-9+/=]+$/.test(config.privateKey.replace(/\s|-----.*?-----/g, ""));
+  const publicKeyLooksValid = !hasPlaceholder(config.publicKey) && /^MII[A-Za-z0-9+/=]+$/.test(config.publicKey.replace(/\s|-----.*?-----/g, ""));
+  return {
+    mode: paymentMode(),
+    apiEnabled: paymentApiEnabled(),
+    readyForApi: missing.length === 0 && privateKeyLooksValid && publicKeyLooksValid,
+    missing,
+    keyChecks: {
+      privateKeyLooksValid,
+      publicKeyLooksValid,
+      merchantPublicKeyPresent: !hasPlaceholder(config.merchantPublicKey)
+    }
   };
 }
 

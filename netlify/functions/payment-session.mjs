@@ -1,4 +1,4 @@
-import { antomConfig, jsonResponse, paymentMode, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
+import { antomConfig, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
 
 function mockCheckoutUrl(order) {
   const params = new URLSearchParams({ order: order.id, payment: "mock_pending" });
@@ -7,7 +7,7 @@ function mockCheckoutUrl(order) {
 
 async function createHostedPaymentSession(order) {
   const config = antomConfig();
-  if (paymentMode() !== "live") {
+  if (!paymentApiEnabled()) {
     return {
       paymentSessionId: `mock-session-${order.id}`,
       paymentRequestId: `mock-request-${order.id}`,
@@ -15,8 +15,9 @@ async function createHostedPaymentSession(order) {
       mode: "mock"
     };
   }
-  if (!config.apiBaseUrl || !config.clientId || !config.merchantId || !config.privateKey) {
-    throw new Error("Live payment mode is missing required server environment variables");
+  const status = paymentConfigStatus();
+  if (!status.readyForApi) {
+    throw new Error(`Payment API mode is missing required server environment variables: ${status.missing.join(", ")}`);
   }
 
   const requestUri = config.createSessionPath;
@@ -70,7 +71,7 @@ async function createHostedPaymentSession(order) {
     paymentSessionId: body.paymentSessionData?.paymentSessionId || body.paymentSessionId || "",
     paymentRequestId: body.paymentRequestId || order.id,
     checkoutUrl: body.paymentSessionData?.paymentRedirectUrl || body.normalUrl || body.checkoutUrl || "",
-    mode: "live"
+    mode: paymentMode()
   };
 }
 
@@ -78,7 +79,7 @@ export async function handler(event) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
   const payload = JSON.parse(event.body || "{}");
   let order = await getOrder(payload.orderId);
-  if (!order && payload.orderSnapshot && paymentMode() !== "live") {
+  if (!order && payload.orderSnapshot && !paymentApiEnabled()) {
     order = normalizeOrderPayload(payload.orderSnapshot, event);
     await saveOrder(order);
   }
