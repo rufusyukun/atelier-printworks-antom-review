@@ -46,6 +46,13 @@ const checks = [
     pass: main.includes('path === "/membership"') && main.includes("Maker Monthly") && main.includes("$699") && main.includes("不能提现、转让、兑换现金")
   },
   {
+    name: "membership page is localized across supported languages",
+    pass: main.includes("const localizedMembership") &&
+      ["en", "zh-CN", "ja-JP", "fr-FR", "es-ES"].every(locale => main.includes(`${locale}:`) || main.includes(`"${locale}":`)) &&
+      main.includes("membership.plans.map") &&
+      !main.includes("cnAudience")
+  },
+  {
     name: "policy pages have structured sections",
     pass: main.includes("policyPages") && main.includes("Digital goods")
   },

@@ -735,6 +735,369 @@ const localizedCategories = {
   }
 };
 
+const localizedMembership = {
+  en: {
+    eyebrow: "Atelier Maker Membership",
+    title: "Original STL access, member previews, and priority studio support.",
+    body: "A digital membership service for 3D printing hobbyists, small studios, and long-term maker customers. Membership fees cover the listed digital access and service benefits only; they do not create an account balance.",
+    primaryCta: "View membership plans",
+    secondaryCta: "Digital goods policy",
+    visualTitle: "Monthly STL access",
+    visualBody: "STL · 3MF · PDF Guide · Member previews",
+    plansEyebrow: "Membership Plans",
+    plansTitle: "Choose the creator membership that fits your workflow.",
+    plansBody: "All three plans are digital content and service benefits. They are not a wallet, stored balance, gift card, or transferable voucher.",
+    contactCta: "Contact to activate",
+    importantTitle: "Important note",
+    importantBody: "Atelier Maker Membership is a digital membership service. It is not a stored-value account, wallet, top-up balance, prepaid card, gift card, cash credit, token, virtual currency, or transferable voucher. Membership benefits cannot be withdrawn, transferred, exchanged for cash, resold, or used as a general payment balance.",
+    policy: [
+      ["Digital Delivery", "Digital delivery", "Membership benefits are delivered through the customer order page and membership records. STL release packs open during each paid membership month; Studio Annual members receive Premium STL Bundles quarterly."],
+      ["Refund Rules", "Refund rules", "If no membership files, previews, discounts, certificates, or service benefits have been accessed or used, you may contact support for cancellation or refund review. Once benefits are accessed or used, the paid membership period is generally not eligible for no-reason refunds."],
+      ["Commercial Use", "Commercial use", "Membership STL files are for personal use by default. Selling physical prints made from the files requires a separate Commercial License. Membership discounts do not automatically grant commercial selling rights."]
+    ],
+    faqEyebrow: "Membership FAQ",
+    faqTitle: "Membership questions.",
+    faq: [
+      ["Is membership a stored balance or points program?", "No. Atelier Maker Membership is not a stored balance, wallet, gift card, points program, token, or top-up account. It only provides the listed digital access and service benefits."],
+      ["Can membership benefits be withdrawn or transferred?", "No. Membership benefits cannot be withdrawn, transferred, exchanged for cash, resold, or used as a general payment balance."],
+      ["Does membership automatically include commercial selling rights?", "No. To sell physical prints made from STL files, you need to purchase an eligible Commercial License separately."]
+    ],
+    plans: [
+      {
+        name: "Maker Monthly",
+        period: "/ month",
+        audience: "For individual makers who want regular access to original STL releases and member-only previews.",
+        benefits: [
+          "1 original STL Release Pack per paid month",
+          "STL, 3MF, and PDF Guide files where applicable",
+          "Member-only previews",
+          "10% discount on selected physical products",
+          "Priority custom print request review",
+          "Priority support within 24-48 business hours"
+        ]
+      },
+      {
+        name: "Maker Quarterly",
+        period: "/ 3 months",
+        audience: "For regular 3D printing customers who prefer a 3-month release cycle and better member savings.",
+        benefits: [
+          "3 paid membership months",
+          "3 original STL Release Packs in total",
+          "Member-only previews",
+          "15% discount on selected physical products",
+          "Priority custom print request review",
+          "10% discount on eligible Commercial License purchases",
+          "Priority support within 24-48 business hours"
+        ]
+      },
+      {
+        name: "Studio Annual",
+        period: "/ year",
+        badge: "Best for Studios",
+        audience: "For small studios, advanced makers, and long-term 3D printing customers who need a full-year content pipeline.",
+        benefits: [
+          "12 paid membership months",
+          "12 monthly original STL Release Packs",
+          "4 quarterly Premium STL Bundles",
+          "20% discount on selected physical products",
+          "Priority custom print request review",
+          "2 small custom print design reviews per year",
+          "20% discount on eligible Commercial License purchases",
+          "PDF membership certificate"
+        ]
+      }
+    ]
+  },
+  "zh-CN": {
+    eyebrow: "Atelier 创作者会员",
+    title: "原创 STL 内容、会员预览和工作室优先支持。",
+    body: "面向 3D 打印爱好者、小型工作室和长期创作者客户的数字会员服务。会员费用仅对应页面列明的数字访问和服务权益，不产生账户余额。",
+    primaryCta: "查看会员方案",
+    secondaryCta: "数字商品政策",
+    visualTitle: "每月 STL 访问",
+    visualBody: "STL · 3MF · PDF 指南 · 会员预览",
+    plansEyebrow: "会员方案",
+    plansTitle: "选择适合你的创作者会员。",
+    plansBody: "三档会员均为数字内容与服务权益，不是钱包、储值余额、礼品卡或可转让代金券。",
+    contactCta: "联系开通",
+    importantTitle: "重要说明",
+    importantBody: "Atelier 创作者会员是一项数字会员服务，不是储值账户、钱包、充值余额、预付卡、礼品卡、现金积分、代币、虚拟币或可转让代金券。会员权益不能提现、转让、兑换现金、转售，也不能作为通用支付余额使用。",
+    policy: [
+      ["数字交付", "数字交付", "会员权益通过客户订单页和会员记录进行数字交付。STL 发布包会在每个已付费会员月开放；Studio 年度会员会按季度获得 Premium STL Bundle。"],
+      ["退款规则", "退款规则", "如果尚未访问或使用任何会员文件、预览内容、折扣、会员证书或服务权益，可联系客服申请取消或退款审核。一旦访问或使用相关权益，该已付费会员周期原则上不支持无理由退款。"],
+      ["商业使用", "商业使用", "会员 STL 文件默认仅限个人使用。若要销售由文件打印出的实体商品，需要另行购买商业授权。会员折扣不等于自动获得商业销售权。"]
+    ],
+    faqEyebrow: "会员常见问题",
+    faqTitle: "会员常见问题。",
+    faq: [
+      ["会员是储值余额或积分吗？", "不是。Atelier 创作者会员不是储值余额、钱包、礼品卡、积分、代币或充值账户。会员仅提供页面列明的数字访问和服务权益。"],
+      ["会员权益可以提现吗或转让吗？", "不可以。会员权益不能提现、转让、兑换现金、转售，也不能作为通用支付余额使用。"],
+      ["会员是否自动包含商业销售权？", "不包含。若要销售由 STL 文件打印出的实体商品，需要另行购买符合条件的商业授权。"]
+    ],
+    plans: [
+      {
+        name: "月度创作者会员",
+        period: "/ 月",
+        audience: "适合希望定期获取原创 STL 文件和会员新品预览的个人创作者。",
+        benefits: [
+          "每个已付费月份开放 1 个原创 STL 发布包",
+          "按商品说明包含 STL、3MF 和 PDF 指南",
+          "会员专属新品预览",
+          "指定实体商品 9 折优惠",
+          "定制打印需求优先审核",
+          "24-48 个工作小时内优先客服支持"
+        ]
+      },
+      {
+        name: "季度创作者会员",
+        period: "/ 3 个月",
+        audience: "适合稳定打印用户，以 3 个月为周期获得原创模型内容和更高会员优惠。",
+        benefits: [
+          "共 3 个已付费会员月",
+          "总计 3 个原创 STL 发布包",
+          "会员专属新品预览",
+          "指定实体商品 85 折优惠",
+          "定制打印需求优先审核",
+          "符合条件的商业授权 9 折优惠",
+          "24-48 个工作小时内优先客服支持"
+        ]
+      },
+      {
+        name: "年度工作室会员",
+        period: "/ 年",
+        badge: "适合工作室",
+        audience: "适合小型工作室、高频创作者和长期 3D 打印客户，约为 4999 元级别年度会员。",
+        benefits: [
+          "共 12 个已付费会员月",
+          "12 个每月原创 STL 发布包",
+          "4 个季度 Premium STL Bundle",
+          "指定实体商品 8 折优惠",
+          "定制打印需求优先审核",
+          "每年 2 次小型定制打印设计评审",
+          "符合条件的商业授权 8 折优惠",
+          "PDF 会员证明"
+        ]
+      }
+    ]
+  },
+  "ja-JP": {
+    eyebrow: "Atelier Maker Membership",
+    title: "オリジナルSTL、会員向けプレビュー、優先スタジオサポート。",
+    body: "3Dプリント愛好家、小規模スタジオ、長期のメイカー顧客向けのデジタル会員サービスです。会費は記載されたデジタルアクセスとサービス特典にのみ対応し、アカウント残高は発生しません。",
+    primaryCta: "会員プランを見る",
+    secondaryCta: "デジタル商品ポリシー",
+    visualTitle: "月次STLアクセス",
+    visualBody: "STL · 3MF · PDFガイド · 会員プレビュー",
+    plansEyebrow: "会員プラン",
+    plansTitle: "制作スタイルに合う会員プランを選択。",
+    plansBody: "3つのプランはいずれもデジタルコンテンツとサービス特典です。ウォレット、残高、ギフトカード、譲渡可能なクーポンではありません。",
+    contactCta: "申し込み相談",
+    importantTitle: "重要事項",
+    importantBody: "Atelier Maker Membershipはデジタル会員サービスです。保存残高、ウォレット、チャージ残高、プリペイドカード、ギフトカード、現金クレジット、トークン、仮想通貨、譲渡可能なクーポンではありません。会員特典は出金、譲渡、換金、再販売、一般的な支払い残高としての使用はできません。",
+    policy: [
+      ["デジタル納品", "デジタル納品", "会員特典は注文ページと会員記録を通じて提供されます。STLリリースパックは各有料会員月に開放され、Studio Annual会員には四半期ごとにPremium STL Bundleが提供されます。"],
+      ["返金ルール", "返金ルール", "会員ファイル、プレビュー、割引、証明書、サービス特典をまだ利用していない場合、キャンセルまたは返金審査をサポートへ依頼できます。利用後の有料会員期間は、原則として自己都合返金の対象外です。"],
+      ["商用利用", "商用利用", "会員STLファイルは初期状態では個人利用限定です。ファイルから印刷した物理商品を販売するには、別途商用ライセンスが必要です。会員割引は商用販売権を自動的に付与するものではありません。"]
+    ],
+    faqEyebrow: "会員FAQ",
+    faqTitle: "会員に関する質問。",
+    faq: [
+      ["会員は保存残高やポイント制度ですか？", "いいえ。Atelier Maker Membershipは保存残高、ウォレット、ギフトカード、ポイント、トークン、チャージアカウントではありません。記載されたデジタルアクセスとサービス特典のみを提供します。"],
+      ["会員特典は出金または譲渡できますか？", "できません。会員特典は出金、譲渡、換金、再販売、一般的な支払い残高としての使用はできません。"],
+      ["会員には商用販売権が自動で含まれますか？", "含まれません。STLファイルから印刷した物理商品を販売するには、対象となる商用ライセンスを別途購入する必要があります。"]
+    ],
+    plans: [
+      {
+        name: "Maker Monthly",
+        period: "/ 月",
+        audience: "オリジナルSTLリリースと会員限定プレビューを定期的に利用したい個人メイカー向け。",
+        benefits: [
+          "有料月ごとにオリジナルSTLリリースパック1点",
+          "対象商品にSTL、3MF、PDFガイドを同梱",
+          "会員限定プレビュー",
+          "対象物理商品の10%割引",
+          "カスタムプリント依頼の優先レビュー",
+          "24-48営業時間以内の優先サポート"
+        ]
+      },
+      {
+        name: "Maker Quarterly",
+        period: "/ 3か月",
+        audience: "3か月単位でモデルコンテンツと会員割引を利用したい継続的な3Dプリント顧客向け。",
+        benefits: [
+          "3か月分の有料会員期間",
+          "合計3点のオリジナルSTLリリースパック",
+          "会員限定プレビュー",
+          "対象物理商品の15%割引",
+          "カスタムプリント依頼の優先レビュー",
+          "対象商用ライセンスの10%割引",
+          "24-48営業時間以内の優先サポート"
+        ]
+      },
+      {
+        name: "Studio Annual",
+        period: "/ 年",
+        badge: "スタジオ向け",
+        audience: "年間のコンテンツ計画が必要な小規模スタジオ、上級メイカー、長期顧客向け。",
+        benefits: [
+          "12か月分の有料会員期間",
+          "毎月12点のオリジナルSTLリリースパック",
+          "四半期ごとに4点のPremium STL Bundle",
+          "対象物理商品の20%割引",
+          "カスタムプリント依頼の優先レビュー",
+          "年2回の小型カスタムプリント設計レビュー",
+          "対象商用ライセンスの20%割引",
+          "PDF会員証明書"
+        ]
+      }
+    ]
+  },
+  "fr-FR": {
+    eyebrow: "Adhésion Atelier Maker",
+    title: "Accès STL original, aperçus membres et support studio prioritaire.",
+    body: "Une adhésion numérique pour passionnés d'impression 3D, petits studios et clients créateurs réguliers. Les frais couvrent uniquement les accès numériques et services listés; ils ne créent aucun solde de compte.",
+    primaryCta: "Voir les formules",
+    secondaryCta: "Politique des biens numériques",
+    visualTitle: "Accès STL mensuel",
+    visualBody: "STL · 3MF · Guide PDF · Aperçus membres",
+    plansEyebrow: "Formules d'adhésion",
+    plansTitle: "Choisissez l'adhésion adaptée à votre rythme de création.",
+    plansBody: "Les trois formules sont des contenus numériques et services. Elles ne sont pas un portefeuille, un solde stocké, une carte cadeau ni un bon transférable.",
+    contactCta: "Demander l'activation",
+    importantTitle: "Note importante",
+    importantBody: "L'adhésion Atelier Maker est un service numérique. Ce n'est pas un compte à valeur stockée, un portefeuille, un solde rechargeable, une carte prépayée, une carte cadeau, un crédit en espèces, un jeton, une monnaie virtuelle ou un bon transférable. Les avantages ne peuvent pas être retirés, transférés, échangés contre de l'argent, revendus ou utilisés comme solde de paiement général.",
+    policy: [
+      ["Livraison numérique", "Livraison numérique", "Les avantages sont livrés via la page de commande client et les registres d'adhésion. Les packs STL sont ouverts pendant chaque mois payé; les membres Studio Annual reçoivent des Premium STL Bundles chaque trimestre."],
+      ["Règles de remboursement", "Règles de remboursement", "Si aucun fichier, aperçu, remise, certificat ou service membre n'a été consulté ou utilisé, vous pouvez contacter le support pour une demande d'annulation ou de remboursement. Après utilisation, la période payée n'est généralement pas remboursable sans motif."],
+      ["Usage commercial", "Usage commercial", "Les fichiers STL de l'adhésion sont destinés à un usage personnel par défaut. La vente d'impressions physiques issues de ces fichiers nécessite une licence commerciale séparée. Les remises membres n'accordent pas automatiquement de droits de vente commerciale."]
+    ],
+    faqEyebrow: "FAQ adhésion",
+    faqTitle: "Questions sur l'adhésion.",
+    faq: [
+      ["L'adhésion est-elle un solde stocké ou un programme de points ?", "Non. L'adhésion Atelier Maker n'est pas un solde stocké, un portefeuille, une carte cadeau, un programme de points, un jeton ou un compte rechargeable. Elle fournit uniquement les accès numériques et services listés."],
+      ["Les avantages peuvent-ils être retirés ou transférés ?", "Non. Les avantages ne peuvent pas être retirés, transférés, échangés contre de l'argent, revendus ou utilisés comme solde de paiement général."],
+      ["L'adhésion inclut-elle automatiquement des droits de vente commerciale ?", "Non. Pour vendre des impressions physiques issues des fichiers STL, vous devez acheter séparément une licence commerciale éligible."]
+    ],
+    plans: [
+      {
+        name: "Maker Monthly",
+        period: "/ mois",
+        audience: "Pour les créateurs individuels qui veulent accéder régulièrement aux sorties STL originales et aux aperçus réservés aux membres.",
+        benefits: [
+          "1 pack STL original par mois payé",
+          "Fichiers STL, 3MF et guide PDF lorsque disponibles",
+          "Aperçus réservés aux membres",
+          "10% de remise sur certains produits physiques",
+          "Revue prioritaire des demandes d'impression sur mesure",
+          "Support prioritaire sous 24-48 heures ouvrées"
+        ]
+      },
+      {
+        name: "Maker Quarterly",
+        period: "/ 3 mois",
+        audience: "Pour les clients réguliers d'impression 3D qui préfèrent un cycle de 3 mois et de meilleures économies membres.",
+        benefits: [
+          "3 mois d'adhésion payés",
+          "3 packs STL originaux au total",
+          "Aperçus réservés aux membres",
+          "15% de remise sur certains produits physiques",
+          "Revue prioritaire des demandes d'impression sur mesure",
+          "10% de remise sur les licences commerciales éligibles",
+          "Support prioritaire sous 24-48 heures ouvrées"
+        ]
+      },
+      {
+        name: "Studio Annual",
+        period: "/ an",
+        badge: "Idéal studios",
+        audience: "Pour petits studios, créateurs avancés et clients 3D réguliers qui ont besoin d'un flux de contenu annuel.",
+        benefits: [
+          "12 mois d'adhésion payés",
+          "12 packs STL originaux mensuels",
+          "4 Premium STL Bundles trimestriels",
+          "20% de remise sur certains produits physiques",
+          "Revue prioritaire des demandes d'impression sur mesure",
+          "2 revues de conception de petites impressions sur mesure par an",
+          "20% de remise sur les licences commerciales éligibles",
+          "Certificat d'adhésion PDF"
+        ]
+      }
+    ]
+  },
+  "es-ES": {
+    eyebrow: "Membresía Atelier Maker",
+    title: "Acceso a STL originales, vistas previas para miembros y soporte prioritario.",
+    body: "Una membresía digital para aficionados a la impresión 3D, pequeños estudios y clientes creadores recurrentes. La cuota cubre solo el acceso digital y los servicios indicados; no crea saldo de cuenta.",
+    primaryCta: "Ver planes",
+    secondaryCta: "Política de bienes digitales",
+    visualTitle: "Acceso mensual a STL",
+    visualBody: "STL · 3MF · Guía PDF · Vistas previas",
+    plansEyebrow: "Planes de membresía",
+    plansTitle: "Elige la membresía que encaja con tu flujo creativo.",
+    plansBody: "Los tres planes son contenido digital y servicios. No son una cartera, saldo almacenado, tarjeta regalo ni cupón transferible.",
+    contactCta: "Contactar para activar",
+    importantTitle: "Nota importante",
+    importantBody: "La Membresía Atelier Maker es un servicio digital. No es una cuenta de valor almacenado, cartera, saldo recargable, tarjeta prepago, tarjeta regalo, crédito en efectivo, token, moneda virtual ni cupón transferible. Los beneficios no se pueden retirar, transferir, cambiar por efectivo, revender ni usar como saldo general de pago.",
+    policy: [
+      ["Entrega digital", "Entrega digital", "Los beneficios se entregan mediante la página de pedido y los registros de membresía. Los packs STL se abren durante cada mes pagado; los miembros Studio Annual reciben Premium STL Bundles cada trimestre."],
+      ["Reglas de reembolso", "Reglas de reembolso", "Si no se ha accedido ni usado ningún archivo, vista previa, descuento, certificado o servicio de membresía, puedes contactar con soporte para revisar cancelación o reembolso. Una vez usados los beneficios, el periodo pagado normalmente no admite reembolso sin motivo."],
+      ["Uso comercial", "Uso comercial", "Los archivos STL de membresía son para uso personal por defecto. Vender impresiones físicas hechas con esos archivos requiere una Licencia Comercial separada. Los descuentos de membresía no conceden automáticamente derechos de venta comercial."]
+    ],
+    faqEyebrow: "FAQ de membresía",
+    faqTitle: "Preguntas sobre membresía.",
+    faq: [
+      ["¿La membresía es saldo almacenado o puntos?", "No. La Membresía Atelier Maker no es saldo almacenado, cartera, tarjeta regalo, programa de puntos, token ni cuenta recargable. Solo proporciona el acceso digital y los servicios indicados."],
+      ["¿Los beneficios se pueden retirar o transferir?", "No. Los beneficios no se pueden retirar, transferir, cambiar por efectivo, revender ni usar como saldo general de pago."],
+      ["¿La membresía incluye automáticamente derechos comerciales?", "No. Para vender impresiones físicas hechas con archivos STL, debes comprar por separado una Licencia Comercial elegible."]
+    ],
+    plans: [
+      {
+        name: "Maker Monthly",
+        period: "/ mes",
+        audience: "Para creadores individuales que quieren acceso regular a lanzamientos STL originales y vistas previas exclusivas.",
+        benefits: [
+          "1 pack STL original por cada mes pagado",
+          "Archivos STL, 3MF y guía PDF cuando corresponda",
+          "Vistas previas exclusivas para miembros",
+          "10% de descuento en productos físicos seleccionados",
+          "Revisión prioritaria de solicitudes de impresión personalizada",
+          "Soporte prioritario en 24-48 horas hábiles"
+        ]
+      },
+      {
+        name: "Maker Quarterly",
+        period: "/ 3 meses",
+        audience: "Para clientes habituales de impresión 3D que prefieren un ciclo de 3 meses y mejores ahorros.",
+        benefits: [
+          "3 meses de membresía pagados",
+          "3 packs STL originales en total",
+          "Vistas previas exclusivas para miembros",
+          "15% de descuento en productos físicos seleccionados",
+          "Revisión prioritaria de solicitudes de impresión personalizada",
+          "10% de descuento en Licencias Comerciales elegibles",
+          "Soporte prioritario en 24-48 horas hábiles"
+        ]
+      },
+      {
+        name: "Studio Annual",
+        period: "/ año",
+        badge: "Ideal estudios",
+        audience: "Para pequeños estudios, creadores avanzados y clientes de impresión 3D de largo plazo que necesitan un flujo anual de contenido.",
+        benefits: [
+          "12 meses de membresía pagados",
+          "12 packs STL originales mensuales",
+          "4 Premium STL Bundles trimestrales",
+          "20% de descuento en productos físicos seleccionados",
+          "Revisión prioritaria de solicitudes de impresión personalizada",
+          "2 revisiones pequeñas de diseño personalizado al año",
+          "20% de descuento en Licencias Comerciales elegibles",
+          "Certificado de membresía en PDF"
+        ]
+      }
+    ]
+  }
+};
+
 const localizedProducts = {
   "zh-CN": {
     "arc-desk-dock": ["弧形桌面停靠座", "可放置手机、手表、笔和线缆的加重模块化桌面底座。"],
@@ -1596,142 +1959,80 @@ function homePage() {
 }
 
 function membershipPage() {
-  const plans = [
-    {
-      name: "Maker Monthly",
-      price: "$39",
-      period: "/ month",
-      audience: "For individual makers who want regular access to original STL releases and member-only previews.",
-      cnAudience: "适合希望定期获取原创 STL 文件和会员新品预览的个人创作者。",
-      benefits: [
-        "1 original STL Release Pack per paid month",
-        "STL, 3MF, and PDF Guide files where applicable",
-        "Member-only previews",
-        "10% discount on selected physical products",
-        "Priority custom print request review",
-        "Priority support within 24-48 business hours"
-      ]
-    },
-    {
-      name: "Maker Quarterly",
-      price: "$99",
-      period: "/ 3 months",
-      audience: "For regular 3D printing customers who prefer a 3-month release cycle and better member savings.",
-      cnAudience: "适合稳定打印用户，以 3 个月为周期获得原创模型内容和更高会员优惠。",
-      benefits: [
-        "3 paid membership months",
-        "3 original STL Release Packs in total",
-        "Member-only previews",
-        "15% discount on selected physical products",
-        "Priority custom print request review",
-        "10% discount on eligible Commercial License purchases",
-        "Priority support within 24-48 business hours"
-      ]
-    },
-    {
-      name: "Studio Annual",
-      price: "$699",
-      period: "/ year",
-      badge: "Best for Studios",
-      audience: "For small studios, advanced makers, and long-term 3D printing customers who need a full-year content pipeline.",
-      cnAudience: "适合小型工作室、高频创作者和长期 3D 打印客户，约为 4999 元级别年度会员。",
-      benefits: [
-        "12 paid membership months",
-        "12 monthly original STL Release Packs",
-        "4 quarterly Premium STL Bundles",
-        "20% discount on selected physical products",
-        "Priority custom print request review",
-        "2 small custom print design reviews per year",
-        "20% discount on eligible Commercial License purchases",
-        "PDF membership certificate"
-      ]
-    }
-  ];
+  const membership = localizedMembership[currentLang] || localizedMembership.en;
+  const prices = ["$39", "$99", "$699"];
+  const plans = membership.plans.map((plan, index) => ({ ...plan, price: prices[index] }));
 
   return `
     ${nav()}
     <main>
       <section class="membership-hero">
         <div>
-          <span class="eyebrow">Atelier Maker Membership</span>
-          <h1>原创 STL 内容、会员预览和工作室优先支持。</h1>
-          <p>面向 3D 打印爱好者、小型工作室和长期创作者客户的数字会员服务。会员费用用于页面列明的数字访问和服务权益，不产生账户余额。</p>
+          <span class="eyebrow">${membership.eyebrow}</span>
+          <h1>${membership.title}</h1>
+          <p>${membership.body}</p>
           <div class="hero-actions">
-            <a class="button primary" href="#/membership-plans">查看会员方案</a>
-            <a class="button secondary" href="#/digital-goods-policy">数字商品政策</a>
+            <a class="button primary" href="#/membership-plans">${membership.primaryCta}</a>
+            <a class="button secondary" href="#/digital-goods-policy">${membership.secondaryCta}</a>
           </div>
         </div>
         <div class="membership-visual">
           ${renderIllustration(products.find(product => product.id === "urban-nook-stl-pack") || products[4], 4)}
           <div class="membership-visual-note">
-            <strong>Monthly STL access</strong>
-            <span>STL · 3MF · PDF Guide · Member previews</span>
+            <strong>${membership.visualTitle}</strong>
+            <span>${membership.visualBody}</span>
           </div>
         </div>
       </section>
 
       <section class="section membership-section" id="membership-plans">
         <div class="section-heading">
-          <span class="eyebrow">Membership Plans</span>
-          <h2>选择适合你的创作者会员。</h2>
-          <p>三档会员均为数字内容与服务权益，不是钱包、储值余额、礼品卡或可转让代金券。</p>
+          <span class="eyebrow">${membership.plansEyebrow}</span>
+          <h2>${membership.plansTitle}</h2>
+          <p>${membership.plansBody}</p>
         </div>
         <div class="membership-grid">
           ${plans.map(plan => `
             <article class="membership-card ${plan.badge ? "featured-membership" : ""}">
               ${plan.badge ? `<span class="membership-badge">${plan.badge}</span>` : ""}
               <h3>${plan.name}</h3>
-              <p>${plan.cnAudience}</p>
+              <p>${plan.audience}</p>
               <div class="membership-price"><strong>${plan.price}</strong><span>${plan.period}</span></div>
               <ul>
                 ${plan.benefits.map(benefit => `<li>${benefit}</li>`).join("")}
               </ul>
-              <a class="button ${plan.badge ? "primary" : "secondary"}" href="#/contact">联系开通</a>
+              <a class="button ${plan.badge ? "primary" : "secondary"}" href="#/contact">${membership.contactCta}</a>
             </article>
           `).join("")}
         </div>
       </section>
 
       <section class="membership-notice">
-        <strong>重要说明</strong>
-        <p>Atelier 创作者会员是一项数字会员服务，不是储值账户、钱包、充值余额、预付卡、礼品卡、现金积分、代币、虚拟币或可转让代金券。会员权益不能提现、转让、兑换现金、转售，也不能作为通用支付余额使用。</p>
+        <strong>${membership.importantTitle}</strong>
+        <p>${membership.importantBody}</p>
       </section>
 
       <section class="membership-policy-grid">
-        <article>
-          <span class="eyebrow">Digital Delivery</span>
-          <h2>数字交付</h2>
-          <p>会员权益通过客户订单页和会员记录进行数字交付。STL 发布包会在每个已付费会员月开放；Studio 年度会员会按季度获得 Premium STL Bundle。</p>
-        </article>
-        <article>
-          <span class="eyebrow">Refund Rules</span>
-          <h2>退款规则</h2>
-          <p>如果尚未访问或使用任何会员文件、预览内容、折扣、会员证书或服务权益，可联系客服申请取消或退款审核。一旦访问或使用相关权益，该已付费会员周期原则上不支持无理由退款。</p>
-        </article>
-        <article>
-          <span class="eyebrow">Commercial Use</span>
-          <h2>商业使用</h2>
-          <p>会员 STL 文件默认仅限个人使用。若要销售由文件打印出的实体商品，需要另行购买商业授权。会员折扣不等于自动获得商业销售权。</p>
-        </article>
+        ${membership.policy.map(([eyebrow, title, body]) => `
+          <article>
+            <span class="eyebrow">${eyebrow}</span>
+            <h2>${title}</h2>
+            <p>${body}</p>
+          </article>
+        `).join("")}
       </section>
 
       <section class="section faq-preview">
         <div class="section-heading">
-          <span class="eyebrow">Membership FAQ</span>
-          <h2>会员常见问题。</h2>
+          <span class="eyebrow">${membership.faqEyebrow}</span>
+          <h2>${membership.faqTitle}</h2>
         </div>
-        <details open>
-          <summary>会员是储值余额或积分吗？</summary>
-          <p>不是。Atelier 创作者会员不是储值余额、钱包、礼品卡、积分、代币或充值账户。会员仅提供页面列明的数字访问和服务权益。</p>
-        </details>
-        <details>
-          <summary>会员权益可以提现吗或转让吗？</summary>
-          <p>不可以。会员权益不能提现、转让、兑换现金、转售，也不能作为通用支付余额使用。</p>
-        </details>
-        <details>
-          <summary>会员是否自动包含商业销售权？</summary>
-          <p>不包含。若要销售由 STL 文件打印出的实体商品，需要另行购买符合条件的 Commercial License。</p>
-        </details>
+        ${membership.faq.map(([question, answer], index) => `
+          <details ${index === 0 ? "open" : ""}>
+            <summary>${question}</summary>
+            <p>${answer}</p>
+          </details>
+        `).join("")}
       </section>
     </main>
     ${footer()}
