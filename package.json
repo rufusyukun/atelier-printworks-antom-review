@@ -8,5 +8,8 @@
     "lint": "node scripts/lint.mjs",
     "test": "node scripts/test.mjs",
     "dev": "node scripts/dev-server.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^9.1.2"
   }
 }

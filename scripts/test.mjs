@@ -6,6 +6,13 @@ const root = process.cwd();
 const main = readFileSync(join(root, "src/main.js"), "utf8");
 const html = readFileSync(join(root, "index.html"), "utf8");
 const css = readFileSync(join(root, "src/styles.css"), "utf8");
+const pkg = readFileSync(join(root, "package.json"), "utf8");
+const orderServicePath = join(root, "netlify/functions/_order-service.mjs");
+const orderCreatePath = join(root, "netlify/functions/orders-create.mjs");
+const paymentSessionPath = join(root, "netlify/functions/payment-session.mjs");
+const paymentWebhookPath = join(root, "netlify/functions/payment-webhook.mjs");
+const ordersGetPath = join(root, "netlify/functions/orders-get.mjs");
+const orderService = existsSync(orderServicePath) ? readFileSync(orderServicePath, "utf8") : "";
 const specificPaymentReviewBrand = new RegExp(["an", "tom"].join(""), "i");
 
 const checks = [
@@ -95,6 +102,35 @@ const checks = [
   {
     name: "company and support details are populated",
     pass: main.includes("whyqwl888@163.com") && main.includes("MazeCraft Technology Limited") && main.includes("80498471")
+  },
+  {
+    name: "payment-ready Netlify functions exist",
+    pass: [orderServicePath, orderCreatePath, paymentSessionPath, paymentWebhookPath, ordersGetPath].every(file => existsSync(file))
+  },
+  {
+    name: "server order service defines durable payment states and evidence fields",
+    pass: ["draft", "pending_payment", "paid", "payment_failed", "fulfillment_pending", "fulfilled", "refunded", "disputed"].every(state => orderService.includes(state)) &&
+      ["merchantOrderId", "paymentRequestId", "paymentSessionId", "paymentProviderTransactionId", "customerIp", "customerCountry", "policyVersion", "rawPaymentEvents"].every(field => orderService.includes(field))
+  },
+  {
+    name: "order service has optional blob persistence fallback",
+    pass: pkg.includes("@netlify/blobs") && orderService.includes("getStore") && orderService.includes("atelier-orders")
+  },
+  {
+    name: "payment functions keep live credentials and signature handling server-side",
+    pass: orderService.includes("signApiRequest") &&
+      orderService.includes("verifyApiSignature") &&
+      orderService.includes("ANTOM_PRIVATE_KEY") &&
+      !main.includes("ANTOM_PRIVATE_KEY") &&
+      !main.includes("ANTOM_CLIENT_ID")
+  },
+  {
+    name: "checkout creates server order before hosted payment session",
+    pass: main.includes("createServerOrder") && main.includes("createHostedPaymentSession") && main.includes("/.netlify/functions/orders-create") && main.includes("/.netlify/functions/payment-session")
+  },
+  {
+    name: "order lookup and admin can read server orders",
+    pass: main.includes("fetchServerOrder") && main.includes("fetchAdminOrders") && main.includes("/.netlify/functions/orders-get")
   }
 ];
 

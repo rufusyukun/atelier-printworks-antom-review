@@ -388,11 +388,11 @@ const dict = {
     lookupOrder: "Look up order",
     notRequiredDigital: "Shipping address is not required for digital-only carts.",
     deliveryRefundBeforeCheckout: "Delivery and refund notes are shown before checkout for each item.",
-    paymentPlaceholder: "Secure payment preview. This demo creates a mock order and stores no payment credentials.",
+    paymentPlaceholder: "Secure hosted checkout. Your order is created first, then payment is completed on the hosted payment page. Private payment credentials are never stored in this browser.",
     requiredField: "Please complete the required fields.",
     invalidEmail: "Please enter a valid email address.",
     orderNotFound: "Order not found. Check the order number or email support.",
-    successBody: "Your mock order has been created for review. Digital links and license certificates would appear on this page after payment confirmation.",
+    successBody: "Your order status is shown here after payment confirmation. Digital links, license certificates, and shipping updates will appear on this page when available.",
     downloadAccess: "Download access",
     shippingNeeded: "Shipping required",
     customReview: "Custom review required",
@@ -503,11 +503,11 @@ const dict = {
     lookupOrder: "查询订单",
     notRequiredDigital: "纯数字商品购物车不需要填写收货地址。",
     deliveryRefundBeforeCheckout: "每件商品在结账前都会展示交付和退款说明。",
-    paymentPlaceholder: "安全支付预览。当前演示会生成模拟订单，不保存任何支付凭证。",
+    paymentPlaceholder: "安全托管结账。系统会先创建订单，再跳转到托管收银台完成付款；支付私密凭证不会存放在浏览器中。",
     requiredField: "请填写必填信息。",
     invalidEmail: "请输入有效邮箱地址。",
     orderNotFound: "未找到订单，请检查订单号或联系邮箱客服。",
-    successBody: "模拟订单已生成用于审核。真实支付确认后，数字下载和授权证书会显示在此页面。",
+    successBody: "支付确认后可在此查看订单状态。数字下载、授权证书和物流更新会在可用时显示。",
     downloadAccess: "下载访问",
     shippingNeeded: "需要配送",
     customReview: "需要定制审核",
@@ -1282,6 +1282,87 @@ function saveOrders(orders) {
   localStorage.setItem("atelier-orders", JSON.stringify(orders));
 }
 
+function getServerOrdersCache() {
+  try {
+    return JSON.parse(localStorage.getItem("atelier-server-orders-cache") || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveServerOrderCache(order) {
+  if (!order?.id) return;
+  const orders = [order, ...getServerOrdersCache().filter(item => item.id !== order.id)];
+  localStorage.setItem("atelier-server-orders-cache", JSON.stringify(orders.slice(0, 100)));
+}
+
+function saveServerOrdersCache(orders = []) {
+  const merged = [...orders, ...getServerOrdersCache()];
+  const unique = merged.filter((order, index, list) => order?.id && list.findIndex(item => item.id === order.id) === index);
+  localStorage.setItem("atelier-server-orders-cache", JSON.stringify(unique.slice(0, 100)));
+}
+
+async function apiJson(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: {
+      "content-type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(body.error || "Request failed");
+  return body;
+}
+
+function checkoutOrderPayload(form) {
+  const lines = cartLines();
+  return {
+    email: form.email,
+    address: form.address || "",
+    notes: form.notes || "",
+    currency: "USD",
+    total: cartTotal(lines),
+    delivery: orderDeliverySummary(lines),
+    checkoutLanguage: currentLang,
+    items: lines.map(line => ({
+      id: line.product.id,
+      name: productText(line.product).name,
+      type: line.product.type,
+      qty: line.qty,
+      price: line.product.price
+    }))
+  };
+}
+
+async function createServerOrder(form) {
+  const body = await apiJson("/.netlify/functions/orders-create", {
+    method: "POST",
+    body: JSON.stringify(checkoutOrderPayload(form))
+  });
+  saveServerOrderCache(body.order);
+  return body.order;
+}
+
+async function createHostedPaymentSession(order) {
+  return apiJson("/.netlify/functions/payment-session", {
+    method: "POST",
+    body: JSON.stringify({ orderId: order.id, orderSnapshot: order })
+  });
+}
+
+async function fetchServerOrder(orderId) {
+  const body = await apiJson(`/.netlify/functions/orders-get?orderId=${encodeURIComponent(orderId)}`);
+  saveServerOrderCache(body.order);
+  return body.order;
+}
+
+async function fetchAdminOrders() {
+  const body = await apiJson("/.netlify/functions/orders-get");
+  saveServerOrdersCache(body.orders || []);
+  return body.orders || [];
+}
+
 function addToCart(productId) {
   const cart = getCart();
   const item = cart.find(entry => entry.id === productId);
@@ -1396,7 +1477,7 @@ const mockOrders = [
 
 function findOrder(orderId) {
   const normalized = orderId.trim().toUpperCase();
-  return [...getOrders(), ...mockOrders].find(order => order.id.toUpperCase() === normalized);
+  return [...getServerOrdersCache(), ...getOrders(), ...mockOrders].find(order => order.id.toUpperCase() === normalized);
 }
 
 function escapeHtml(value = "") {
@@ -1433,7 +1514,7 @@ function saveAdminAuditLog(logs) {
 }
 
 function adminAllOrders() {
-  const merged = [...getOrders(), ...mockOrders];
+  const merged = [...getServerOrdersCache(), ...getOrders(), ...mockOrders];
   return merged
     .filter((order, index, list) => list.findIndex(item => item.id === order.id) === index)
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
@@ -2675,7 +2756,7 @@ function render() {
   });
   const checkoutForm = app.querySelector("[data-checkout-form]");
   if (checkoutForm) {
-    checkoutForm.addEventListener("submit", event => {
+    checkoutForm.addEventListener("submit", async event => {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(checkoutForm));
       const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email || "");
@@ -2690,15 +2771,39 @@ function render() {
         render();
         return;
       }
-      createMockOrder(data);
+      const submitButton = checkoutForm.querySelector("button[type='submit']");
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "Processing...";
+      }
+      try {
+        const order = await createServerOrder(data);
+        const session = await createHostedPaymentSession(order);
+        if (session.order) saveServerOrderCache(session.order);
+        saveCart([]);
+        sessionStorage.setItem("atelier-last-order", order.id);
+        if (session.checkoutUrl) {
+          location.href = session.checkoutUrl;
+        } else {
+          location.hash = `#/order-success?order=${order.id}`;
+        }
+      } catch (error) {
+        sessionStorage.setItem("atelier-checkout-error", error.message || t("requiredField"));
+        render();
+      }
     });
   }
   const lookupForm = app.querySelector("[data-order-lookup]");
   if (lookupForm) {
-    lookupForm.addEventListener("submit", event => {
+    lookupForm.addEventListener("submit", async event => {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(lookupForm));
-      const order = findOrder(data.orderId || "");
+      let order = null;
+      try {
+        order = await fetchServerOrder(data.orderId || "");
+      } catch {
+        order = findOrder(data.orderId || "");
+      }
       if (!order) sessionStorage.setItem("atelier-lookup-error", t("orderNotFound"));
       if (order) sessionStorage.setItem("atelier-lookup-order", order.id);
       else sessionStorage.removeItem("atelier-lookup-order");
@@ -2717,6 +2822,34 @@ function render() {
   app.querySelectorAll("[data-export-evidence]").forEach(button => {
     button.addEventListener("click", () => downloadAdminEvidence(button.dataset.exportEvidence));
   });
+  const rawPath = location.hash.replace("#", "") || "/";
+  const path = rawPath.split("?")[0];
+  if (path === "/admin" && !window.__atelierAdminOrdersLoading) {
+    window.__atelierAdminOrdersLoading = true;
+    fetchAdminOrders()
+      .then(() => {
+        window.__atelierAdminOrdersLoading = false;
+        if ((location.hash.replace("#", "") || "/").split("?")[0] === "/admin") render();
+      })
+      .catch(() => {
+        window.__atelierAdminOrdersLoading = false;
+      });
+  }
+  if (path === "/order-success" && !window.__atelierOrderSuccessLoading) {
+    const params = new URLSearchParams(rawPath.split("?")[1] || "");
+    const orderId = params.get("order") || sessionStorage.getItem("atelier-last-order") || "";
+    if (orderId && !findOrder(orderId)) {
+      window.__atelierOrderSuccessLoading = true;
+      fetchServerOrder(orderId)
+        .then(() => {
+          window.__atelierOrderSuccessLoading = false;
+          if ((location.hash.replace("#", "") || "/").split("?")[0] === "/order-success") render();
+        })
+        .catch(() => {
+          window.__atelierOrderSuccessLoading = false;
+        });
+    }
+  }
   window.scrollTo({ top: 0, behavior: "instant" });
 }
 
