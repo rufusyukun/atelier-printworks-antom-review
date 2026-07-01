@@ -57,6 +57,22 @@ function checkoutUrlHost(url = "") {
   }
 }
 
+function checkoutPaymentMethods(order = {}) {
+  const configured = process.env.CHECKOUT_PAYMENT_METHODS || "";
+  const methods = configured
+    .split(",")
+    .map(item => item.trim().toUpperCase())
+    .filter(Boolean);
+  const defaultMethods = checkoutEnv(order, { headers: { "user-agent": order.userAgent || "" } }).osType === "IOS"
+    ? ["ALIPAY_CN", "APPLEPAY", "CARD"]
+    : ["ALIPAY_CN", "CARD"];
+  return (methods.length ? methods : defaultMethods).map((paymentMethodType, index) => ({
+    paymentMethodType,
+    expressCheckout: ["ALIPAY_CN", "APPLEPAY", "GOOGLEPAY"].includes(paymentMethodType),
+    paymentMethodOrder: String(index)
+  }));
+}
+
 async function createHostedPaymentSession(order, event) {
   const config = antomConfig();
   if (!paymentApiEnabled()) {
@@ -75,6 +91,7 @@ async function createHostedPaymentSession(order, event) {
   const requestUri = config.createSessionPath;
   const requestTime = new Date().toISOString();
   const checkoutEnvironment = checkoutEnv(order, event);
+  const paymentMethodTypeList = checkoutPaymentMethods(order);
   const requestPayload = {
     merchantRegion: config.merchantRegion,
     productCode: "CASHIER_PAYMENT",
@@ -83,6 +100,7 @@ async function createHostedPaymentSession(order, event) {
     paymentRequestId: order.paymentRequestId || order.id,
     paymentAmount: paymentAmount(order),
     settlementStrategy: { settlementCurrency: order.currency },
+    availablePaymentMethod: { paymentMethodTypeList },
     order: {
       referenceOrderId: order.id,
       orderDescription: `Atelier Printworks order ${order.id}`,
@@ -141,7 +159,8 @@ async function createHostedPaymentSession(order, event) {
       value: requestPayload.paymentAmount.value,
       terminalType: checkoutEnvironment.terminalType,
       osType: checkoutEnvironment.osType,
-      goodsCount: requestPayload.order.goods.length
+      goodsCount: requestPayload.order.goods.length,
+      paymentMethodTypeList: paymentMethodTypeList.map(item => item.paymentMethodType)
     }
   };
   if (!response.ok || body.result?.resultStatus === "F") {

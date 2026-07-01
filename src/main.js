@@ -1744,7 +1744,8 @@ function adminPaymentDiagnostics(order = {}) {
       ["系统类型", shape.osType],
       ["语言", shape.locale],
       ["产品代码", shape.productCode],
-      ["产品场景", shape.productScene]
+      ["产品场景", shape.productScene],
+      ["指定支付方式", shape.paymentMethodTypeList]
     ].filter(([, value]) => value !== undefined)
   };
 }
