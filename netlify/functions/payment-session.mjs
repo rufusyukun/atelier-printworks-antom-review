@@ -1,4 +1,4 @@
-import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
+import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, recentSuccessfulPaymentBlock, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
 
 function mockCheckoutUrl(order) {
   const params = new URLSearchParams({ order: order.id, payment: "mock_pending" });
@@ -131,6 +131,19 @@ export async function handler(event) {
   if (!order) return jsonResponse(404, { error: "Order not found" });
 
   try {
+    const block = await recentSuccessfulPaymentBlock(order);
+    if (block) {
+      const updated = await updateOrder(order.id, {
+        status: "payment_blocked",
+        paymentStatus: "blocked",
+        fulfillmentStatus: "not_started",
+        supportNotes: [
+          ...(order.supportNotes || []),
+          { at: new Date().toISOString(), note: `${block.message} Matched order: ${block.matchedOrderId}` }
+        ]
+      });
+      return jsonResponse(429, { error: block.message, code: block.code, retryAfterSeconds: block.retryAfterSeconds, matchedOrderId: block.matchedOrderId, order: updated });
+    }
     const session = await createHostedPaymentSession(order, event);
     const updated = await updateOrder(order.id, {
       status: "pending_payment",

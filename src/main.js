@@ -1662,6 +1662,7 @@ function adminOrderRisk(order, operational = adminOrderState(order)) {
     : [];
   const sameCustomerPaidRecent = sameCustomerRecent.filter(isPaidOrder);
   const sameIpPaidRecent = sameIpRecent.filter(isPaidOrder);
+  if (/payment_blocked|blocked/i.test(`${order.status || ""} ${order.paymentStatus || ""}`)) risks.push(["High", "连续支付已被系统拦截"]);
   if (sameCustomerPaidRecent.length >= 2) risks.push(["High", `同一邮箱 2 小时内连续支付 ${sameCustomerPaidRecent.length + (isPaidOrder(order) ? 1 : 0)} 笔`]);
   else if (sameCustomerRecent.length >= 2) risks.push(["Medium", `同一邮箱 2 小时内连续下单 ${sameCustomerRecent.length + 1} 笔`]);
   if (sameIpPaidRecent.length >= 3) risks.push(["High", `同一 IP 2 小时内多笔支付成功，需要复核`]);

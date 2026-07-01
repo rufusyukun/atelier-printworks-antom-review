@@ -6,6 +6,7 @@ const ORDER_STATES = [
   "pending_payment",
   "paid",
   "payment_failed",
+  "payment_blocked",
   "fulfillment_pending",
   "fulfilled",
   "refunded",
@@ -260,6 +261,47 @@ export async function listOrders() {
     }
   }
   return [...memoryStore().values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+function normalizedIdentity(value = "") {
+  return String(value || "").trim().toLowerCase();
+}
+
+function paidAt(order = {}) {
+  const paidEvent = [...(order.paymentEvents || [])]
+    .reverse()
+    .find(event => /success|paid|finished|complete/i.test(`${event.status || ""} ${event.paymentStatus || ""}`));
+  return paidEvent?.at || order.paidAt || order.updatedAt || order.createdAt || "";
+}
+
+export function isPaidOrder(order = {}) {
+  return /paid|success|fulfilled/i.test(`${order.paymentStatus || ""} ${order.status || ""} ${order.fulfillmentStatus || ""}`);
+}
+
+export async function recentSuccessfulPaymentBlock(order, windowMs = 60_000) {
+  const email = normalizedIdentity(order.email);
+  const ip = normalizedIdentity(order.customerIp);
+  const userAgent = normalizedIdentity(order.userAgent);
+  if (!email || !ip || !userAgent || ip === "unknown" || userAgent === "unknown") return null;
+
+  const now = Date.now();
+  const orders = await listOrders();
+  const matched = orders.find(existing => {
+    if (existing.id === order.id || !isPaidOrder(existing)) return false;
+    const sameCustomer = normalizedIdentity(existing.email) === email;
+    const sameIp = normalizedIdentity(existing.customerIp) === ip;
+    const sameDevice = normalizedIdentity(existing.userAgent) === userAgent;
+    const previousPaidAt = new Date(paidAt(existing)).getTime();
+    return sameCustomer && sameIp && sameDevice && previousPaidAt && now - previousPaidAt >= 0 && now - previousPaidAt <= windowMs;
+  });
+  if (!matched) return null;
+  const retryAfterSeconds = Math.max(1, Math.ceil((windowMs - (now - new Date(paidAt(matched)).getTime())) / 1000));
+  return {
+    code: "RECENT_SUCCESSFUL_PAYMENT",
+    matchedOrderId: matched.id,
+    retryAfterSeconds,
+    message: "为保护账户安全，系统检测到同一账号和设备刚刚完成了一笔支付。请稍等 1 分钟后再提交下一笔订单，避免重复扣款。"
+  };
 }
 
 export async function orderStorageStatus() {
