@@ -5,7 +5,27 @@ function mockCheckoutUrl(order) {
   return `${siteUrl()}/#/order-success?${params.toString()}`;
 }
 
-async function createHostedPaymentSession(order) {
+function checkoutLocale(language = "en") {
+  const supported = {
+    en: "en_US",
+    "zh-CN": "zh_CN",
+    "ja-JP": "ja_JP",
+    "fr-FR": "fr_FR",
+    "es-ES": "es_ES"
+  };
+  return supported[language] || supported.en;
+}
+
+function checkoutEnv(order, event) {
+  const userAgent = event.headers?.["user-agent"] || event.headers?.["User-Agent"] || order.userAgent || "";
+  const terminalType = /Android|iPhone|iPad|iPod|Mobile/i.test(userAgent) ? "WAP" : "WEB";
+  let osType = "WEB";
+  if (/Android/i.test(userAgent)) osType = "ANDROID";
+  if (/iPhone|iPad|iPod/i.test(userAgent)) osType = "IOS";
+  return { terminalType, osType };
+}
+
+async function createHostedPaymentSession(order, event) {
   const config = antomConfig();
   if (!paymentApiEnabled()) {
     return {
@@ -23,12 +43,14 @@ async function createHostedPaymentSession(order) {
   const requestUri = config.createSessionPath;
   const requestTime = new Date().toISOString();
   const requestBody = JSON.stringify({
+    merchantRegion: config.merchantRegion,
     productCode: "CASHIER_PAYMENT",
     productScene: "CHECKOUT_PAYMENT",
+    locale: checkoutLocale(order.checkoutLanguage),
     paymentRequestId: order.paymentRequestId || order.id,
     paymentAmount: { currency: order.currency, value: String(Math.round(order.total * 100)) },
     settlementStrategy: { settlementCurrency: order.currency },
-    paymentFactor: { isAuthorization: false },
+    paymentFactor: { isAuthorization: "false" },
     order: {
       referenceOrderId: order.id,
       orderDescription: `Atelier Printworks order ${order.id}`,
@@ -41,10 +63,7 @@ async function createHostedPaymentSession(order) {
       merchantName: "Atelier Printworks",
       merchantRegion: config.merchantRegion
     },
-    env: {
-      terminalType: "WEB",
-      osType: "WEB"
-    },
+    env: checkoutEnv(order, event),
     paymentRedirectUrl: `${siteUrl()}/#/order-success?order=${encodeURIComponent(order.id)}`,
     paymentNotifyUrl: `${siteUrl()}/.netlify/functions/payment-webhook`
   });
@@ -87,7 +106,7 @@ export async function handler(event) {
   if (!order) return jsonResponse(404, { error: "Order not found" });
 
   try {
-    const session = await createHostedPaymentSession(order);
+    const session = await createHostedPaymentSession(order, event);
     const updated = await updateOrder(order.id, {
       status: "pending_payment",
       paymentStatus: "pending",

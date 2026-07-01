@@ -135,6 +135,14 @@ const checks = [
       !css.includes("ANTOM_PRIVATE_KEY")
   },
   {
+    name: "hosted checkout request includes gateway and mobile context fields",
+    pass: existsSync(paymentSessionPath) &&
+      readFileSync(paymentSessionPath, "utf8").includes("merchantRegion: config.merchantRegion") &&
+      readFileSync(paymentSessionPath, "utf8").includes("productScene: \"CHECKOUT_PAYMENT\"") &&
+      readFileSync(paymentSessionPath, "utf8").includes("isAuthorization: \"false\"") &&
+      readFileSync(paymentSessionPath, "utf8").includes("checkoutEnv(order, event)")
+  },
+  {
     name: "checkout creates server order before hosted payment session",
     pass: main.includes("createServerOrder") && main.includes("createHostedPaymentSession") && main.includes("/.netlify/functions/orders-create") && main.includes("/.netlify/functions/payment-session")
   },
