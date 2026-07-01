@@ -24,6 +24,7 @@ async function createHostedPaymentSession(order) {
   const requestTime = new Date().toISOString();
   const requestBody = JSON.stringify({
     productCode: "CASHIER_PAYMENT",
+    productScene: "CHECKOUT_PAYMENT",
     paymentRequestId: order.paymentRequestId || order.id,
     paymentAmount: { currency: order.currency, value: String(Math.round(order.total * 100)) },
     settlementStrategy: { settlementCurrency: order.currency },
@@ -31,7 +32,7 @@ async function createHostedPaymentSession(order) {
     order: {
       referenceOrderId: order.id,
       orderDescription: `Atelier Printworks order ${order.id}`,
-      buyer: { referenceBuyerId: order.email },
+      buyer: { referenceBuyerId: order.email, buyerEmail: order.email },
       orderAmount: { currency: order.currency, value: String(Math.round(order.total * 100)) }
     },
     merchant: {
