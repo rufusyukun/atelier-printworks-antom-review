@@ -89,6 +89,20 @@ const checks = [
       !main.includes("cnAudience")
   },
   {
+    name: "hidden operations recharge test page has fixed CNY tiers",
+    pass: main.includes('path === "/ops-recharge-test"') &&
+      main.includes("const opsRechargeTiers") &&
+      [1, 9, 999, 1999, 3499, 4999].every(amount => main.includes(`amount: ${amount}`)) &&
+      main.includes("createOpsRechargeOrder") &&
+      main.includes("运营测试充值")
+  },
+  {
+    name: "operations recharge page is not linked from public navigation",
+    pass: !main.includes("#/ops-recharge-test") &&
+      !main.includes("/ops-recharge-test\", t(") &&
+      !html.includes("ops-recharge-test")
+  },
+  {
     name: "policy pages have structured sections",
     pass: main.includes("policyPages") && main.includes("Digital goods")
   },

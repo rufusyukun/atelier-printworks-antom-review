@@ -1045,6 +1045,227 @@ h3 {
   padding: 12px;
 }
 
+.ops-recharge-page {
+  background: #111312;
+  color: #f9fafb;
+  min-height: 100vh;
+  padding: 18px;
+}
+
+.ops-recharge-header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 920px;
+  padding: 8px 0 22px;
+}
+
+.ops-recharge-header .brand {
+  color: #f9fafb;
+}
+
+.ops-recharge-header small,
+.ops-recharge-header > span {
+  color: #a1a1aa;
+}
+
+.ops-recharge-panel {
+  margin: 0 auto;
+  max-width: 920px;
+  padding-bottom: 128px;
+}
+
+.ops-recharge-title {
+  padding: clamp(18px, 4vw, 34px) 0 22px;
+}
+
+.ops-recharge-title span {
+  color: #f59e0b;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.ops-recharge-title h1 {
+  font-size: clamp(40px, 8vw, 72px);
+  line-height: 1;
+  margin: 10px 0 12px;
+}
+
+.ops-recharge-title p {
+  color: #a1a1aa;
+  font-size: 17px;
+  margin: 0;
+  max-width: 640px;
+}
+
+.ops-recharge-form {
+  display: grid;
+  gap: 18px;
+}
+
+.ops-tier-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ops-tier-card {
+  background: linear-gradient(145deg, #1f201f, #191a19);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 18px 40px rgba(0,0,0,0.25);
+  cursor: pointer;
+  display: grid;
+  min-height: 138px;
+  padding: 22px;
+  position: relative;
+}
+
+.ops-tier-card input {
+  height: 1px;
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+}
+
+.ops-tier-card:has(input:checked) {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 1px rgba(245,158,11,0.65), 0 0 34px rgba(245,158,11,0.2);
+}
+
+.ops-tier-card strong {
+  align-self: end;
+  color: #ffffff;
+  font-size: clamp(36px, 8vw, 56px);
+  line-height: 1;
+}
+
+.ops-tier-tag {
+  background: #f8fafc;
+  border-radius: 999px;
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 850;
+  justify-self: end;
+  padding: 7px 12px;
+}
+
+.ops-tier-card:has(input:checked) .ops-tier-tag {
+  background: #f59e0b;
+  color: #111312;
+}
+
+.ops-payment-card,
+.ops-email-label,
+.ops-recharge-note {
+  background: #1a1b1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.22);
+  padding: 20px;
+}
+
+.ops-payment-heading {
+  align-items: center;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: auto 1fr auto;
+}
+
+.ops-pay-icon,
+.ops-pay-check {
+  align-items: center;
+  background: #f59e0b;
+  border-radius: 50%;
+  color: #111312;
+  display: inline-flex;
+  font-weight: 900;
+  height: 46px;
+  justify-content: center;
+  width: 46px;
+}
+
+.ops-payment-heading strong {
+  display: block;
+  font-size: 22px;
+}
+
+.ops-payment-heading p,
+.ops-recharge-note {
+  color: #a1a1aa;
+  margin: 0;
+}
+
+.ops-email-label {
+  color: #f9fafb;
+  display: grid;
+  font-size: 22px;
+  font-weight: 900;
+  gap: 12px;
+}
+
+.ops-email-label span {
+  color: #a1a1aa;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.ops-email-label input {
+  background: #151615;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  color: #f9fafb;
+  font: inherit;
+  font-size: 18px;
+  min-height: 56px;
+  padding: 0 16px;
+}
+
+.ops-pay-bar {
+  align-items: center;
+  background: rgba(17,19,18,0.96);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  bottom: 0;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: 1fr minmax(220px, 360px);
+  left: 0;
+  padding: 18px max(18px, calc((100vw - 920px) / 2));
+  position: fixed;
+  right: 0;
+  z-index: 30;
+}
+
+.ops-pay-bar span {
+  color: #a1a1aa;
+  display: block;
+  font-weight: 700;
+}
+
+.ops-pay-bar strong {
+  color: #fff;
+  display: block;
+  font-size: 34px;
+}
+
+.ops-pay-button {
+  background: #f59e0b;
+  border: 0;
+  border-radius: 16px;
+  color: #111312;
+  cursor: pointer;
+  font: inherit;
+  font-size: 20px;
+  font-weight: 900;
+  min-height: 64px;
+}
+
+.ops-pay-button:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .form-note {
   background: #eef4f0;
   border: 1px solid #cadbd1;
@@ -1643,5 +1864,69 @@ h3 {
   .policy-shell {
     padding-left: 16px;
     padding-right: 16px;
+  }
+
+  .ops-recharge-page {
+    padding: 14px;
+  }
+
+  .ops-recharge-header {
+    padding-bottom: 12px;
+  }
+
+  .ops-recharge-header .brand-mark {
+    height: 38px;
+    width: 38px;
+  }
+
+  .ops-recharge-header .brand strong {
+    font-size: 16px;
+  }
+
+  .ops-recharge-header > span {
+    font-size: 13px;
+  }
+
+  .ops-recharge-panel {
+    padding-bottom: 154px;
+  }
+
+  .ops-tier-grid {
+    gap: 12px;
+  }
+
+  .ops-tier-card {
+    border-radius: 18px;
+    min-height: 116px;
+    padding: 16px;
+  }
+
+  .ops-tier-card strong {
+    font-size: 32px;
+  }
+
+  .ops-tier-tag {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+
+  .ops-payment-card,
+  .ops-email-label,
+  .ops-recharge-note {
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .ops-pay-bar {
+    grid-template-columns: 1fr;
+    padding: 16px 14px calc(16px + env(safe-area-inset-bottom));
+  }
+
+  .ops-pay-bar strong {
+    font-size: 28px;
+  }
+
+  .ops-pay-button {
+    min-height: 58px;
   }
 }

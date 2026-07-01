@@ -1367,6 +1367,48 @@ async function createHostedPaymentSession(order) {
   });
 }
 
+const opsRechargeTiers = [
+  { amount: 1, tag: "连通测试" },
+  { amount: 9, tag: "小额验证" },
+  { amount: 999, tag: "标准档" },
+  { amount: 1999, tag: "进阶档" },
+  { amount: 3499, tag: "高额档" },
+  { amount: 4999, tag: "上限档" }
+];
+
+function opsRechargeOrderPayload(form) {
+  const amount = Number(form.amount || opsRechargeTiers[0].amount);
+  const tier = opsRechargeTiers.find(item => item.amount === amount) || opsRechargeTiers[0];
+  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  const entropy = Math.random().toString(36).slice(2, 8).toUpperCase();
+  return {
+    merchantOrderId: `AP-OPS-RECHARGE-${date}-${entropy}`,
+    email: String(form.email || "customer@example.com").trim(),
+    address: "",
+    notes: `运营测试充值页面档位：CNY ${tier.amount}，${tier.tag}`,
+    currency: "CNY",
+    total: tier.amount,
+    delivery: "运营测试充值记录；支付完成后用于后台核验支付链路，不产生实物发货。",
+    checkoutLanguage: "zh-CN",
+    items: [{
+      id: `ops-recharge-cny-${tier.amount}`,
+      name: `运营测试充值 CNY ${tier.amount}`,
+      type: "Operations Recharge Test",
+      qty: 1,
+      price: tier.amount
+    }]
+  };
+}
+
+async function createOpsRechargeOrder(form) {
+  const body = await apiJson("/.netlify/functions/orders-create", {
+    method: "POST",
+    body: JSON.stringify(opsRechargeOrderPayload(form))
+  });
+  saveServerOrderCache(body.order);
+  return body.order;
+}
+
 async function fetchServerOrder(orderId) {
   const body = await apiJson(`/.netlify/functions/orders-get?orderId=${encodeURIComponent(orderId)}`);
   saveServerOrderCache(body.order);
@@ -2461,6 +2503,66 @@ function checkoutPage(error = sessionStorage.getItem("atelier-checkout-error") |
   `;
 }
 
+function opsRechargeTestPage(error = sessionStorage.getItem("atelier-ops-recharge-error") || "") {
+  sessionStorage.removeItem("atelier-ops-recharge-error");
+  const defaultAmount = opsRechargeTiers[0].amount;
+  return `
+    <main class="ops-recharge-page">
+      <header class="ops-recharge-header">
+        <a class="brand" href="#/" aria-label="Atelier Printworks home">
+          <span class="brand-mark">AP</span>
+          <span>
+            <strong>Atelier Printworks</strong>
+            <small>运营测试入口</small>
+          </span>
+        </a>
+        <span>人民币 CNY</span>
+      </header>
+      <section class="ops-recharge-panel">
+        <div class="ops-recharge-title">
+          <span>内部测试页面</span>
+          <h1>账户充值测试</h1>
+          <p>仅限运营和测试人员通过直链访问。选择金额后将跳转支付宝支付，用于验证主站支付链路。</p>
+        </div>
+        <form data-ops-recharge-form class="ops-recharge-form">
+          ${error ? `<div class="form-error">${escapeHtml(error)}</div>` : ""}
+          <div class="ops-tier-grid" role="radiogroup" aria-label="充值金额">
+            ${opsRechargeTiers.map((tier, index) => `
+              <label class="ops-tier-card">
+                <input type="radio" name="amount" value="${tier.amount}" ${index === 0 ? "checked" : ""} />
+                <span class="ops-tier-tag">${tier.tag}</span>
+                <strong>¥${tier.amount.toLocaleString("zh-CN")}</strong>
+              </label>
+            `).join("")}
+          </div>
+          <section class="ops-payment-card">
+            <div class="ops-payment-heading">
+              <span class="ops-pay-icon">支</span>
+              <div>
+                <strong>支付宝支付</strong>
+                <p>点击支付后跳转支付宝完成付款。</p>
+              </div>
+              <span class="ops-pay-check">✓</span>
+            </div>
+          </section>
+          <label class="ops-email-label">
+            接收凭证邮箱 <span>可选</span>
+            <input name="email" type="email" placeholder="customer@example.com" />
+          </label>
+          <p class="ops-recharge-note">该页面不会出现在首页、导航或 Footer 中；测试订单将在后台以“运营测试充值”记录展示。</p>
+          <div class="ops-pay-bar">
+            <div>
+              <span>应付金额</span>
+              <strong data-ops-recharge-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong>
+            </div>
+            <button class="ops-pay-button" type="submit">立即支付</button>
+          </div>
+        </form>
+      </section>
+    </main>
+  `;
+}
+
 function orderCard(order) {
   return `
     <article class="order-card">
@@ -2895,6 +2997,7 @@ function route() {
   if (path === "/membership") return membershipPage();
   if (path === "/cart") return cartPage();
   if (path === "/checkout") return checkoutPage();
+  if (path === "/ops-recharge-test") return opsRechargeTestPage();
   if (path === "/order-lookup") return orderLookupPage();
   if (path === "/order-success") return orderSuccessPage();
   if (path === "/admin") return adminOrdersPage();
@@ -2976,6 +3079,40 @@ function render() {
       } catch (error) {
         resetCheckoutProcessingState();
         sessionStorage.setItem("atelier-checkout-error", error.message || t("requiredField"));
+        render();
+      }
+    });
+  }
+  const opsRechargeForm = app.querySelector("[data-ops-recharge-form]");
+  if (opsRechargeForm) {
+    const totalDisplay = opsRechargeForm.querySelector("[data-ops-recharge-total]");
+    opsRechargeForm.querySelectorAll("input[name='amount']").forEach(input => {
+      input.addEventListener("change", () => {
+        if (totalDisplay) totalDisplay.textContent = `¥${Number(input.value || 0).toLocaleString("zh-CN")}`;
+      });
+    });
+    opsRechargeForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(opsRechargeForm));
+      if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+        sessionStorage.setItem("atelier-ops-recharge-error", "请输入有效邮箱，或留空使用默认测试邮箱。");
+        render();
+        return;
+      }
+      const submitButton = opsRechargeForm.querySelector("button[type='submit']");
+      if (submitButton) {
+        submitButton.disabled = true;
+        submitButton.textContent = "正在跳转...";
+      }
+      try {
+        const order = await createOpsRechargeOrder(data);
+        const session = await createHostedPaymentSession(order);
+        if (session.order) saveServerOrderCache(session.order);
+        sessionStorage.setItem("atelier-last-order", order.id);
+        if (session.checkoutUrl) location.href = session.checkoutUrl;
+        else location.href = `/order-success?order=${encodeURIComponent(order.id)}`;
+      } catch (error) {
+        sessionStorage.setItem("atelier-ops-recharge-error", error.message || "支付请求失败，请稍后再试。");
         render();
       }
     });
