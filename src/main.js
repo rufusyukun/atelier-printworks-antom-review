@@ -1354,13 +1354,13 @@ async function createHostedPaymentSession(order) {
 }
 
 async function fetchServerOrder(orderId) {
-  const body = await apiJson(`/.netlify/functions/orders-get?orderId=${encodeURIComponent(orderId)}`);
+  const body = await apiJson(`/.netlify/functions/orders-get?orderId=${encodeURIComponent(orderId)}&reconcile=1`);
   saveServerOrderCache(body.order);
   return body.order;
 }
 
 async function fetchAdminOrders() {
-  const body = await apiJson("/.netlify/functions/orders-get");
+  const body = await apiJson("/.netlify/functions/orders-get?reconcile=1");
   saveServerOrdersCache(body.orders || []);
   return body.orders || [];
 }
@@ -1519,8 +1519,14 @@ function saveAdminAuditLog(logs) {
 function adminAllOrders() {
   const merged = [...getServerOrdersCache(), ...getOrders(), ...mockOrders];
   return merged
+    .filter(order => !isInternalTestOrder(order))
     .filter((order, index, list) => list.findIndex(item => item.id === order.id) === index)
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+function isInternalTestOrder(order = {}) {
+  const id = String(order.id || "");
+  return id.startsWith("AP-STORAGE-PROBE") || id.startsWith("AP-RAPID-");
 }
 
 function orderProducts(order) {
@@ -1679,6 +1685,24 @@ function adminRiskLevelLabel(level) {
   return { High: "高风险", Medium: "中风险", Low: "低风险" }[level] || level;
 }
 
+function adminOrderStatusLabel(status = "") {
+  const normalized = String(status || "").toLowerCase();
+  return {
+    draft: "草稿",
+    pending_payment: "待支付确认",
+    pending: "待支付确认",
+    paid: "已支付",
+    payment_failed: "支付失败",
+    payment_blocked: "连续支付已拦截",
+    blocked: "连续支付已拦截",
+    fulfillment_pending: "待履约",
+    fulfilled: "已履约",
+    refunded: "已退款",
+    disputed: "争议处理中",
+    not_started: "未开始"
+  }[normalized] || status || "新订单";
+}
+
 function adminProductTypeLabel(type) {
   return {
     "Physical Product": "实体商品",
@@ -1695,7 +1719,7 @@ function adminDigitalDelivery(order) {
     .map((item, index) => ({
       name: item.product?.name || item.id,
       format: item.product?.type === "Commercial License" ? "PDF 授权证书" : "STL, 3MF, PDF 指南",
-      status: order.status || "待处理",
+      status: adminOrderStatusLabel(order.paymentStatus || order.status || "待处理"),
       firstAccess: order.id === "AP-DEMO-1001" ? "2026-06-24 04:22 UTC" : "待开放",
       firstDownload: order.id === "AP-DEMO-1001" ? "2026-06-24 04:24 UTC" : "未下载",
       downloads: order.id === "AP-DEMO-1001" ? index + 1 : 0,
@@ -2360,7 +2384,7 @@ function checkoutPage(error = sessionStorage.getItem("atelier-checkout-error") |
 function orderCard(order) {
   return `
     <article class="order-card">
-      <span class="pill">${order.status}</span>
+      <span class="pill">${adminOrderStatusLabel(order.paymentStatus || order.status)}</span>
       <h2>${t("orderNumber")}: ${order.id}</h2>
       <p>${t("total")}: <strong>${orderMoney(order.total, order.currency || checkoutCurrency)}</strong></p>
       <p>${t("delivery")}: ${order.delivery}</p>
@@ -2605,7 +2629,7 @@ function adminOrdersPage() {
                 <span>${orderTypes(order).map(type => `<small>${escapeHtml(adminProductTypeLabel(type))}</small>`).join("")}</span>
                 <span><strong>${orderMoney(order.total || 0, order.currency || checkoutCurrency)}</strong></span>
                 <span>${adminStatusPill(risk[0], risk[1])}</span>
-                <span>${escapeHtml(operational.fulfillmentStatus || order.status || "新订单")}</span>
+                <span>${escapeHtml(adminOrderStatusLabel(order.paymentStatus || order.status || operational.fulfillmentStatus))}</span>
                 <span><a class="button secondary compact-button" href="#/admin/orders/${order.id}">打开</a></span>
               </article>
             `;
@@ -2653,7 +2677,7 @@ function adminOrderDetailPage(orderId) {
             <div><dt>原始地址</dt><dd>${escapeHtml(order.address || "未提供")}</dd></div>
             <div><dt>原始备注</dt><dd>${escapeHtml(order.notes || "无")}</dd></div>
             <div><dt>订单金额</dt><dd>${orderMoney(order.total || 0, order.currency || checkoutCurrency)}</dd></div>
-            <div><dt>订单状态</dt><dd>${escapeHtml(order.status || "新订单")}</dd></div>
+            <div><dt>订单状态</dt><dd>${escapeHtml(adminOrderStatusLabel(order.paymentStatus || order.status))}</dd></div>
           </dl>
           <h3>商品</h3>
           <ul class="admin-list">

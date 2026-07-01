@@ -56,6 +56,16 @@ const checks = [
       !main.includes("(order.total || 0) >= 500")
   },
   {
+    name: "admin hides internal probes and displays Chinese statuses",
+    pass: main.includes("function isInternalTestOrder") &&
+      main.includes('id.startsWith("AP-STORAGE-PROBE")') &&
+      main.includes('id.startsWith("AP-RAPID-")') &&
+      main.includes("function adminOrderStatusLabel") &&
+      main.includes("待支付确认") &&
+      main.includes("已支付") &&
+      main.includes("连续支付已拦截")
+  },
+  {
     name: "admin interface defaults to Chinese",
     pass: main.includes("订单证据与风控工作台") && main.includes("运营手工编辑") && main.includes("导出证据包")
   },
@@ -140,6 +150,16 @@ const checks = [
       readFileSync(paymentSessionPath, "utf8").includes("jsonResponse(429") &&
       readFileSync(paymentSessionPath, "utf8").includes("payment_blocked") &&
       main.includes("连续支付已被系统拦截")
+  },
+  {
+    name: "server can reconcile payment status through inquiry API",
+    pass: orderService.includes("inquirePayment") &&
+      orderService.includes("reconcilePayment") &&
+      orderService.includes("stateFromInquiryPaymentStatus") &&
+      orderService.includes("inquiryPaymentPath") &&
+      readFileSync(ordersGetPath, "utf8").includes("reconcilePayment") &&
+      main.includes("orders-get?reconcile=1") &&
+      main.includes("orderId=${encodeURIComponent(orderId)}&reconcile=1")
   },
   {
     name: "order service has optional blob persistence fallback",

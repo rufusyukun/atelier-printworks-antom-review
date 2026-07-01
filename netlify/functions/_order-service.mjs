@@ -207,7 +207,8 @@ async function saveOrderIndex(store, orderId) {
 }
 
 function listableOrder(order) {
-  return order?.id && !String(order.id).startsWith("__") && !String(order.id).startsWith("AP-STORAGE-PROBE");
+  const id = String(order?.id || "");
+  return order?.id && !id.startsWith("__") && !id.startsWith("AP-STORAGE-PROBE") && !id.startsWith("AP-RAPID-");
 }
 
 export async function getOrder(orderId) {
@@ -343,6 +344,72 @@ export async function appendPaymentEvent(orderId, paymentEvent) {
   return updateOrder(orderId, { paymentEvents, rawPaymentEvents });
 }
 
+export function stateFromInquiryPaymentStatus(paymentStatus = "") {
+  const normalized = String(paymentStatus).toUpperCase();
+  if (normalized === "SUCCESS") return "paid";
+  if (["FAIL", "CANCELLED"].includes(normalized)) return "payment_failed";
+  if (["PROCESSING", "PENDING"].includes(normalized)) return "pending_payment";
+  return "pending_payment";
+}
+
+export async function inquirePayment(order) {
+  const config = antomConfig();
+  if (!paymentApiEnabled()) return null;
+  const status = paymentConfigStatus();
+  if (!status.readyForApi) return null;
+  const paymentRequestId = order.paymentRequestId || order.id;
+  if (!paymentRequestId) return null;
+  const requestUri = config.inquiryPaymentPath;
+  const requestTime = new Date().toISOString();
+  const requestBody = JSON.stringify({ paymentRequestId });
+  const signature = signApiRequest({
+    requestUri,
+    clientId: config.clientId,
+    requestTime,
+    privateKey: config.privateKey,
+    requestBody,
+    keyVersion: config.keyVersion
+  });
+  const response = await fetch(`${config.apiBaseUrl.replace(/\/$/, "")}${requestUri}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "client-id": config.clientId,
+      "request-time": requestTime,
+      signature
+    },
+    body: requestBody
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok || body.result?.resultStatus !== "S") return null;
+  return body;
+}
+
+export async function reconcilePayment(order) {
+  if (!order?.id || !/pending|processing/i.test(`${order.status || ""} ${order.paymentStatus || ""}`)) return order;
+  const inquiry = await inquirePayment(order);
+  if (!inquiry?.paymentStatus) return order;
+  const nextState = stateFromInquiryPaymentStatus(inquiry.paymentStatus);
+  const eventRecord = {
+    id: `inquiry-${order.id}-${Date.now()}`,
+    at: new Date().toISOString(),
+    status: inquiry.paymentStatus,
+    paymentProviderTransactionId: inquiry.paymentId || order.paymentProviderTransactionId || "",
+    raw: { source: "inquiryPayment", paymentStatus: inquiry.paymentStatus, paymentResultCode: inquiry.paymentResultCode, paymentTime: inquiry.paymentTime }
+  };
+  const paymentEvents = [...(order.paymentEvents || []), eventRecord];
+  const rawPaymentEvents = [...(order.rawPaymentEvents || []), eventRecord.raw];
+  return updateOrder(order.id, {
+    status: nextState,
+    paymentStatus: nextState === "paid" ? "paid" : nextState,
+    fulfillmentStatus: nextState === "paid" ? "fulfillment_pending" : order.fulfillmentStatus,
+    paymentProviderTransactionId: inquiry.paymentId || order.paymentProviderTransactionId || "",
+    paidAt: nextState === "paid" ? inquiry.paymentTime || new Date().toISOString() : order.paidAt,
+    paymentEvents,
+    rawPaymentEvents
+  });
+}
+
 export function stateFromPaymentResult(result = "") {
   const normalized = String(result).toLowerCase();
   if (/success|paid|finished|complete/.test(normalized)) return "paid";
@@ -374,7 +441,8 @@ export function antomConfig() {
     publicKey: env("ANTOM_PUBLIC_KEY"),
     merchantPublicKey: env("ANTOM_MERCHANT_PUBLIC_KEY"),
     keyVersion: env("ANTOM_KEY_VERSION") || "1",
-    merchantRegion: env("ANTOM_MERCHANT_REGION") || "HK"
+    merchantRegion: env("ANTOM_MERCHANT_REGION") || "HK",
+    inquiryPaymentPath: env("ANTOM_INQUIRY_PAYMENT_PATH") || "/ams/api/v1/payments/inquiryPayment"
   };
 }
 
