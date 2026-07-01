@@ -463,6 +463,7 @@ export function antomConfig() {
   return {
     apiBaseUrl: env("ANTOM_API_BASE_URL"),
     createSessionPath: env("ANTOM_CREATE_SESSION_PATH") || "/ams/api/v1/payments/createPaymentSession",
+    payPath: env("ANTOM_PAY_PATH") || "/ams/api/v1/payments/pay",
     clientId: env("ANTOM_CLIENT_ID"),
     merchantId: env("ANTOM_MERCHANT_ID"),
     privateKey: env("ANTOM_PRIVATE_KEY"),

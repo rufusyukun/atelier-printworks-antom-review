@@ -71,6 +71,105 @@ function checkoutPaymentMethods(order = {}) {
   }));
 }
 
+function paymentEntrypoint() {
+  return (process.env.PAYMENT_ENTRYPOINT || "pay").trim().toLowerCase();
+}
+
+function paymentUrlFromPayResponse(body = {}) {
+  return body.applinkUrl || body.schemeUrl || body.normalUrl || "";
+}
+
+async function createDirectWalletPayment(order, event) {
+  const config = antomConfig();
+  const status = paymentConfigStatus();
+  if (!status.readyForApi) {
+    throw new Error(`Payment API mode is missing required server environment variables: ${status.missing.join(", ")}`);
+  }
+  const requestUri = config.payPath;
+  const requestTime = new Date().toISOString();
+  const checkoutEnvironment = checkoutEnv(order, event);
+  const paymentMethodType = checkoutPaymentMethods(order)[0]?.paymentMethodType || "ALIPAY_CN";
+  const requestPayload = {
+    merchantRegion: config.merchantRegion,
+    productCode: "CASHIER_PAYMENT",
+    paymentRequestId: order.paymentRequestId || order.id,
+    paymentAmount: paymentAmount(order),
+    settlementStrategy: { settlementCurrency: order.currency },
+    paymentMethod: { paymentMethodType },
+    paymentRedirectUrl: `${siteUrl()}/order-success?order=${encodeURIComponent(order.id)}`,
+    paymentNotifyUrl: `${siteUrl()}/.netlify/functions/payment-webhook`,
+    env: checkoutEnvironment,
+    order: {
+      referenceOrderId: order.id,
+      orderDescription: `Atelier Printworks order ${order.id}`,
+      buyer: { referenceBuyerId: order.email, buyerEmail: order.email },
+      orderAmount: paymentAmount(order),
+      goods: orderGoods(order)
+    }
+  };
+  const requestBody = JSON.stringify(requestPayload);
+  const signature = signApiRequest({
+    requestUri,
+    clientId: config.clientId,
+    requestTime,
+    privateKey: config.privateKey,
+    requestBody,
+    keyVersion: config.keyVersion
+  });
+  const response = await fetch(`${config.apiBaseUrl.replace(/\/$/, "")}${requestUri}`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "client-id": config.clientId,
+      "request-time": requestTime,
+      signature
+    },
+    body: requestBody
+  });
+  const body = await response.json().catch(() => ({}));
+  const checkoutUrl = paymentUrlFromPayResponse(body);
+  const diagnostics = {
+    createdAt: new Date().toISOString(),
+    mode: paymentMode(),
+    entrypoint: "pay",
+    httpStatus: response.status,
+    resultStatus: body.result?.resultStatus || "",
+    resultCode: body.result?.resultCode || "",
+    resultMessage: body.result?.resultMessage || "",
+    hasNormalUrl: Boolean(body.normalUrl),
+    hasApplinkUrl: Boolean(body.applinkUrl),
+    hasSchemeUrl: Boolean(body.schemeUrl),
+    checkoutHost: checkoutUrlHost(checkoutUrl),
+    paymentId: body.paymentId || "",
+    requestShape: {
+      merchantRegion: requestPayload.merchantRegion,
+      productCode: requestPayload.productCode,
+      currency: requestPayload.paymentAmount.currency,
+      value: requestPayload.paymentAmount.value,
+      terminalType: checkoutEnvironment.terminalType,
+      osType: checkoutEnvironment.osType,
+      goodsCount: requestPayload.order.goods.length,
+      paymentMethodTypeList: [paymentMethodType]
+    }
+  };
+  const resultStatus = body.result?.resultStatus || "";
+  const resultCode = body.result?.resultCode || "";
+  const processable = resultStatus === "U" && resultCode === "PAYMENT_IN_PROCESS" && checkoutUrl;
+  if (!response.ok || body.result?.resultStatus === "F" || (!processable && resultStatus !== "S")) {
+    const error = new Error(`Direct wallet payment failed: ${response.status} ${resultCode} ${body.result?.resultMessage || ""}`.trim());
+    error.paymentDiagnostics = diagnostics;
+    throw error;
+  }
+  return {
+    paymentSessionId: body.paymentId || `pay-${order.id}`,
+    paymentRequestId: body.paymentRequestId || order.id,
+    paymentProviderTransactionId: body.paymentId || "",
+    checkoutUrl,
+    mode: paymentMode(),
+    paymentDiagnostics: diagnostics
+  };
+}
+
 async function createHostedPaymentSession(order, event) {
   const config = antomConfig();
   if (!paymentApiEnabled()) {
@@ -200,12 +299,15 @@ export async function handler(event) {
       });
       return jsonResponse(429, { error: block.message, code: block.code, retryAfterSeconds: block.retryAfterSeconds, matchedOrderId: block.matchedOrderId, order: updated });
     }
-    const session = await createHostedPaymentSession(order, event);
+    const session = paymentEntrypoint() === "pay"
+      ? await createDirectWalletPayment(order, event)
+      : await createHostedPaymentSession(order, event);
     const updated = await updateOrder(order.id, {
       status: "pending_payment",
       paymentStatus: "pending",
       paymentRequestId: session.paymentRequestId,
       paymentSessionId: session.paymentSessionId,
+      paymentProviderTransactionId: session.paymentProviderTransactionId || order.paymentProviderTransactionId || "",
       paymentDiagnostics: {
         ...(order.paymentDiagnostics || {}),
         lastCreateSession: session.paymentDiagnostics
