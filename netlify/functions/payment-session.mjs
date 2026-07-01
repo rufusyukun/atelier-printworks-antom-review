@@ -98,6 +98,12 @@ function paymentUrlFromPayResponse(body = {}) {
   return body.applinkUrl || body.schemeUrl || body.normalUrl || "";
 }
 
+function isInternalPaymentProbe(order = {}) {
+  const id = String(order.id || order.merchantOrderId || "").toUpperCase();
+  const email = String(order.email || "").toLowerCase();
+  return id.startsWith("AP-STORAGE-PROBE") || id.startsWith("AP-RAPID-") || email === "storage-probe@example.com";
+}
+
 async function createDirectWalletPayment(order, event) {
   const config = antomConfig();
   const status = paymentConfigStatus();
@@ -310,6 +316,25 @@ export async function handler(event) {
   if (!order) return jsonResponse(404, { error: "Order not found" });
 
   try {
+    if (isInternalPaymentProbe(order)) {
+      const updated = await updateOrder(order.id, {
+        status: "payment_blocked",
+        paymentStatus: "blocked",
+        paymentDiagnostics: {
+          ...(order.paymentDiagnostics || {}),
+          lastCreateSessionError: {
+            at: new Date().toISOString(),
+            resultCode: "INTERNAL_PAYMENT_PROBE_BLOCKED",
+            resultMessage: "Internal payment probes are blocked before reaching the payment provider."
+          }
+        },
+        supportNotes: [
+          ...(order.supportNotes || []),
+          { at: new Date().toISOString(), note: "内部支付探针已被本系统拦截，未向支付服务商发起交易。" }
+        ]
+      });
+      return jsonResponse(403, { error: "Internal payment probe blocked before provider submission.", code: "INTERNAL_PAYMENT_PROBE_BLOCKED", order: updated });
+    }
     const block = await recentSuccessfulPaymentBlock(order);
     if (block) {
       const updated = await updateOrder(order.id, {

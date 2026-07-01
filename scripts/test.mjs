@@ -232,6 +232,13 @@ const checks = [
       readFileSync(paymentSessionPath, "utf8").includes("currencyNormalized")
   },
   {
+    name: "internal payment probes are blocked before provider submission",
+    pass: existsSync(paymentSessionPath) &&
+      readFileSync(paymentSessionPath, "utf8").includes("function isInternalPaymentProbe") &&
+      readFileSync(paymentSessionPath, "utf8").includes("INTERNAL_PAYMENT_PROBE_BLOCKED") &&
+      readFileSync(paymentSessionPath, "utf8").includes("jsonResponse(403")
+  },
+  {
     name: "hosted checkout uses standard HTTPS return paths",
     pass: existsSync(paymentSessionPath) &&
       readFileSync(paymentSessionPath, "utf8").includes("}/order-success?order=") &&
