@@ -26,3 +26,8 @@
   for = "/src/styles.css"
   [headers.values]
     Cache-Control = "no-cache, no-store, must-revalidate"
+
+[[headers]]
+  for = "/src/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
