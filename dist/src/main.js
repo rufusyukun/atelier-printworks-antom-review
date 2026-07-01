@@ -1626,15 +1626,50 @@ function adminOrderState(order) {
   };
 }
 
+function orderCustomerKey(order = {}, operational = adminOrderState(order)) {
+  return String(operational.customerEmail || order.email || "").trim().toLowerCase();
+}
+
+function orderIpKey(order = {}) {
+  return String(order.customerIp || "").trim();
+}
+
+function ordersWithinWindow(order, matcher, hours = 2) {
+  const createdAt = new Date(order.createdAt || 0).getTime();
+  if (!createdAt) return [];
+  const windowMs = hours * 60 * 60 * 1000;
+  return adminAllOrders().filter(item => {
+    const itemCreatedAt = new Date(item.createdAt || 0).getTime();
+    return item.id !== order.id && itemCreatedAt && Math.abs(itemCreatedAt - createdAt) <= windowMs && matcher(item);
+  });
+}
+
+function isPaidOrder(order = {}) {
+  return /paid|success|fulfilled|已支付/i.test(`${order.paymentStatus || ""} ${order.status || ""} ${order.fulfillmentStatus || ""}`);
+}
+
 function adminOrderRisk(order, operational = adminOrderState(order)) {
   const types = orderTypes(order);
   const logs = adminAuditLog().filter(log => log.orderId === order.id);
   const risks = [];
-  if ((order.total || 0) >= 500) risks.push(["High", "高金额订单"]);
+  const customerKey = orderCustomerKey(order, operational);
+  const ipKey = orderIpKey(order);
+  const sameCustomerRecent = customerKey
+    ? ordersWithinWindow(order, item => orderCustomerKey(item) === customerKey, 2)
+    : [];
+  const sameIpRecent = ipKey && ipKey !== "Unknown"
+    ? ordersWithinWindow(order, item => orderIpKey(item) === ipKey, 2)
+    : [];
+  const sameCustomerPaidRecent = sameCustomerRecent.filter(isPaidOrder);
+  const sameIpPaidRecent = sameIpRecent.filter(isPaidOrder);
+  if (sameCustomerPaidRecent.length >= 2) risks.push(["High", `同一邮箱 2 小时内连续支付 ${sameCustomerPaidRecent.length + (isPaidOrder(order) ? 1 : 0)} 笔`]);
+  else if (sameCustomerRecent.length >= 2) risks.push(["Medium", `同一邮箱 2 小时内连续下单 ${sameCustomerRecent.length + 1} 笔`]);
+  if (sameIpPaidRecent.length >= 3) risks.push(["High", `同一 IP 2 小时内多笔支付成功，需要复核`]);
+  else if (sameIpRecent.length >= 4) risks.push(["Medium", `同一 IP 2 小时内高频下单，需要观察`]);
   if (types.includes("Commercial License")) risks.push(["Medium", "商业授权订单需要核验经营主体"]);
   if (types.includes("Digital STL Pack") && /refund|退款/i.test(operational.supportNotes || "")) risks.push(["High", "数字商品交付后出现退款诉求"]);
   if (logs.some(log => /country|address|customerEmail|phone/i.test((log.fields || []).join(",")))) risks.push(["Medium", "客户或物流敏感字段被编辑"]);
-  if (!operational.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(operational.customerEmail)) risks.push(["High", "运营邮箱缺失或格式无效"]);
+  if (!operational.customerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(operational.customerEmail)) risks.push(["Medium", "客户邮箱缺失、脱敏或格式待补全"]);
   if (!risks.length) risks.push(["Low", "未命中主要风险规则"]);
   return risks;
 }
