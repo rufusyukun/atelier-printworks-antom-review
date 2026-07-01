@@ -64,7 +64,7 @@ async function createHostedPaymentSession(order, event) {
       merchantRegion: config.merchantRegion
     },
     env: checkoutEnv(order, event),
-    paymentRedirectUrl: `${siteUrl()}/#/order-success?order=${encodeURIComponent(order.id)}`,
+    paymentRedirectUrl: `${siteUrl()}/order-success?order=${encodeURIComponent(order.id)}`,
     paymentNotifyUrl: `${siteUrl()}/.netlify/functions/payment-webhook`
   });
   const signature = signApiRequest({

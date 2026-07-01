@@ -1829,7 +1829,7 @@ function renderIllustration(product, index = 0) {
 }
 
 function nav() {
-  const rawPath = location.hash.replace("#", "") || "/";
+  const rawPath = currentRoute();
   const path = rawPath.split("?")[0];
   const isActive = href => {
     const targetRaw = href.replace("#", "");
@@ -2121,7 +2121,7 @@ function membershipPage() {
 }
 
 function productsPage() {
-  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const params = currentParams();
   const active = params.get("category");
   const visible = active ? products.filter(product => product.category === active || product.type.toLowerCase().includes(active)) : products;
   const activeCategory = categories.find(category => category.id === active);
@@ -2351,7 +2351,7 @@ function orderLookupPage(result = null, error = sessionStorage.getItem("atelier-
 }
 
 function orderSuccessPage() {
-  const params = new URLSearchParams(location.hash.split("?")[1] || "");
+  const params = currentParams();
   const order = findOrder(params.get("order") || sessionStorage.getItem("atelier-last-order") || "");
   return `
     ${nav()}
@@ -2704,9 +2704,22 @@ function auditChecklistPage() {
   `;
 }
 
+function currentRoute() {
+  const hashRoute = location.hash.replace("#", "");
+  const pathRoute = `${location.pathname || "/"}${location.search || ""}`;
+  return hashRoute || pathRoute || "/";
+}
+
+function currentPath() {
+  return currentRoute().split("?")[0] || "/";
+}
+
+function currentParams() {
+  return new URLSearchParams(currentRoute().split("?")[1] || "");
+}
+
 function route() {
-  const raw = location.hash.replace("#", "") || "/";
-  const path = raw.split("?")[0];
+  const path = currentPath();
   const productMatch = path.match(/^\/products\/(.+)$/);
   const adminOrderMatch = path.match(/^\/admin\/orders\/(.+)$/);
   if (path === "/") return homePage();
@@ -2822,28 +2835,27 @@ function render() {
   app.querySelectorAll("[data-export-evidence]").forEach(button => {
     button.addEventListener("click", () => downloadAdminEvidence(button.dataset.exportEvidence));
   });
-  const rawPath = location.hash.replace("#", "") || "/";
-  const path = rawPath.split("?")[0];
+  const path = currentPath();
   if (path === "/admin" && !window.__atelierAdminOrdersLoading) {
     window.__atelierAdminOrdersLoading = true;
     fetchAdminOrders()
       .then(() => {
         window.__atelierAdminOrdersLoading = false;
-        if ((location.hash.replace("#", "") || "/").split("?")[0] === "/admin") render();
+        if (currentPath() === "/admin") render();
       })
       .catch(() => {
         window.__atelierAdminOrdersLoading = false;
       });
   }
   if (path === "/order-success" && !window.__atelierOrderSuccessLoading) {
-    const params = new URLSearchParams(rawPath.split("?")[1] || "");
+    const params = currentParams();
     const orderId = params.get("order") || sessionStorage.getItem("atelier-last-order") || "";
     if (orderId && !findOrder(orderId)) {
       window.__atelierOrderSuccessLoading = true;
       fetchServerOrder(orderId)
         .then(() => {
           window.__atelierOrderSuccessLoading = false;
-          if ((location.hash.replace("#", "") || "/").split("?")[0] === "/order-success") render();
+          if (currentPath() === "/order-success") render();
         })
         .catch(() => {
           window.__atelierOrderSuccessLoading = false;

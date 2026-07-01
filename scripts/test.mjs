@@ -143,6 +143,15 @@ const checks = [
       readFileSync(paymentSessionPath, "utf8").includes("checkoutEnv(order, event)")
   },
   {
+    name: "hosted checkout uses standard HTTPS return paths",
+    pass: existsSync(paymentSessionPath) &&
+      readFileSync(paymentSessionPath, "utf8").includes("}/order-success?order=") &&
+      !readFileSync(paymentSessionPath, "utf8").includes("}/#/order-success?order=") &&
+      main.includes("function currentRoute()") &&
+      main.includes("location.pathname") &&
+      main.includes("currentParams()")
+  },
+  {
     name: "checkout creates server order before hosted payment session",
     pass: main.includes("createServerOrder") && main.includes("createHostedPaymentSession") && main.includes("/.netlify/functions/orders-create") && main.includes("/.netlify/functions/payment-session")
   },
