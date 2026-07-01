@@ -77,7 +77,6 @@ async function createHostedPaymentSession(order, event) {
   const checkoutEnvironment = checkoutEnv(order, event);
   const requestPayload = {
     merchantRegion: config.merchantRegion,
-    merchantAccountId: config.merchantId,
     productCode: "CASHIER_PAYMENT",
     productScene: "CHECKOUT_PAYMENT",
     locale: checkoutLocale(order.checkoutLanguage),
@@ -209,6 +208,6 @@ export async function handler(event) {
         { at: new Date().toISOString(), note: `Hosted checkout session error: ${error.message}` }
       ]
     });
-    return jsonResponse(500, { error: error.message });
+    return jsonResponse(500, { error: error.message, paymentDiagnostics: error.paymentDiagnostics || null });
   }
 }
