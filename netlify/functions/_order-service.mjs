@@ -382,13 +382,40 @@ export async function inquirePayment(order) {
     body: requestBody
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok || body.result?.resultStatus !== "S") return null;
+  if (!response.ok || body.result?.resultStatus !== "S") {
+    return {
+      inquiryFailed: true,
+      httpStatus: response.status,
+      resultStatus: body.result?.resultStatus || "",
+      resultCode: body.result?.resultCode || "",
+      resultMessage: body.result?.resultMessage || "",
+      paymentRequestId
+    };
+  }
   return body;
 }
 
 export async function reconcilePayment(order) {
   if (!order?.id || !/pending|processing/i.test(`${order.status || ""} ${order.paymentStatus || ""}`)) return order;
+  const lastInquiry = order.paymentDiagnostics?.lastInquiryPayment;
+  const lastInquiryAt = new Date(lastInquiry?.createdAt || 0).getTime();
+  if (lastInquiryAt && Date.now() - lastInquiryAt < 10 * 60 * 1000) return order;
   const inquiry = await inquirePayment(order);
+  if (inquiry.inquiryFailed) {
+    return updateOrder(order.id, {
+      paymentDiagnostics: {
+        ...(order.paymentDiagnostics || {}),
+        lastInquiryPayment: {
+          createdAt: new Date().toISOString(),
+          httpStatus: inquiry.httpStatus,
+          resultStatus: inquiry.resultStatus,
+          resultCode: inquiry.resultCode,
+          resultMessage: inquiry.resultMessage,
+          paymentRequestId: inquiry.paymentRequestId
+        }
+      }
+    });
+  }
   if (!inquiry?.paymentStatus) return order;
   const nextState = stateFromInquiryPaymentStatus(inquiry.paymentStatus);
   const eventRecord = {

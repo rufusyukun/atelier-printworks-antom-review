@@ -166,8 +166,9 @@ const checks = [
       orderService.includes("stateFromInquiryPaymentStatus") &&
       orderService.includes("inquiryPaymentPath") &&
       readFileSync(ordersGetPath, "utf8").includes("reconcilePayment") &&
-      main.includes("orders-get?reconcile=1") &&
-      main.includes("orderId=${encodeURIComponent(orderId)}&reconcile=1")
+      orderService.includes("lastInquiryPayment") &&
+      !main.includes("orders-get?reconcile=1") &&
+      !main.includes("orderId=${encodeURIComponent(orderId)}&reconcile=1")
   },
   {
     name: "order service has optional blob persistence fallback",

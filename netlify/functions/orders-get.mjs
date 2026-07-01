@@ -14,8 +14,5 @@ export async function handler(event) {
     return jsonResponse(200, { order });
   }
   let orders = await listOrders();
-  if (shouldReconcile) {
-    orders = await Promise.all(orders.map(order => reconcilePayment(order)));
-  }
   return jsonResponse(200, { orders });
 }

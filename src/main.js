@@ -1368,13 +1368,13 @@ async function createHostedPaymentSession(order) {
 }
 
 async function fetchServerOrder(orderId) {
-  const body = await apiJson(`/.netlify/functions/orders-get?orderId=${encodeURIComponent(orderId)}&reconcile=1`);
+  const body = await apiJson(`/.netlify/functions/orders-get?orderId=${encodeURIComponent(orderId)}`);
   saveServerOrderCache(body.order);
   return body.order;
 }
 
 async function fetchAdminOrders() {
-  const body = await apiJson("/.netlify/functions/orders-get?reconcile=1");
+  const body = await apiJson("/.netlify/functions/orders-get");
   saveServerOrdersCache(body.orders || []);
   return body.orders || [];
 }
@@ -1730,10 +1730,20 @@ function paymentDiagnosticValue(value) {
 function adminPaymentDiagnostics(order = {}) {
   const diagnostics = order.paymentDiagnostics || {};
   const latest = diagnostics.lastCreateSession || diagnostics.lastCreateSessionError || null;
+  const inquiry = diagnostics.lastInquiryPayment || null;
   if (!latest) {
     return {
-      summary: "暂无支付会话诊断。该订单可能创建于诊断功能上线前，或尚未进入托管支付页。",
-      rows: []
+      summary: inquiry
+        ? "暂无支付会话诊断，但已记录支付状态查询结果。"
+        : "暂无支付会话诊断。该订单可能创建于诊断功能上线前，或尚未进入托管支付页。",
+      rows: inquiry ? [
+        ["最近查询时间", inquiry.createdAt],
+        ["查询 HTTP 状态", inquiry.httpStatus],
+        ["查询返回状态", inquiry.resultStatus],
+        ["查询返回代码", inquiry.resultCode],
+        ["查询返回信息", inquiry.resultMessage],
+        ["查询 paymentRequestId", inquiry.paymentRequestId]
+      ] : []
     };
   }
   const shape = latest.requestShape || {};
@@ -1759,7 +1769,10 @@ function adminPaymentDiagnostics(order = {}) {
       ["语言", shape.locale],
       ["产品代码", shape.productCode],
       ["产品场景", shape.productScene],
-      ["指定支付方式", shape.paymentMethodTypeList]
+      ["指定支付方式", shape.paymentMethodTypeList],
+      ["最近查询时间", inquiry?.createdAt],
+      ["查询返回代码", inquiry?.resultCode],
+      ["查询返回信息", inquiry?.resultMessage]
     ].filter(([, value]) => value !== undefined)
   };
 }
