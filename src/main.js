@@ -2793,6 +2793,8 @@ function currentParams() {
   return new URLSearchParams(currentRoute().split("?")[1] || "");
 }
 
+let lastRenderedRoute = "";
+
 function route() {
   const path = currentPath();
   const productMatch = path.match(/^\/products\/(.+)$/);
@@ -2820,7 +2822,11 @@ function route() {
 }
 
 function render() {
+  const renderRoute = currentRoute();
+  const shouldResetScroll = renderRoute !== lastRenderedRoute;
+  const previousScrollY = window.scrollY;
   app.innerHTML = route();
+  lastRenderedRoute = renderRoute;
   document.documentElement.lang = currentLang;
   const languageSelect = document.querySelector(".language-select");
   if (languageSelect) {
@@ -2937,7 +2943,7 @@ function render() {
         });
     }
   }
-  window.scrollTo({ top: 0, behavior: "instant" });
+  window.scrollTo({ top: shouldResetScroll ? 0 : previousScrollY, behavior: "instant" });
 }
 
 window.addEventListener("hashchange", render);

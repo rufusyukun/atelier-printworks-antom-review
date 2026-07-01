@@ -66,6 +66,14 @@ const checks = [
       main.includes("连续支付已拦截")
   },
   {
+    name: "admin detail rerenders preserve scroll position",
+    pass: main.includes("let lastRenderedRoute") &&
+      main.includes("shouldResetScroll") &&
+      main.includes("previousScrollY") &&
+      main.includes("shouldResetScroll ? 0 : previousScrollY") &&
+      !main.includes("window.scrollTo({ top: 0, behavior: \"instant\" });")
+  },
+  {
     name: "admin interface defaults to Chinese",
     pass: main.includes("订单证据与风控工作台") && main.includes("运营手工编辑") && main.includes("导出证据包")
   },
