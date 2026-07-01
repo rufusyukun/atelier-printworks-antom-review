@@ -136,6 +136,13 @@ const checks = [
       readFileSync(ordersGetPath, "utf8").includes("storage\") === \"status")
   },
   {
+    name: "server order list is backed by an explicit index",
+    pass: orderService.includes("ORDER_INDEX_KEY") &&
+      orderService.includes("saveOrderIndex") &&
+      orderService.includes("listableOrder") &&
+      orderService.includes("indexedOrders")
+  },
+  {
     name: "payment functions keep live credentials and signature handling server-side",
     pass: orderService.includes("signApiRequest") &&
       orderService.includes("verifyApiSignature") &&

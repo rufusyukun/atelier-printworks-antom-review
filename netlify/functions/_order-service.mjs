@@ -14,6 +14,7 @@ const ORDER_STATES = [
 
 const POLICY_VERSION = "2026-07-01-payment-terms";
 const MEMORY_KEY = "__atelierPrintworksOrders";
+const ORDER_INDEX_KEY = "__order_index";
 let lastStorageFallbackReason = "";
 
 function memoryStore() {
@@ -182,6 +183,7 @@ export async function saveOrder(order) {
       if (order.merchantOrderId && order.merchantOrderId !== order.id) {
         await store.setJSON(order.merchantOrderId, order);
       }
+      await saveOrderIndex(store, order.id);
       return order;
     } catch (error) {
       lastStorageFallbackReason = error.message || String(error);
@@ -190,6 +192,21 @@ export async function saveOrder(order) {
   }
   memoryStore().set(order.id, order);
   return order;
+}
+
+async function saveOrderIndex(store, orderId) {
+  try {
+    const existing = await store.get(ORDER_INDEX_KEY, { type: "json" });
+    const ids = Array.isArray(existing?.ids) ? existing.ids : [];
+    const next = [orderId, ...ids.filter(id => id !== orderId)].slice(0, 250);
+    await store.setJSON(ORDER_INDEX_KEY, { ids: next, updatedAt: new Date().toISOString() });
+  } catch (error) {
+    lastStorageFallbackReason = error.message || String(error);
+  }
+}
+
+function listableOrder(order) {
+  return order?.id && !String(order.id).startsWith("__") && !String(order.id).startsWith("AP-STORAGE-PROBE");
 }
 
 export async function getOrder(orderId) {
@@ -221,11 +238,20 @@ export async function listOrders() {
   const store = await blobStore();
   if (store) {
     try {
+      const index = await store.get(ORDER_INDEX_KEY, { type: "json" }).catch(() => null);
+      const indexedOrders = [];
+      for (const id of index?.ids || []) {
+        const order = await store.get(id, { type: "json" }).catch(() => null);
+        if (listableOrder(order) && !indexedOrders.some(item => item.id === order.id)) indexedOrders.push(order);
+      }
+      if (indexedOrders.length) {
+        return indexedOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
+      }
       const list = await store.list();
       const orders = [];
       for (const blob of list.blobs || []) {
         const order = await store.get(blob.key, { type: "json" });
-        if (order?.id && !orders.some(item => item.id === order.id)) orders.push(order);
+        if (listableOrder(order) && !orders.some(item => item.id === order.id)) orders.push(order);
       }
       return orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
     } catch (error) {
