@@ -63,9 +63,7 @@ function checkoutPaymentMethods(order = {}) {
     .split(",")
     .map(item => item.trim().toUpperCase())
     .filter(Boolean);
-  const defaultMethods = checkoutEnv(order, { headers: { "user-agent": order.userAgent || "" } }).osType === "IOS"
-    ? ["ALIPAY_CN", "APPLEPAY", "CARD"]
-    : ["ALIPAY_CN", "CARD"];
+  const defaultMethods = ["CARD"];
   return (methods.length ? methods : defaultMethods).map((paymentMethodType, index) => ({
     paymentMethodType,
     expressCheckout: ["ALIPAY_CN", "APPLEPAY", "GOOGLEPAY"].includes(paymentMethodType),

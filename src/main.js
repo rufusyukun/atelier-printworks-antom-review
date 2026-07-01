@@ -1,6 +1,20 @@
 const app = document.querySelector("#app");
 const checkoutCurrency = "HKD";
 const usdToHkdRate = 7.8;
+const checkoutSubmittingKey = "atelier-checkout-submitting";
+
+function resetCheckoutProcessingState() {
+  sessionStorage.removeItem(checkoutSubmittingKey);
+  document.querySelectorAll("[data-checkout-form] button[type='submit']").forEach(button => {
+    button.disabled = false;
+    button.textContent = t("placeOrder");
+  });
+}
+
+window.addEventListener("pageshow", resetCheckoutProcessingState);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") resetCheckoutProcessingState();
+});
 
 const categories = [
   {
@@ -2929,6 +2943,7 @@ function render() {
         submitButton.disabled = true;
         submitButton.textContent = "Processing...";
       }
+      sessionStorage.setItem(checkoutSubmittingKey, "1");
       try {
         const order = await createServerOrder(data);
         const session = await createHostedPaymentSession(order);
@@ -2941,6 +2956,7 @@ function render() {
           location.hash = `#/order-success?order=${order.id}`;
         }
       } catch (error) {
+        resetCheckoutProcessingState();
         sessionStorage.setItem("atelier-checkout-error", error.message || t("requiredField"));
         render();
       }
