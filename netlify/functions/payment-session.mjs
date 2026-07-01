@@ -29,6 +29,25 @@ function paymentAmount(order, value = order.total) {
   return { currency: order.currency, value: String(Math.round(Number(value || 0) * 100)) };
 }
 
+function paymentCurrencyForMethod(order, paymentMethodType = "") {
+  if (paymentMethodType === "ALIPAY_CN") return "CNY";
+  return order.currency || "USD";
+}
+
+function convertPaymentValue(value, fromCurrency = "", toCurrency = "") {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount) || amount <= 0) return 0;
+  if (fromCurrency === toCurrency) return amount;
+  if (fromCurrency === "HKD" && toCurrency === "CNY") return amount * (7.2 / 7.8);
+  if (fromCurrency === "USD" && toCurrency === "CNY") return amount * 7.2;
+  return amount;
+}
+
+function paymentAmountForCurrency(order, value = order.total, currency = order.currency) {
+  const normalizedValue = convertPaymentValue(value, order.currency, currency);
+  return { currency, value: String(Math.round(normalizedValue * 100)) };
+}
+
 function goodsCategory(item = {}) {
   const type = String(item.type || "").toLowerCase();
   if (type.includes("digital")) return "digital goods/3d printable model files";
@@ -37,13 +56,13 @@ function goodsCategory(item = {}) {
   return "consumer goods/3d printed home and desk accessories";
 }
 
-function orderGoods(order) {
+function orderGoods(order, currency = order.currency) {
   return (order.items || []).map(item => ({
     referenceGoodsId: String(item.id || "").slice(0, 64),
     goodsName: String(item.name || item.id || "Atelier Printworks item").slice(0, 256),
     goodsCategory: goodsCategory(item),
     goodsQuantity: String(item.qty || 1),
-    goodsUnitAmount: paymentAmount(order, item.price || 0),
+    goodsUnitAmount: paymentAmountForCurrency(order, item.price || 0, currency),
     goodsUrl: `${siteUrl()}/products/${encodeURIComponent(item.id || "")}`,
     goodsSkuName: String(item.type || "Original 3D design").slice(0, 128)
   })).filter(item => item.referenceGoodsId);
@@ -89,12 +108,15 @@ async function createDirectWalletPayment(order, event) {
   const requestTime = new Date().toISOString();
   const checkoutEnvironment = checkoutEnv(order, event);
   const paymentMethodType = checkoutPaymentMethods(order)[0]?.paymentMethodType || "ALIPAY_CN";
+  const paymentCurrency = paymentCurrencyForMethod(order, paymentMethodType);
+  const normalizedPaymentAmount = paymentAmountForCurrency(order, order.total, paymentCurrency);
+  const normalizedGoods = orderGoods(order, paymentCurrency);
   const requestPayload = {
     merchantRegion: config.merchantRegion,
     productCode: "CASHIER_PAYMENT",
     paymentRequestId: order.paymentRequestId || order.id,
-    paymentAmount: paymentAmount(order),
-    settlementStrategy: { settlementCurrency: order.currency },
+    paymentAmount: normalizedPaymentAmount,
+    settlementStrategy: { settlementCurrency: paymentCurrency },
     paymentMethod: { paymentMethodType },
     paymentRedirectUrl: `${siteUrl()}/order-success?order=${encodeURIComponent(order.id)}`,
     paymentNotifyUrl: `${siteUrl()}/.netlify/functions/payment-webhook`,
@@ -103,8 +125,8 @@ async function createDirectWalletPayment(order, event) {
       referenceOrderId: order.id,
       orderDescription: `Atelier Printworks order ${order.id}`,
       buyer: { referenceBuyerId: order.email, buyerEmail: order.email },
-      orderAmount: paymentAmount(order),
-      goods: orderGoods(order)
+      orderAmount: normalizedPaymentAmount,
+      goods: normalizedGoods
     }
   };
   const requestBody = JSON.stringify(requestPayload);
@@ -145,6 +167,8 @@ async function createDirectWalletPayment(order, event) {
       merchantRegion: requestPayload.merchantRegion,
       productCode: requestPayload.productCode,
       currency: requestPayload.paymentAmount.currency,
+      originalCurrency: order.currency,
+      currencyNormalized: requestPayload.paymentAmount.currency !== order.currency,
       value: requestPayload.paymentAmount.value,
       terminalType: checkoutEnvironment.terminalType,
       osType: checkoutEnvironment.osType,

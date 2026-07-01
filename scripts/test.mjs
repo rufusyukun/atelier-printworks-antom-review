@@ -218,10 +218,18 @@ const checks = [
   {
     name: "hosted checkout request includes order goods for risk and display",
     pass: existsSync(paymentSessionPath) &&
-      readFileSync(paymentSessionPath, "utf8").includes("function orderGoods(order)") &&
+      readFileSync(paymentSessionPath, "utf8").includes("function orderGoods(order, currency = order.currency)") &&
       readFileSync(paymentSessionPath, "utf8").includes("goodsUnitAmount") &&
       readFileSync(paymentSessionPath, "utf8").includes("goodsUrl") &&
       readFileSync(paymentSessionPath, "utf8").includes("goods: orderGoods(order)")
+  },
+  {
+    name: "direct Alipay wallet payment normalizes stale HKD orders to CNY",
+    pass: existsSync(paymentSessionPath) &&
+      readFileSync(paymentSessionPath, "utf8").includes("function paymentCurrencyForMethod") &&
+      readFileSync(paymentSessionPath, "utf8").includes("if (paymentMethodType === \"ALIPAY_CN\") return \"CNY\"") &&
+      readFileSync(paymentSessionPath, "utf8").includes("fromCurrency === \"HKD\" && toCurrency === \"CNY\"") &&
+      readFileSync(paymentSessionPath, "utf8").includes("currencyNormalized")
   },
   {
     name: "hosted checkout uses standard HTTPS return paths",
