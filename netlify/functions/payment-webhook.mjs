@@ -1,4 +1,4 @@
-import { antomConfig, appendPaymentEvent, getOrder, jsonResponse, paymentApiEnabled, stateFromPaymentResult, updateOrder, verifyApiSignature } from "./_order-service.mjs";
+import { antomConfig, appendPaymentEvent, connectOrderStorage, getOrder, jsonResponse, paymentApiEnabled, stateFromPaymentResult, updateOrder, verifyApiSignature } from "./_order-service.mjs";
 
 function pickOrderId(payload) {
   return payload.merchantOrderId || payload.referenceOrderId || payload.paymentRequestId || payload.orderId || "";
@@ -6,6 +6,7 @@ function pickOrderId(payload) {
 
 export async function handler(event) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
+  connectOrderStorage(event);
   const config = antomConfig();
   const signatureHeader = event.headers?.signature || event.headers?.Signature || "";
   const requestTime = event.headers?.["request-time"] || event.headers?.["Request-Time"] || "";

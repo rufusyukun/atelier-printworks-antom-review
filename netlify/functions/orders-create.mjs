@@ -1,7 +1,8 @@
-import { jsonResponse, normalizeOrderPayload, parseJson, saveOrder } from "./_order-service.mjs";
+import { connectOrderStorage, jsonResponse, normalizeOrderPayload, parseJson, saveOrder } from "./_order-service.mjs";
 
 export async function handler(event) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
+  connectOrderStorage(event);
   const payload = await parseJson(event);
   if (!payload) return jsonResponse(400, { error: "Invalid JSON body" });
   const order = normalizeOrderPayload(payload, event);

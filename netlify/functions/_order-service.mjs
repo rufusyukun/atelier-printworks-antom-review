@@ -1,5 +1,5 @@
 import { createSign, createVerify } from "node:crypto";
-import { getStore } from "@netlify/blobs";
+import { connectLambda, getStore } from "@netlify/blobs";
 
 const ORDER_STATES = [
   "draft",
@@ -14,6 +14,7 @@ const ORDER_STATES = [
 
 const POLICY_VERSION = "2026-07-01-payment-terms";
 const MEMORY_KEY = "__atelierPrintworksOrders";
+let lastStorageFallbackReason = "";
 
 function memoryStore() {
   if (!globalThis[MEMORY_KEY]) globalThis[MEMORY_KEY] = new Map();
@@ -22,9 +23,20 @@ function memoryStore() {
 
 async function blobStore() {
   try {
-    return getStore({ name: "atelier-orders" });
-  } catch {
+    return getStore({ name: "atelier-orders", consistency: "strong" });
+  } catch (error) {
+    lastStorageFallbackReason = error.message || String(error);
     return null;
+  }
+}
+
+export function connectOrderStorage(event) {
+  try {
+    connectLambda(event);
+    return true;
+  } catch (error) {
+    lastStorageFallbackReason = error.message || String(error);
+    return false;
   }
 }
 
@@ -171,7 +183,8 @@ export async function saveOrder(order) {
         await store.setJSON(order.merchantOrderId, order);
       }
       return order;
-    } catch {
+    } catch (error) {
+      lastStorageFallbackReason = error.message || String(error);
       // Fall through to in-memory storage for local smoke tests.
     }
   }
@@ -191,7 +204,8 @@ export async function getOrder(orderId) {
   if (store) {
     try {
       return await store.get(normalized, { type: "json" });
-    } catch {
+    } catch (error) {
+      lastStorageFallbackReason = error.message || String(error);
       // Fall through to in-memory storage for local smoke tests.
     }
   }
@@ -214,11 +228,30 @@ export async function listOrders() {
         if (order?.id && !orders.some(item => item.id === order.id)) orders.push(order);
       }
       return orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
-    } catch {
+    } catch (error) {
+      lastStorageFallbackReason = error.message || String(error);
       // Fall through to in-memory storage for local smoke tests.
     }
   }
   return [...memoryStore().values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+}
+
+export async function orderStorageStatus() {
+  const config = supabaseConfig();
+  if (config) return { backend: "supabase", table: config.table, fallbackReason: "" };
+  const store = await blobStore();
+  if (store) {
+    const probeKey = "__storage_probe";
+    try {
+      const probe = { ok: true, at: new Date().toISOString() };
+      await store.setJSON(probeKey, probe);
+      const readBack = await store.get(probeKey, { type: "json" });
+      return { backend: "netlify-blobs", ok: Boolean(readBack?.ok), fallbackReason: "" };
+    } catch (error) {
+      lastStorageFallbackReason = error.message || String(error);
+    }
+  }
+  return { backend: "memory", ok: true, fallbackReason: lastStorageFallbackReason };
 }
 
 export async function updateOrder(orderId, patch) {

@@ -1,4 +1,4 @@
-import { antomConfig, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
+import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
 
 function mockCheckoutUrl(order) {
   const params = new URLSearchParams({ order: order.id, payment: "mock_pending" });
@@ -121,6 +121,7 @@ async function createHostedPaymentSession(order, event) {
 
 export async function handler(event) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
+  connectOrderStorage(event);
   const payload = JSON.parse(event.body || "{}");
   let order = await getOrder(payload.orderId);
   if (!order && payload.orderSnapshot && paymentMode() !== "live") {

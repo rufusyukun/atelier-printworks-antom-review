@@ -123,7 +123,18 @@ const checks = [
   },
   {
     name: "order service has optional blob persistence fallback",
-    pass: pkg.includes("@netlify/blobs") && orderService.includes("getStore") && orderService.includes("atelier-orders")
+    pass: pkg.includes("@netlify/blobs") &&
+      orderService.includes("connectLambda") &&
+      orderService.includes("connectOrderStorage") &&
+      orderService.includes("getStore") &&
+      orderService.includes("atelier-orders") &&
+      orderService.includes("consistency: \"strong\"")
+  },
+  {
+    name: "server order routes initialize persistent storage",
+    pass: [orderCreatePath, paymentSessionPath, paymentWebhookPath, ordersGetPath]
+      .every(file => readFileSync(file, "utf8").includes("connectOrderStorage(event)")) &&
+      readFileSync(ordersGetPath, "utf8").includes("storage\") === \"status")
   },
   {
     name: "payment functions keep live credentials and signature handling server-side",
