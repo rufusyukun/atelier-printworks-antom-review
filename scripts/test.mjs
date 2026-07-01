@@ -139,8 +139,15 @@ const checks = [
     pass: existsSync(paymentSessionPath) &&
       readFileSync(paymentSessionPath, "utf8").includes("merchantRegion: config.merchantRegion") &&
       readFileSync(paymentSessionPath, "utf8").includes("productScene: \"CHECKOUT_PAYMENT\"") &&
-      readFileSync(paymentSessionPath, "utf8").includes("isAuthorization: \"false\"") &&
       readFileSync(paymentSessionPath, "utf8").includes("checkoutEnv(order, event)")
+  },
+  {
+    name: "hosted checkout request includes order goods for risk and display",
+    pass: existsSync(paymentSessionPath) &&
+      readFileSync(paymentSessionPath, "utf8").includes("function orderGoods(order)") &&
+      readFileSync(paymentSessionPath, "utf8").includes("goodsUnitAmount") &&
+      readFileSync(paymentSessionPath, "utf8").includes("goodsUrl") &&
+      readFileSync(paymentSessionPath, "utf8").includes("goods: orderGoods(order)")
   },
   {
     name: "hosted checkout uses standard HTTPS return paths",

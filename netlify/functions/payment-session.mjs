@@ -25,6 +25,30 @@ function checkoutEnv(order, event) {
   return { terminalType, osType };
 }
 
+function paymentAmount(order, value = order.total) {
+  return { currency: order.currency, value: String(Math.round(Number(value || 0) * 100)) };
+}
+
+function goodsCategory(item = {}) {
+  const type = String(item.type || "").toLowerCase();
+  if (type.includes("digital")) return "digital goods/3d printable model files";
+  if (type.includes("license")) return "digital goods/commercial license";
+  if (type.includes("custom")) return "customized goods/3d printing service";
+  return "consumer goods/3d printed home and desk accessories";
+}
+
+function orderGoods(order) {
+  return (order.items || []).map(item => ({
+    referenceGoodsId: String(item.id || "").slice(0, 64),
+    goodsName: String(item.name || item.id || "Atelier Printworks item").slice(0, 256),
+    goodsCategory: goodsCategory(item),
+    goodsQuantity: String(item.qty || 1),
+    goodsUnitAmount: paymentAmount(order, item.price || 0),
+    goodsUrl: `${siteUrl()}/products/${encodeURIComponent(item.id || "")}`,
+    goodsSkuName: String(item.type || "Original 3D design").slice(0, 128)
+  })).filter(item => item.referenceGoodsId);
+}
+
 async function createHostedPaymentSession(order, event) {
   const config = antomConfig();
   if (!paymentApiEnabled()) {
@@ -48,14 +72,14 @@ async function createHostedPaymentSession(order, event) {
     productScene: "CHECKOUT_PAYMENT",
     locale: checkoutLocale(order.checkoutLanguage),
     paymentRequestId: order.paymentRequestId || order.id,
-    paymentAmount: { currency: order.currency, value: String(Math.round(order.total * 100)) },
+    paymentAmount: paymentAmount(order),
     settlementStrategy: { settlementCurrency: order.currency },
-    paymentFactor: { isAuthorization: "false" },
     order: {
       referenceOrderId: order.id,
       orderDescription: `Atelier Printworks order ${order.id}`,
       buyer: { referenceBuyerId: order.email, buyerEmail: order.email },
-      orderAmount: { currency: order.currency, value: String(Math.round(order.total * 100)) }
+      orderAmount: paymentAmount(order),
+      goods: orderGoods(order)
     },
     merchant: {
       referenceMerchantId: config.merchantId,
