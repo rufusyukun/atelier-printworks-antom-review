@@ -49,6 +49,14 @@ function orderGoods(order) {
   })).filter(item => item.referenceGoodsId);
 }
 
+function checkoutUrlHost(url = "") {
+  try {
+    return new URL(url).host;
+  } catch {
+    return "";
+  }
+}
+
 async function createHostedPaymentSession(order, event) {
   const config = antomConfig();
   if (!paymentApiEnabled()) {
@@ -66,14 +74,17 @@ async function createHostedPaymentSession(order, event) {
 
   const requestUri = config.createSessionPath;
   const requestTime = new Date().toISOString();
-  const requestBody = JSON.stringify({
+  const checkoutEnvironment = checkoutEnv(order, event);
+  const requestPayload = {
     merchantRegion: config.merchantRegion,
+    merchantAccountId: config.merchantId,
     productCode: "CASHIER_PAYMENT",
     productScene: "CHECKOUT_PAYMENT",
     locale: checkoutLocale(order.checkoutLanguage),
     paymentRequestId: order.paymentRequestId || order.id,
     paymentAmount: paymentAmount(order),
     settlementStrategy: { settlementCurrency: order.currency },
+    availablePaymentMethod: { allowedPaymentMethodRegions: ["GLOBAL"] },
     order: {
       referenceOrderId: order.id,
       orderDescription: `Atelier Printworks order ${order.id}`,
@@ -87,10 +98,11 @@ async function createHostedPaymentSession(order, event) {
       merchantName: "Atelier Printworks",
       merchantRegion: config.merchantRegion
     },
-    env: checkoutEnv(order, event),
+    env: checkoutEnvironment,
     paymentRedirectUrl: `${siteUrl()}/order-success?order=${encodeURIComponent(order.id)}`,
     paymentNotifyUrl: `${siteUrl()}/.netlify/functions/payment-webhook`
-  });
+  };
+  const requestBody = JSON.stringify(requestPayload);
   const signature = signApiRequest({
     requestUri,
     clientId: config.clientId,
@@ -110,12 +122,42 @@ async function createHostedPaymentSession(order, event) {
     body: requestBody
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(`Hosted payment session failed: ${response.status}`);
+  const normalUrl = body.normalUrl || body.paymentRedirectUrl || body.paymentSessionData?.paymentRedirectUrl || "";
+  const diagnostics = {
+    createdAt: new Date().toISOString(),
+    mode: paymentMode(),
+    httpStatus: response.status,
+    resultStatus: body.result?.resultStatus || "",
+    resultCode: body.result?.resultCode || "",
+    resultMessage: body.result?.resultMessage || "",
+    hasNormalUrl: Boolean(normalUrl),
+    checkoutHost: checkoutUrlHost(normalUrl),
+    paymentSessionExpiryTime: body.paymentSessionExpiryTime || "",
+    requestShape: {
+      merchantRegion: requestPayload.merchantRegion,
+      hasMerchantAccountId: Boolean(requestPayload.merchantAccountId),
+      productCode: requestPayload.productCode,
+      productScene: requestPayload.productScene,
+      locale: requestPayload.locale,
+      currency: requestPayload.paymentAmount.currency,
+      value: requestPayload.paymentAmount.value,
+      allowedPaymentMethodRegions: requestPayload.availablePaymentMethod.allowedPaymentMethodRegions,
+      terminalType: checkoutEnvironment.terminalType,
+      osType: checkoutEnvironment.osType,
+      goodsCount: requestPayload.order.goods.length
+    }
+  };
+  if (!response.ok || body.result?.resultStatus === "F") {
+    const error = new Error(`Hosted payment session failed: ${response.status} ${body.result?.resultCode || ""} ${body.result?.resultMessage || ""}`.trim());
+    error.paymentDiagnostics = diagnostics;
+    throw error;
+  }
   return {
-    paymentSessionId: body.paymentSessionData?.paymentSessionId || body.paymentSessionId || "",
+    paymentSessionId: body.paymentSessionId || body.paymentSessionData?.paymentSessionId || "",
     paymentRequestId: body.paymentRequestId || order.id,
-    checkoutUrl: body.paymentSessionData?.paymentRedirectUrl || body.normalUrl || body.checkoutUrl || "",
-    mode: paymentMode()
+    checkoutUrl: normalUrl || body.checkoutUrl || "",
+    mode: paymentMode(),
+    paymentDiagnostics: diagnostics
   };
 }
 
@@ -149,10 +191,26 @@ export async function handler(event) {
       status: "pending_payment",
       paymentStatus: "pending",
       paymentRequestId: session.paymentRequestId,
-      paymentSessionId: session.paymentSessionId
+      paymentSessionId: session.paymentSessionId,
+      paymentDiagnostics: {
+        ...(order.paymentDiagnostics || {}),
+        lastCreateSession: session.paymentDiagnostics
+      }
     });
     return jsonResponse(200, { order: updated, ...session });
   } catch (error) {
+    await updateOrder(order.id, {
+      status: "payment_session_failed",
+      paymentStatus: "failed",
+      paymentDiagnostics: {
+        ...(order.paymentDiagnostics || {}),
+        lastCreateSessionError: error.paymentDiagnostics || { message: error.message, at: new Date().toISOString() }
+      },
+      supportNotes: [
+        ...(order.supportNotes || []),
+        { at: new Date().toISOString(), note: `Hosted checkout session error: ${error.message}` }
+      ]
+    });
     return jsonResponse(500, { error: error.message });
   }
 }
