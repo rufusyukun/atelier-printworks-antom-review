@@ -1,4 +1,6 @@
 const app = document.querySelector("#app");
+const checkoutCurrency = "HKD";
+const usdToHkdRate = 7.8;
 
 const categories = [
   {
@@ -1321,7 +1323,7 @@ function checkoutOrderPayload(form) {
     email: form.email,
     address: form.address || "",
     notes: form.notes || "",
-    currency: "USD",
+    currency: checkoutCurrency,
     total: cartTotal(lines),
     delivery: orderDeliverySummary(lines),
     checkoutLanguage: currentLang,
@@ -1330,7 +1332,7 @@ function checkoutOrderPayload(form) {
       name: productText(line.product).name,
       type: line.product.type,
       qty: line.qty,
-      price: line.product.price
+      price: checkoutPrice(line.product.price)
     }))
   };
 }
@@ -1387,7 +1389,7 @@ function cartLines() {
 }
 
 function cartTotal(lines = cartLines()) {
-  return lines.reduce((sum, item) => sum + item.product.price * item.qty, 0);
+  return lines.reduce((sum, item) => sum + checkoutPrice(item.product.price) * item.qty, 0);
 }
 
 function cartNeedsShipping(lines = cartLines()) {
@@ -1419,7 +1421,8 @@ function createMockOrder(form) {
     email: form.email,
     address: form.address || "",
     notes: form.notes || "",
-    items: lines.map(line => ({ id: line.product.id, qty: line.qty, price: line.product.price })),
+    currency: checkoutCurrency,
+    items: lines.map(line => ({ id: line.product.id, qty: line.qty, price: checkoutPrice(line.product.price) })),
     total: cartTotal(lines),
     delivery: orderDeliverySummary(lines),
     status: "Payment preview created"
@@ -1804,7 +1807,19 @@ function cartBadgeCount() {
 }
 
 function money(value) {
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
+  return new Intl.NumberFormat("en-HK", { style: "currency", currency: checkoutCurrency }).format(value);
+}
+
+function orderMoney(value, currency = checkoutCurrency) {
+  return new Intl.NumberFormat(currency === "HKD" ? "en-HK" : "en-US", { style: "currency", currency }).format(value);
+}
+
+function checkoutPrice(value) {
+  return Math.round(Number(value || 0) * usdToHkdRate);
+}
+
+function productMoney(value) {
+  return money(checkoutPrice(value));
 }
 
 function renderIllustration(product, index = 0) {
@@ -1918,7 +1933,7 @@ function productCard(product, index) {
         <p>${text.summary}</p>
         <div class="product-meta">
           <span>${product.badge}</span>
-          <strong>${money(product.price)}</strong>
+          <strong>${productMoney(product.price)}</strong>
         </div>
         <div class="card-actions">
           <button class="mini-button" data-add-to-cart="${product.id}" type="button">${t("addToCart")}</button>
@@ -2041,7 +2056,7 @@ function homePage() {
 
 function membershipPage() {
   const membership = localizedMembership[currentLang] || localizedMembership.en;
-  const prices = ["$39", "$99", "$699"];
+  const prices = ["HK$299", "HK$799", "HK$4,999"];
   const plans = membership.plans.map((plan, index) => ({ ...plan, price: prices[index] }));
 
   return `
@@ -2184,7 +2199,7 @@ function productDetailPage(id) {
           <span class="pill">${productTypeLabel(product.type)}</span>
           <h1>${text.name}</h1>
           <p class="lead">${text.summary}</p>
-          <strong class="detail-price">${money(product.price)}</strong>
+          <strong class="detail-price">${productMoney(product.price)}</strong>
           <div class="detail-actions">
             <button class="button primary" data-add-to-cart="${product.id}" type="button">${t("addToCart")}</button>
             <button class="button secondary" data-buy-now="${product.id}" type="button">${t("buyNow")}</button>
@@ -2246,7 +2261,7 @@ function cartPage() {
                     <strong>${line.qty}</strong>
                     <button data-cart-qty="${line.product.id}" data-qty="${line.qty + 1}" type="button">+</button>
                     <button class="text-button" data-cart-qty="${line.product.id}" data-qty="0" type="button">${t("remove")}</button>
-                    <b>${money(line.product.price * line.qty)}</b>
+                    <b>${money(checkoutPrice(line.product.price) * line.qty)}</b>
                   </div>
                 </article>
               `;
@@ -2311,7 +2326,7 @@ function orderCard(order) {
     <article class="order-card">
       <span class="pill">${order.status}</span>
       <h2>${t("orderNumber")}: ${order.id}</h2>
-      <p>${t("total")}: <strong>${money(order.total)}</strong></p>
+      <p>${t("total")}: <strong>${orderMoney(order.total, order.currency || checkoutCurrency)}</strong></p>
       <p>${t("delivery")}: ${order.delivery}</p>
       <p>${t("email")}: ${order.email}</p>
       <h3>${t("products")}</h3>
@@ -2552,7 +2567,7 @@ function adminOrdersPage() {
                 <span><strong>${order.id}</strong><small>${escapeHtml(new Date(order.createdAt || Date.now()).toLocaleString("en-US"))}</small></span>
                 <span>${escapeHtml(operational.customerEmail || order.email)}<small>${escapeHtml(operational.country || "未设置国家")}</small></span>
                 <span>${orderTypes(order).map(type => `<small>${escapeHtml(adminProductTypeLabel(type))}</small>`).join("")}</span>
-                <span><strong>${money(order.total || 0)}</strong></span>
+                <span><strong>${orderMoney(order.total || 0, order.currency || checkoutCurrency)}</strong></span>
                 <span>${adminStatusPill(risk[0], risk[1])}</span>
                 <span>${escapeHtml(operational.fulfillmentStatus || order.status || "新订单")}</span>
                 <span><a class="button secondary compact-button" href="#/admin/orders/${order.id}">打开</a></span>
@@ -2601,12 +2616,12 @@ function adminOrderDetailPage(orderId) {
             <div><dt>原始邮箱</dt><dd>${escapeHtml(order.email)}</dd></div>
             <div><dt>原始地址</dt><dd>${escapeHtml(order.address || "未提供")}</dd></div>
             <div><dt>原始备注</dt><dd>${escapeHtml(order.notes || "无")}</dd></div>
-            <div><dt>订单金额</dt><dd>${money(order.total || 0)}</dd></div>
+            <div><dt>订单金额</dt><dd>${orderMoney(order.total || 0, order.currency || checkoutCurrency)}</dd></div>
             <div><dt>订单状态</dt><dd>${escapeHtml(order.status || "新订单")}</dd></div>
           </dl>
           <h3>商品</h3>
           <ul class="admin-list">
-            ${orderProducts(order).map(item => `<li><strong>${escapeHtml(item.product?.name || item.id)}</strong><span>${escapeHtml(adminProductTypeLabel(item.product?.type || "Unknown"))} · ${item.qty} × ${money(item.price || 0)}</span></li>`).join("")}
+            ${orderProducts(order).map(item => `<li><strong>${escapeHtml(item.product?.name || item.id)}</strong><span>${escapeHtml(adminProductTypeLabel(item.product?.type || "Unknown"))} · ${item.qty} × ${orderMoney(item.price || 0, order.currency || checkoutCurrency)}</span></li>`).join("")}
           </ul>
         </aside>
         <section class="admin-panel">

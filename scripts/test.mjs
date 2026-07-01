@@ -51,7 +51,7 @@ const checks = [
   },
   {
     name: "membership page has safe plan structure",
-    pass: main.includes('path === "/membership"') && main.includes("Maker Monthly") && main.includes("$699") && main.includes("不能提现、转让、兑换现金")
+    pass: main.includes('path === "/membership"') && main.includes("Maker Monthly") && main.includes("HK$4,999") && main.includes("不能提现、转让、兑换现金")
   },
   {
     name: "membership page is localized across supported languages",
@@ -83,6 +83,14 @@ const checks = [
   {
     name: "catalog prices support premium positioning",
     pass: !/price: ([1-4][0-9]|[1-9]),/.test(main) && main.includes("price: 54") && main.includes("price: 747") && main.includes("total: 131")
+  },
+  {
+    name: "checkout prices display and submit in supported HKD currency",
+    pass: main.includes('const checkoutCurrency = "HKD"') &&
+      main.includes("function checkoutPrice(value)") &&
+      main.includes("currency: checkoutCurrency") &&
+      main.includes("productMoney(product.price)") &&
+      !main.includes('currency: "USD"')
   },
   {
     name: "cart migration prevents stale default cart items",
