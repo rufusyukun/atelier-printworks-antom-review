@@ -84,7 +84,6 @@ async function createHostedPaymentSession(order, event) {
     paymentRequestId: order.paymentRequestId || order.id,
     paymentAmount: paymentAmount(order),
     settlementStrategy: { settlementCurrency: order.currency },
-    availablePaymentMethod: { allowedPaymentMethodRegions: ["GLOBAL"] },
     order: {
       referenceOrderId: order.id,
       orderDescription: `Atelier Printworks order ${order.id}`,
@@ -141,7 +140,6 @@ async function createHostedPaymentSession(order, event) {
       locale: requestPayload.locale,
       currency: requestPayload.paymentAmount.currency,
       value: requestPayload.paymentAmount.value,
-      allowedPaymentMethodRegions: requestPayload.availablePaymentMethod.allowedPaymentMethodRegions,
       terminalType: checkoutEnvironment.terminalType,
       osType: checkoutEnvironment.osType,
       goodsCount: requestPayload.order.goods.length

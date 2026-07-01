@@ -208,7 +208,8 @@ async function saveOrderIndex(store, orderId) {
 
 function listableOrder(order) {
   const id = String(order?.id || "");
-  return order?.id && !id.startsWith("__") && !id.startsWith("AP-STORAGE-PROBE") && !id.startsWith("AP-RAPID-");
+  const email = String(order?.email || "").toLowerCase();
+  return order?.id && !id.startsWith("__") && !id.startsWith("AP-STORAGE-PROBE") && !id.startsWith("AP-RAPID-") && email !== "storage-probe@example.com";
 }
 
 export async function getOrder(orderId) {

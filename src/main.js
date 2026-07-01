@@ -1526,7 +1526,8 @@ function adminAllOrders() {
 
 function isInternalTestOrder(order = {}) {
   const id = String(order.id || "");
-  return id.startsWith("AP-STORAGE-PROBE") || id.startsWith("AP-RAPID-");
+  const email = String(order.email || "").toLowerCase();
+  return id.startsWith("AP-STORAGE-PROBE") || id.startsWith("AP-RAPID-") || email === "storage-probe@example.com";
 }
 
 function orderProducts(order) {
