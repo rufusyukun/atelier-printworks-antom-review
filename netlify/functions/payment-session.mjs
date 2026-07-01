@@ -63,7 +63,7 @@ function checkoutPaymentMethods(order = {}) {
     .split(",")
     .map(item => item.trim().toUpperCase())
     .filter(Boolean);
-  const defaultMethods = ["CARD"];
+  const defaultMethods = ["ALIPAY_CN"];
   return (methods.length ? methods : defaultMethods).map((paymentMethodType, index) => ({
     paymentMethodType,
     expressCheckout: ["ALIPAY_CN", "APPLEPAY", "GOOGLEPAY"].includes(paymentMethodType),
