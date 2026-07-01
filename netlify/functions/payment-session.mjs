@@ -79,7 +79,7 @@ export async function handler(event) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
   const payload = JSON.parse(event.body || "{}");
   let order = await getOrder(payload.orderId);
-  if (!order && payload.orderSnapshot && !paymentApiEnabled()) {
+  if (!order && payload.orderSnapshot && paymentMode() !== "live") {
     order = normalizeOrderPayload(payload.orderSnapshot, event);
     await saveOrder(order);
   }
