@@ -1,6 +1,6 @@
 const app = document.querySelector("#app");
-const checkoutCurrency = "HKD";
-const usdToHkdRate = 7.8;
+const checkoutCurrency = "CNY";
+const usdToHkdRate = 7.2;
 const checkoutSubmittingKey = "atelier-checkout-submitting";
 
 function resetCheckoutProcessingState() {
@@ -1946,11 +1946,12 @@ function cartBadgeCount() {
 }
 
 function money(value) {
-  return new Intl.NumberFormat("en-HK", { style: "currency", currency: checkoutCurrency }).format(value);
+  return new Intl.NumberFormat(checkoutCurrency === "CNY" ? "zh-CN" : "en-HK", { style: "currency", currency: checkoutCurrency }).format(value);
 }
 
 function orderMoney(value, currency = checkoutCurrency) {
-  return new Intl.NumberFormat(currency === "HKD" ? "en-HK" : "en-US", { style: "currency", currency }).format(value);
+  const locale = currency === "HKD" ? "en-HK" : currency === "CNY" ? "zh-CN" : "en-US";
+  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(value);
 }
 
 function checkoutPrice(value) {
