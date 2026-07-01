@@ -1526,7 +1526,8 @@ function adminAllOrders() {
 
 function isInternalTestOrder(order = {}) {
   const id = String(order.id || "");
-  return id.startsWith("AP-STORAGE-PROBE") || id.startsWith("AP-RAPID-");
+  const email = String(order.email || "").toLowerCase();
+  return id.startsWith("AP-STORAGE-PROBE") || id.startsWith("AP-RAPID-") || email === "storage-probe@example.com";
 }
 
 function orderProducts(order) {
@@ -1693,6 +1694,7 @@ function adminOrderStatusLabel(status = "") {
     pending: "待支付确认",
     paid: "已支付",
     payment_failed: "支付失败",
+    payment_session_failed: "支付会话创建失败",
     payment_blocked: "连续支付已拦截",
     blocked: "连续支付已拦截",
     fulfillment_pending: "待履约",
@@ -1701,6 +1703,50 @@ function adminOrderStatusLabel(status = "") {
     disputed: "争议处理中",
     not_started: "未开始"
   }[normalized] || status || "新订单";
+}
+
+function paymentDiagnosticValue(value) {
+  if (Array.isArray(value)) return value.join(", ");
+  if (value && typeof value === "object") return JSON.stringify(value);
+  if (value === true) return "是";
+  if (value === false) return "否";
+  return value || "未记录";
+}
+
+function adminPaymentDiagnostics(order = {}) {
+  const diagnostics = order.paymentDiagnostics || {};
+  const latest = diagnostics.lastCreateSession || diagnostics.lastCreateSessionError || null;
+  if (!latest) {
+    return {
+      summary: "暂无支付会话诊断。该订单可能创建于诊断功能上线前，或尚未进入托管支付页。",
+      rows: []
+    };
+  }
+  const shape = latest.requestShape || {};
+  return {
+    summary: latest.resultStatus === "S"
+      ? "支付会话创建成功；如果用户仍看到支付方错误页，重点检查正式产品权限、支付方式开通状态、风控拦截或支付方后台请求日志。"
+      : "支付会话创建失败；优先根据 resultCode/resultMessage 修复请求参数或账户配置。",
+    rows: [
+      ["创建时间", latest.createdAt],
+      ["运行模式", latest.mode],
+      ["HTTP 状态", latest.httpStatus],
+      ["返回状态", latest.resultStatus],
+      ["返回代码", latest.resultCode],
+      ["返回信息", latest.resultMessage],
+      ["是否拿到 checkout URL", latest.hasNormalUrl],
+      ["Checkout Host", latest.checkoutHost],
+      ["Session 过期时间", latest.paymentSessionExpiryTime],
+      ["商品数量", shape.goodsCount],
+      ["币种", shape.currency],
+      ["金额最小单位", shape.value],
+      ["终端类型", shape.terminalType],
+      ["系统类型", shape.osType],
+      ["语言", shape.locale],
+      ["产品代码", shape.productCode],
+      ["产品场景", shape.productScene]
+    ].filter(([, value]) => value !== undefined)
+  };
 }
 
 function adminProductTypeLabel(type) {
@@ -1839,6 +1885,7 @@ function adminEvidencePackage(orderId) {
     risk: adminOrderRisk(order, operational),
     digitalDelivery: adminDigitalDelivery(order),
     fulfillment: adminFulfillmentEvidence(order, operational),
+    paymentDiagnostics: adminPaymentDiagnostics(order),
     auditLog: adminAuditLog().filter(log => log.orderId === order.id),
     policySnapshot: {
       refund: policyPages["/refund-policy"].sections,
@@ -2655,6 +2702,7 @@ function adminOrderDetailPage(orderId) {
   const risks = adminOrderRisk(order, operational);
   const digitalDelivery = adminDigitalDelivery(order);
   const fulfillment = adminFulfillmentEvidence(order, operational);
+  const paymentDiagnostics = adminPaymentDiagnostics(order);
   const audit = adminAuditLog().filter(log => log.orderId === order.id);
   return `
     ${nav()}
@@ -2724,6 +2772,16 @@ function adminOrderDetailPage(orderId) {
           ${risks.map(([level, note]) => adminStatusPill(level, note)).join("")}
         </article>
         <article class="admin-panel">
+          <span class="eyebrow">支付链路</span>
+          <h2>支付诊断</h2>
+          <p>${escapeHtml(paymentDiagnostics.summary)}</p>
+          ${paymentDiagnostics.rows.length ? `
+            <dl class="admin-dl">
+              ${paymentDiagnostics.rows.map(([label, value]) => `<div><dt>${escapeHtml(label)}</dt><dd>${escapeHtml(paymentDiagnosticValue(value))}</dd></div>`).join("")}
+            </dl>
+          ` : ""}
+        </article>
+        <article class="admin-panel">
           <span class="eyebrow">数字交付</span>
           <h2>下载/授权记录</h2>
           ${digitalDelivery.length ? `<ul class="admin-list">${digitalDelivery.map(item => `<li><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.format)} · ${escapeHtml(item.status)} · 下载次数: ${item.downloads} · IP: ${escapeHtml(item.downloadIp)}</span></li>`).join("")}</ul>` : `<p>该订单不需要数字交付。</p>`}
@@ -2753,7 +2811,7 @@ function auditChecklistPage() {
     ["Pass", "Policies exist", "Shipping, refund, privacy, terms, digital goods, and license pages are present."],
     ["Pass", "Contact available", `Email, response time, business name, company registration, and service address policy are visible.`],
     ["Pass", "Order lookup exists", "Mock order AP-DEMO-1001 and locally generated orders can be queried."],
-    ["Warning", "Preview payment only", "Live payment capture is not connected yet. Add server-side payment provider integration before production."],
+    ["Pass", "Live hosted checkout connected", "Server-side hosted checkout is connected through environment variables; payment diagnostics are recorded on orders."],
     ["Pass", "No infringing IP positioning", "The site states original designs only and rejects protected character/logo requests."],
     ["Warning", "Policy translations", "Core UI is multilingual; long policy body copy is currently English-first and should be fully localized before final submission."],
     ["Pass", "Dead links", "All header and footer routes resolve inside the SPA."]
