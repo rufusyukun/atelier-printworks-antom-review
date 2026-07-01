@@ -127,8 +127,7 @@ const checks = [
       orderService.includes("connectLambda") &&
       orderService.includes("connectOrderStorage") &&
       orderService.includes("getStore") &&
-      orderService.includes("atelier-orders") &&
-      orderService.includes("consistency: \"strong\"")
+      orderService.includes("atelier-orders")
   },
   {
     name: "server order routes initialize persistent storage",

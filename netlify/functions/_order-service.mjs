@@ -23,7 +23,7 @@ function memoryStore() {
 
 async function blobStore() {
   try {
-    return getStore({ name: "atelier-orders", consistency: "strong" });
+    return getStore({ name: "atelier-orders" });
   } catch (error) {
     lastStorageFallbackReason = error.message || String(error);
     return null;
