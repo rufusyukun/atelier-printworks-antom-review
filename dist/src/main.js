@@ -1409,14 +1409,17 @@ async function createOpsRechargeOrder(form) {
   return body.order;
 }
 
-async function fetchServerOrder(orderId) {
-  const body = await apiJson(`/.netlify/functions/orders-get?orderId=${encodeURIComponent(orderId)}`);
+async function fetchServerOrder(orderId, options = {}) {
+  const params = new URLSearchParams({ orderId });
+  if (options.reconcile) params.set("reconcile", "1");
+  if (options.force) params.set("force", "1");
+  const body = await apiJson(`/.netlify/functions/orders-get?${params.toString()}`);
   saveServerOrderCache(body.order);
   return body.order;
 }
 
 async function fetchAdminOrders() {
-  const body = await apiJson("/.netlify/functions/orders-get");
+  const body = await apiJson("/.netlify/functions/orders-get?reconcile=recent&force=1&limit=12");
   saveServerOrdersCache(body.orders || []);
   return body.orders || [];
 }
@@ -3124,7 +3127,7 @@ function render() {
       const data = Object.fromEntries(new FormData(lookupForm));
       let order = null;
       try {
-        order = await fetchServerOrder(data.orderId || "");
+        order = await fetchServerOrder(data.orderId || "", { reconcile: true, force: true });
       } catch {
         order = findOrder(data.orderId || "");
       }
@@ -3163,7 +3166,7 @@ function render() {
     const orderId = params.get("order") || sessionStorage.getItem("atelier-last-order") || "";
     if (orderId && !findOrder(orderId)) {
       window.__atelierOrderSuccessLoading = true;
-      fetchServerOrder(orderId)
+      fetchServerOrder(orderId, { reconcile: true, force: true })
         .then(() => {
           window.__atelierOrderSuccessLoading = false;
           if (currentPath() === "/order-success") render();
