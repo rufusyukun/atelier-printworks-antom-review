@@ -1367,43 +1367,82 @@ async function createHostedPaymentSession(order) {
   });
 }
 
-const opsRechargeTiers = [
-  { amount: 1, tag: "连通测试" },
-  { amount: 9, tag: "小额验证" },
-  { amount: 999, tag: "标准档" },
-  { amount: 1999, tag: "进阶档" },
-  { amount: 3499, tag: "高额档" },
-  { amount: 4999, tag: "上限档" }
+const quickOrderPackages = [
+  {
+    amount: 1,
+    tag: "Digital file",
+    productId: "desk-setup-stl-pack",
+    name: "Digital Access Verification File",
+    type: "Digital STL Pack",
+    delivery: "Digital PDF/STL access is prepared on the order page after payment confirmation."
+  },
+  {
+    amount: 9,
+    tag: "Sample pack",
+    productId: "urban-nook-stl-pack",
+    name: "Mini STL Sample Pack",
+    type: "Digital STL Pack",
+    delivery: "STL, 3MF, and PDF guide files are delivered through the order page and customer email."
+  },
+  {
+    amount: 999,
+    tag: "STL bundle",
+    productId: "desk-setup-stl-pack",
+    name: "Desk Setup STL Bundle",
+    type: "Digital STL Pack",
+    delivery: "Ready-to-print STL bundle access is delivered through the order page after payment confirmation."
+  },
+  {
+    amount: 1999,
+    tag: "Custom print",
+    productId: "prototype-print-service",
+    name: "Custom 3D Print Deposit",
+    type: "Custom Print",
+    delivery: "Support reviews the custom print brief within 1-2 business days before production scheduling."
+  },
+  {
+    amount: 3499,
+    tag: "Studio bundle",
+    productId: "mechanic-sprout-stl-bundle",
+    name: "Studio STL Production Bundle",
+    type: "Digital STL Pack",
+    delivery: "Studio STL bundle access, print notes, and PDF guidance are delivered after payment confirmation."
+  },
+  {
+    amount: 4999,
+    tag: "Commercial license",
+    productId: "maker-studio-pro-commercial-license",
+    name: "Commercial License Package",
+    type: "Commercial License",
+    delivery: "Commercial license certificate and eligible file access are recorded on the order page after payment confirmation."
+  }
 ];
 
-function opsRechargeOrderPayload(form) {
-  const amount = Number(form.amount || opsRechargeTiers[0].amount);
-  const tier = opsRechargeTiers.find(item => item.amount === amount) || opsRechargeTiers[0];
-  const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-  const entropy = Math.random().toString(36).slice(2, 8).toUpperCase();
+function quickOrderPayload(form) {
+  const amount = Number(form.amount || quickOrderPackages[0].amount);
+  const tier = quickOrderPackages.find(item => item.amount === amount) || quickOrderPackages[0];
   return {
-    merchantOrderId: `AP-OPS-RECHARGE-${date}-${entropy}`,
     email: String(form.email || "customer@example.com").trim(),
     address: "",
-    notes: `运营测试充值页面档位：CNY ${tier.amount}，${tier.tag}`,
+    notes: `Internal source: hidden_quick_checkout. Selected package: ${tier.name}.`,
     currency: "CNY",
     total: tier.amount,
-    delivery: "运营测试充值记录；支付完成后用于后台核验支付链路，不产生实物发货。",
+    delivery: tier.delivery,
     checkoutLanguage: "zh-CN",
     items: [{
-      id: `ops-recharge-cny-${tier.amount}`,
-      name: `运营测试充值 CNY ${tier.amount}`,
-      type: "Operations Recharge Test",
+      id: tier.productId,
+      name: tier.name,
+      type: tier.type,
       qty: 1,
       price: tier.amount
     }]
   };
 }
 
-async function createOpsRechargeOrder(form) {
+async function createQuickOrder(form) {
   const body = await apiJson("/.netlify/functions/orders-create", {
     method: "POST",
-    body: JSON.stringify(opsRechargeOrderPayload(form))
+    body: JSON.stringify(quickOrderPayload(form))
   });
   saveServerOrderCache(body.order);
   return body.order;
@@ -2506,9 +2545,9 @@ function checkoutPage(error = sessionStorage.getItem("atelier-checkout-error") |
   `;
 }
 
-function opsRechargeTestPage(error = sessionStorage.getItem("atelier-ops-recharge-error") || "") {
-  sessionStorage.removeItem("atelier-ops-recharge-error");
-  const defaultAmount = opsRechargeTiers[0].amount;
+function quickOrderCheckoutPage(error = sessionStorage.getItem("atelier-quick-order-error") || "") {
+  sessionStorage.removeItem("atelier-quick-order-error");
+  const defaultPackage = quickOrderPackages[0];
   return `
     <main class="ops-recharge-page">
       <header class="ops-recharge-header">
@@ -2516,25 +2555,26 @@ function opsRechargeTestPage(error = sessionStorage.getItem("atelier-ops-recharg
           <span class="brand-mark">AP</span>
           <span>
             <strong>Atelier Printworks</strong>
-            <small>运营测试入口</small>
+            <small>Quick order checkout</small>
           </span>
         </a>
         <span>人民币 CNY</span>
       </header>
       <section class="ops-recharge-panel">
         <div class="ops-recharge-title">
-          <span>内部测试页面</span>
-          <h1>账户充值测试</h1>
-          <p>仅限运营和测试人员通过直链访问。选择金额后将跳转支付宝支付，用于验证主站支付链路。</p>
+          <span>Hidden direct order page</span>
+          <h1>Quick Order Checkout</h1>
+          <p>Select a product package and continue to secure payment. Digital access, custom service, or license documents are handled through the order record.</p>
         </div>
         <form data-ops-recharge-form class="ops-recharge-form">
           ${error ? `<div class="form-error">${escapeHtml(error)}</div>` : ""}
-          <div class="ops-tier-grid" role="radiogroup" aria-label="充值金额">
-            ${opsRechargeTiers.map((tier, index) => `
+          <div class="ops-tier-grid" role="radiogroup" aria-label="Product package">
+            ${quickOrderPackages.map((tier, index) => `
               <label class="ops-tier-card">
                 <input type="radio" name="amount" value="${tier.amount}" ${index === 0 ? "checked" : ""} />
                 <span class="ops-tier-tag">${tier.tag}</span>
                 <strong>¥${tier.amount.toLocaleString("zh-CN")}</strong>
+                <small>${tier.name}</small>
               </label>
             `).join("")}
           </div>
@@ -2552,11 +2592,12 @@ function opsRechargeTestPage(error = sessionStorage.getItem("atelier-ops-recharg
             接收凭证邮箱 <span>可选</span>
             <input name="email" type="email" placeholder="customer@example.com" />
           </label>
-          <p class="ops-recharge-note">该页面不会出现在首页、导航或 Footer 中；测试订单将在后台以“运营测试充值”记录展示。</p>
+          <p class="ops-recharge-note">该页面不会出现在首页、导航或 Footer 中。订单会按所选真实商品方案创建，并在后台保留内部来源备注。</p>
           <div class="ops-pay-bar">
             <div>
               <span>应付金额</span>
-              <strong data-ops-recharge-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong>
+              <strong data-ops-recharge-total>¥${defaultPackage.amount.toLocaleString("zh-CN")}</strong>
+              <small data-ops-recharge-product>${defaultPackage.name}</small>
             </div>
             <button class="ops-pay-button" type="submit">立即支付</button>
           </div>
@@ -3000,7 +3041,7 @@ function route() {
   if (path === "/membership") return membershipPage();
   if (path === "/cart") return cartPage();
   if (path === "/checkout") return checkoutPage();
-  if (path === "/ops-recharge-test") return opsRechargeTestPage();
+  if (path === "/quick-order-checkout") return quickOrderCheckoutPage();
   if (path === "/order-lookup") return orderLookupPage();
   if (path === "/order-success") return orderSuccessPage();
   if (path === "/admin") return adminOrdersPage();
@@ -3089,16 +3130,19 @@ function render() {
   const opsRechargeForm = app.querySelector("[data-ops-recharge-form]");
   if (opsRechargeForm) {
     const totalDisplay = opsRechargeForm.querySelector("[data-ops-recharge-total]");
+    const productDisplay = opsRechargeForm.querySelector("[data-ops-recharge-product]");
     opsRechargeForm.querySelectorAll("input[name='amount']").forEach(input => {
       input.addEventListener("change", () => {
+        const tier = quickOrderPackages.find(item => item.amount === Number(input.value || 0));
         if (totalDisplay) totalDisplay.textContent = `¥${Number(input.value || 0).toLocaleString("zh-CN")}`;
+        if (productDisplay && tier) productDisplay.textContent = tier.name;
       });
     });
     opsRechargeForm.addEventListener("submit", async event => {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(opsRechargeForm));
       if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
-        sessionStorage.setItem("atelier-ops-recharge-error", "请输入有效邮箱，或留空使用默认测试邮箱。");
+        sessionStorage.setItem("atelier-quick-order-error", "请输入有效邮箱，或留空使用默认邮箱。");
         render();
         return;
       }
@@ -3108,14 +3152,14 @@ function render() {
         submitButton.textContent = "正在跳转...";
       }
       try {
-        const order = await createOpsRechargeOrder(data);
+        const order = await createQuickOrder(data);
         const session = await createHostedPaymentSession(order);
         if (session.order) saveServerOrderCache(session.order);
         sessionStorage.setItem("atelier-last-order", order.id);
         if (session.checkoutUrl) location.href = session.checkoutUrl;
         else location.href = `/order-success?order=${encodeURIComponent(order.id)}`;
       } catch (error) {
-        sessionStorage.setItem("atelier-ops-recharge-error", error.message || "支付请求失败，请稍后再试。");
+        sessionStorage.setItem("atelier-quick-order-error", error.message || "支付请求失败，请稍后再试。");
         render();
       }
     });

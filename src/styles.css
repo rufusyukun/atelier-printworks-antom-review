@@ -1141,6 +1141,14 @@ h3 {
   line-height: 1;
 }
 
+.ops-tier-card small {
+  color: #a1a1aa;
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
+  margin-top: 10px;
+}
+
 .ops-tier-tag {
   background: #f8fafc;
   border-radius: 999px;
@@ -1247,6 +1255,13 @@ h3 {
   color: #fff;
   display: block;
   font-size: 34px;
+}
+
+.ops-pay-bar small {
+  color: #a1a1aa;
+  display: block;
+  font-weight: 750;
+  margin-top: 4px;
 }
 
 .ops-pay-button {

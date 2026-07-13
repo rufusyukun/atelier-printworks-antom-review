@@ -1,11 +1,41 @@
 import { antomConfig, appendPaymentEvent, connectOrderStorage, getOrder, jsonResponse, paymentApiEnabled, stateFromPaymentResult, updateOrder, verifyApiSignature } from "./_order-service.mjs";
 
+function notifySuccess(body = {}) {
+  return jsonResponse(200, {
+    result: {
+      resultCode: "SUCCESS",
+      resultStatus: "S",
+      resultMessage: "success"
+    },
+    ...body
+  });
+}
+
+function notifyFailure(statusCode, message) {
+  return jsonResponse(statusCode, {
+    result: {
+      resultCode: "FAIL",
+      resultStatus: "F",
+      resultMessage: message
+    }
+  });
+}
+
 function pickOrderId(payload) {
   return payload.merchantOrderId || payload.referenceOrderId || payload.paymentRequestId || payload.orderId || "";
 }
 
+function pickPaymentResult(payload = {}) {
+  const resultStatus = payload.result?.resultStatus || "";
+  const resultCode = payload.result?.resultCode || "";
+  if (resultStatus === "S") return payload.paymentStatus || resultCode || "SUCCESS";
+  if (resultStatus === "F") return resultCode ? `FAIL:${resultCode}` : "FAIL";
+  if (resultStatus === "U") return resultCode || "PENDING";
+  return payload.paymentResultCode || payload.resultCode || payload.result?.resultCode || payload.status || payload.paymentStatus || "";
+}
+
 export async function handler(event) {
-  if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
+  if (event.httpMethod !== "POST") return notifyFailure(405, "Method not allowed");
   connectOrderStorage(event);
   const config = antomConfig();
   const signatureHeader = event.headers?.signature || event.headers?.Signature || "";
@@ -20,14 +50,19 @@ export async function handler(event) {
       requestBody: event.body || "{}",
       signatureHeader
     });
-    if (!valid) return jsonResponse(401, { error: "Invalid payment notification signature" });
+    if (!valid) return notifyFailure(401, "Invalid payment notification signature");
   }
-  const payload = JSON.parse(event.body || "{}");
+  let payload = {};
+  try {
+    payload = JSON.parse(event.body || "{}");
+  } catch {
+    return notifyFailure(400, "Invalid JSON body");
+  }
   const orderId = pickOrderId(payload);
   const order = await getOrder(orderId);
-  if (!order) return jsonResponse(202, { accepted: true, warning: "Order not found yet" });
+  if (!order) return notifySuccess({ accepted: true, warning: "Order not found yet" });
 
-  const result = payload.paymentResultCode || payload.resultCode || payload.status || payload.paymentStatus || "";
+  const result = pickPaymentResult(payload);
   const nextState = stateFromPaymentResult(result);
   const eventRecord = {
     id: payload.notifyId || payload.eventId || `${order.id}-${Date.now()}`,
@@ -42,7 +77,8 @@ export async function handler(event) {
     status: nextState,
     paymentStatus: nextState === "paid" ? "paid" : nextState,
     fulfillmentStatus: nextState === "paid" ? "fulfillment_pending" : withEvent.fulfillmentStatus,
-    paymentProviderTransactionId: eventRecord.paymentProviderTransactionId || withEvent.paymentProviderTransactionId
+    paymentProviderTransactionId: eventRecord.paymentProviderTransactionId || withEvent.paymentProviderTransactionId,
+    paidAt: nextState === "paid" ? payload.paymentTime || payload.paymentCreateTime || new Date().toISOString() : withEvent.paidAt
   });
-  return jsonResponse(200, { received: true, order: updated });
+  return notifySuccess({ received: true, orderId: updated?.id || order.id });
 }

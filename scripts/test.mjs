@@ -89,18 +89,32 @@ const checks = [
       !main.includes("cnAudience")
   },
   {
-    name: "hidden operations recharge test page has fixed CNY tiers",
-    pass: main.includes('path === "/ops-recharge-test"') &&
-      main.includes("const opsRechargeTiers") &&
+    name: "hidden quick order checkout page has fixed CNY product packages",
+    pass: main.includes('path === "/quick-order-checkout"') &&
+      !main.includes('path === "/ops-recharge-test"') &&
+      main.includes("const quickOrderPackages") &&
       [1, 9, 999, 1999, 3499, 4999].every(amount => main.includes(`amount: ${amount}`)) &&
-      main.includes("createOpsRechargeOrder") &&
-      main.includes("运营测试充值")
+      main.includes("createQuickOrder") &&
+      main.includes("Commercial License Package") &&
+      main.includes("Studio STL Production Bundle")
   },
   {
-    name: "operations recharge page is not linked from public navigation",
-    pass: !main.includes("#/ops-recharge-test") &&
+    name: "quick order checkout page is not linked from public navigation",
+    pass: !main.includes("#/quick-order-checkout") &&
+      !main.includes("#/ops-recharge-test") &&
+      !main.includes("/quick-order-checkout\", t(") &&
       !main.includes("/ops-recharge-test\", t(") &&
+      !html.includes("quick-order-checkout") &&
       !html.includes("ops-recharge-test")
+  },
+  {
+    name: "quick order payment payload uses real product order wording",
+    pass: main.includes("quickOrderPayload") &&
+      main.includes("hidden_quick_checkout") &&
+      !main.includes("AP-OPS-RECHARGE") &&
+      !main.includes("Operations Recharge Test") &&
+      !main.includes("运营测试充值") &&
+      !main.includes("账户充值测试")
   },
   {
     name: "policy pages have structured sections",
@@ -222,6 +236,16 @@ const checks = [
       existsSync(paymentConfigCheckPath) &&
       !html.includes("ANTOM_PRIVATE_KEY") &&
       !css.includes("ANTOM_PRIVATE_KEY")
+  },
+  {
+    name: "payment webhook returns provider standard notification response",
+    pass: existsSync(paymentWebhookPath) &&
+      readFileSync(paymentWebhookPath, "utf8").includes("function notifySuccess") &&
+      readFileSync(paymentWebhookPath, "utf8").includes('resultCode: "SUCCESS"') &&
+      readFileSync(paymentWebhookPath, "utf8").includes('resultStatus: "S"') &&
+      readFileSync(paymentWebhookPath, "utf8").includes("payload.result?.resultCode") &&
+      readFileSync(paymentWebhookPath, "utf8").includes('resultStatus === "F"') &&
+      readFileSync(paymentWebhookPath, "utf8").includes("`FAIL:${resultCode}`")
   },
   {
     name: "hosted checkout request includes gateway and mobile context fields",
