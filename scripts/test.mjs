@@ -13,6 +13,7 @@ const paymentSessionPath = join(root, "netlify/functions/payment-session.mjs");
 const paymentWebhookPath = join(root, "netlify/functions/payment-webhook.mjs");
 const ordersGetPath = join(root, "netlify/functions/orders-get.mjs");
 const paymentConfigCheckPath = join(root, "netlify/functions/payment-config-check.mjs");
+const financeRecordsPath = join(root, "netlify/functions/finance-records.mjs");
 const orderService = existsSync(orderServicePath) ? readFileSync(orderServicePath, "utf8") : "";
 const specificPaymentReviewBrand = new RegExp(["an", "tom"].join(""), "i");
 
@@ -106,6 +107,18 @@ const checks = [
       !main.includes("/ops-recharge-test\", t(") &&
       !html.includes("quick-order-checkout") &&
       !html.includes("ops-recharge-test")
+  },
+  {
+    name: "finance reconciliation page is unlinked and only exposes paid quick-order records",
+    pass: main.includes('path === "/finance-reconciliation"') &&
+      main.includes("financeReconciliationPage") &&
+      !main.includes("#/finance-reconciliation") &&
+      !html.includes("finance-reconciliation") &&
+      existsSync(financeRecordsPath) &&
+      readFileSync(financeRecordsPath, "utf8").includes("hidden_quick_checkout") &&
+      readFileSync(financeRecordsPath, "utf8").includes("isPaidOrder") &&
+      !readFileSync(financeRecordsPath, "utf8").includes("email:") &&
+      !readFileSync(financeRecordsPath, "utf8").includes("address:")
   },
   {
     name: "quick order payment payload uses real product order wording",

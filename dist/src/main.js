@@ -1463,6 +1463,10 @@ async function fetchAdminOrders() {
   return body.orders || [];
 }
 
+async function fetchFinanceRecords() {
+  return apiJson("/.netlify/functions/finance-records");
+}
+
 function addToCart(productId) {
   const cart = getCart();
   const item = cart.find(entry => entry.id === productId);
@@ -2607,6 +2611,63 @@ function quickOrderCheckoutPage(error = sessionStorage.getItem("atelier-quick-or
   `;
 }
 
+function financeMoney(amount, currency = "CNY") {
+  const locale = currency === "CNY" ? "zh-CN" : currency === "HKD" ? "zh-HK" : "en-US";
+  return new Intl.NumberFormat(locale, { style: "currency", currency }).format(Number(amount || 0));
+}
+
+function financeDate(value) {
+  if (!value) return "待确认";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString("zh-CN", { hour12: false });
+}
+
+function financeRecordsContent(data = null, error = "") {
+  if (error) return `<p class="finance-message error">暂时无法读取对账记录：${escapeHtml(error)}</p>`;
+  if (!data) return `<p class="finance-message">正在读取已支付记录...</p>`;
+  const records = Array.isArray(data.records) ? data.records : [];
+  const totals = Object.entries(data.summary?.totalByCurrency || {});
+  return `
+    <section class="finance-summary" aria-label="财务汇总">
+      <div><span>已入账笔数</span><strong>${Number(data.summary?.paidCount || 0)}</strong></div>
+      ${totals.map(([currency, amount]) => `<div><span>${escapeHtml(currency)} 已入账金额</span><strong>${financeMoney(amount, currency)}</strong></div>`).join("") || `<div><span>已入账金额</span><strong>¥0.00</strong></div>`}
+    </section>
+    <section class="finance-table" aria-label="已支付对账记录">
+      <div class="finance-row finance-head"><span>商户订单号</span><span>业务摘要</span><span>入账金额</span><span>支付状态</span><span>确认时间</span><span>支付流水号</span></div>
+      ${records.length ? records.map(record => `
+        <div class="finance-row">
+          <strong>${escapeHtml(record.orderId)}</strong>
+          <span>${escapeHtml(record.productSummary)}</span>
+          <strong>${financeMoney(record.amount, record.currency)}</strong>
+          <span class="finance-paid">已支付</span>
+          <time>${escapeHtml(financeDate(record.confirmedAt))}</time>
+          <code>${escapeHtml(record.paymentReference || "待平台回传")}</code>
+        </div>
+      `).join("") : `<p class="finance-message">暂无已确认入账的快捷订单。</p>`}
+    </section>
+    <p class="finance-footnote">本页仅显示已支付成功的内部快捷订单，不展示客户邮箱、地址或运营备注。</p>
+  `;
+}
+
+function financeReconciliationPage() {
+  return `
+    <main class="finance-page" data-finance-reconciliation>
+      <header class="finance-header">
+        <span class="brand-mark">AP</span>
+        <div><strong>Atelier Printworks</strong><small>财务内部页面</small></div>
+      </header>
+      <section class="finance-intro">
+        <span class="eyebrow">Finance only</span>
+        <h1>快捷订单入账对账</h1>
+        <p>仅记录已完成付款的入账金额与成功凭据，用于财务核对。</p>
+      </section>
+      <section class="finance-content" data-finance-records>
+        ${financeRecordsContent()}
+      </section>
+    </main>
+  `;
+}
+
 function orderCard(order) {
   return `
     <article class="order-card">
@@ -3042,6 +3103,7 @@ function route() {
   if (path === "/cart") return cartPage();
   if (path === "/checkout") return checkoutPage();
   if (path === "/quick-order-checkout") return quickOrderCheckoutPage();
+  if (path === "/finance-reconciliation") return financeReconciliationPage();
   if (path === "/order-lookup") return orderLookupPage();
   if (path === "/order-success") return orderSuccessPage();
   if (path === "/admin") return adminOrdersPage();
@@ -3163,6 +3225,12 @@ function render() {
         render();
       }
     });
+  }
+  const financeRecordsMount = app.querySelector("[data-finance-records]");
+  if (financeRecordsMount) {
+    fetchFinanceRecords()
+      .then(data => { financeRecordsMount.innerHTML = financeRecordsContent(data); })
+      .catch(error => { financeRecordsMount.innerHTML = financeRecordsContent(null, error.message || "请求失败"); });
   }
   const lookupForm = app.querySelector("[data-order-lookup]");
   if (lookupForm) {
