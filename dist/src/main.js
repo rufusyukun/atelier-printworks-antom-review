@@ -2689,6 +2689,14 @@ function agentPaymentPage() {
           <div><span>金额</span><strong data-agent-payment-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong></div>
           <button type="submit" data-agent-payment-action>前往支付宝支付</button>
         </footer>
+        <div class="agent-payment-loading" data-agent-payment-loading hidden role="status" aria-live="polite">
+          <div class="agent-payment-loading-panel">
+            <span class="agent-payment-spinner" aria-hidden="true"></span>
+            <strong>正在连接支付宝</strong>
+            <p>正在为您打开支付页面，请稍候…</p>
+            <small>请勿重复点击或关闭当前页面</small>
+          </div>
+        </div>
       </form>
     </main>
   `;
@@ -2926,7 +2934,7 @@ function agentPaymentOrderCard(order) {
     <article class="order-card agent-payment-order-card">
       <h2>${t("orderNumber")}: ${escapeHtml(order.id)}</h2>
       <p>${t("total")}: <strong>${orderMoney(order.total, order.currency || "CNY")}</strong></p>
-      <p>微信：<strong>zym1s888</strong></p>
+      <p>请加微信：<strong>zym1s888</strong></p>
       <h3>${t("products")}</h3>
       <ul><li>预付费订金 × 1</li></ul>
     </article>
@@ -3517,10 +3525,12 @@ function render() {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(agentPaymentForm));
       const button = agentPaymentForm.querySelector("[data-agent-payment-action]");
+      const loading = agentPaymentForm.querySelector("[data-agent-payment-loading]");
       if (button) {
         button.disabled = true;
         button.textContent = "正在跳转...";
       }
+      if (loading) loading.hidden = false;
       try {
         const order = await createAgentPaymentOrder(data);
         const session = await createHostedPaymentSession(order);
@@ -3529,6 +3539,7 @@ function render() {
         if (!session.checkoutUrl) throw new Error("暂未取得支付页面，请稍后重试。");
         location.href = session.checkoutUrl;
       } catch (error) {
+        if (loading) loading.hidden = true;
         sessionStorage.setItem("bf-agent-payment-error", error.message || "支付请求失败，请稍后再试。");
         render();
       }

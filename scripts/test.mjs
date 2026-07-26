@@ -137,8 +137,12 @@ const checks = [
     name: "agent payment success page uses the dedicated deposit receipt",
     pass: main.includes("function agentPaymentOrderCard") &&
       main.includes("isAgentPaymentOrder(order)") &&
-      main.includes("微信：<strong>zym1s888</strong>") &&
+      main.includes("请加微信：<strong>zym1s888</strong>") &&
       main.includes("预付费订金 × 1") &&
+      main.includes("data-agent-payment-loading") &&
+      main.includes("正在连接支付宝") &&
+      css.includes(".agent-payment-loading") &&
+      css.includes("@keyframes agent-payment-spin") &&
       main.includes('agentOrder ? "" : footer()') &&
       main.includes('name: "预付费订金"') &&
       !main.includes("代理付款验证")
