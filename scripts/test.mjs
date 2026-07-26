@@ -116,7 +116,7 @@ const checks = [
       !/["']#\/t["']/.test(main) &&
       !html.includes('href="/t"') &&
       !main.includes("data-agent-preview-form") &&
-      main.includes("Preview mode")
+      main.includes("预览模式")
   },
   {
     name: "finance reconciliation page is unlinked and only exposes paid quick-order records",
