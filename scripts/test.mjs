@@ -14,6 +14,7 @@ const paymentWebhookPath = join(root, "netlify/functions/payment-webhook.mjs");
 const ordersGetPath = join(root, "netlify/functions/orders-get.mjs");
 const paymentConfigCheckPath = join(root, "netlify/functions/payment-config-check.mjs");
 const financeRecordsPath = join(root, "netlify/functions/finance-records.mjs");
+const agentFinanceRecordsPath = join(root, "netlify/functions/agent-finance-records.mjs");
 const orderService = existsSync(orderServicePath) ? readFileSync(orderServicePath, "utf8") : "";
 const specificPaymentReviewBrand = new RegExp(["an", "tom"].join(""), "i");
 
@@ -109,14 +110,16 @@ const checks = [
       !html.includes("ops-recharge-test")
   },
   {
-    name: "agent preview page is hidden from public navigation and cannot initiate payment",
+    name: "agent payment page is hidden from public navigation and creates isolated real payment orders",
     pass: main.includes('path === "/t"') &&
-      main.includes("function agentPreviewPage") &&
-      [300, 600, 900, 1200, 1500, 2000, 3000, 5000].every(amount => main.includes(`agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000]`) || main.includes(` ${amount},`)) &&
+      main.includes("function agentPaymentPage") &&
+      main.includes("agentPaymentAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000]") &&
       !/["']#\/t["']/.test(main) &&
       !html.includes('href="/t"') &&
-      !main.includes("data-agent-preview-form") &&
-      main.includes("预览模式") &&
+      main.includes("data-agent-payment-form") &&
+      main.includes("createAgentPaymentOrder") &&
+      main.includes('source: "agent_payment_verification"') &&
+      main.includes("真实付款") &&
       main.includes('aria-label="付款金额"') &&
       main.includes('? "BF"') &&
       main.includes("apple-mobile-web-app-title") &&
@@ -128,6 +131,29 @@ const checks = [
     pass: main.includes("agent-bf-mark.png") &&
       existsSync(join(root, "src/assets/agent-bf-mark.png")) &&
       statSync(join(root, "src/assets/agent-bf-mark.png")).size > 50000
+  },
+  {
+    name: "agent finance reconciliation is access-controlled, source-isolated, and unlinked",
+    pass: main.includes('path === "/bf-finance"') &&
+      main.includes("function agentFinancePage") &&
+      main.includes("agentFinanceAccessKeyStorage") &&
+      main.includes("downloadAgentFinanceCsv") &&
+      !main.includes("#/bf-finance") &&
+      !html.includes("bf-finance") &&
+      existsSync(agentFinanceRecordsPath) &&
+      readFileSync(agentFinanceRecordsPath, "utf8").includes("AGENT_FINANCE_ACCESS_KEY") &&
+      readFileSync(agentFinanceRecordsPath, "utf8").includes("x-finance-access-key") &&
+      readFileSync(agentFinanceRecordsPath, "utf8").includes("agent_payment_verification") &&
+      readFileSync(agentFinanceRecordsPath, "utf8").includes("timingSafeEqual") &&
+      readFileSync(agentFinanceRecordsPath, "utf8").includes("reconcilePayment")
+  },
+  {
+    name: "agent payment tiers and goods URLs are enforced server-side",
+    pass: readFileSync(orderCreatePath, "utf8").includes("AGENT_PAYMENT_AMOUNTS") &&
+      readFileSync(orderCreatePath, "utf8").includes("agent-payment-verification-${order.total}") &&
+      readFileSync(orderCreatePath, "utf8").includes("代理付款订单金额或编号无效") &&
+      orderService.includes("function normalizedGoodsUrl") &&
+      orderService.includes("url.origin === merchantOrigin")
   },
   {
     name: "finance reconciliation page is unlinked and only exposes paid quick-order records",

@@ -1233,6 +1233,49 @@ h3 {
 
 .agent-preview-notice b { color: #b5a5ff; white-space: nowrap; }
 
+.agent-payment-reference {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  display: grid;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 14px;
+}
+
+.agent-payment-reference span {
+  color: #bcb7d3;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.agent-payment-reference input {
+  background: rgba(5, 6, 13, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  color: #fff;
+  font: inherit;
+  min-height: 48px;
+  padding: 0 13px;
+}
+
+.agent-payment-reference input:focus {
+  border-color: #9b83ff;
+  box-shadow: 0 0 0 3px rgba(137, 109, 255, 0.2);
+  outline: 0;
+}
+
+.agent-payment-error {
+  background: rgba(196, 46, 60, 0.13);
+  border: 1px solid rgba(255, 112, 126, 0.32);
+  border-radius: 12px;
+  color: #ffb7bd;
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+}
+
 .agent-preview-bar {
   align-items: center;
   background: rgba(15, 14, 24, 0.92);
@@ -1284,6 +1327,12 @@ h3 {
 .agent-preview-bar button:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 3px;
+}
+
+.agent-preview-bar button:disabled {
+  cursor: wait;
+  filter: saturate(0.55);
+  opacity: 0.7;
 }
 
 .ops-recharge-header {
@@ -1664,6 +1713,281 @@ h3 {
 
 .finance-message.error {
   color: #8a1f16;
+}
+
+.agent-finance-page {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(108, 72, 255, 0.18), transparent 29%),
+    radial-gradient(circle at 95% 12%, rgba(33, 168, 255, 0.12), transparent 26%),
+    #080910;
+  color: #f7f7fb;
+  min-height: 100vh;
+  padding: 24px max(20px, calc((100vw - 1320px) / 2)) 70px;
+}
+
+.agent-finance-header {
+  align-items: center;
+  display: flex;
+  gap: 13px;
+  min-height: 62px;
+}
+
+.agent-finance-header img {
+  filter: drop-shadow(0 0 10px rgba(108, 86, 255, 0.45));
+  height: auto;
+  width: 78px;
+}
+
+.agent-finance-header strong,
+.agent-finance-header span {
+  display: block;
+}
+
+.agent-finance-header strong {
+  font-size: 16px;
+}
+
+.agent-finance-header span {
+  color: #8f8c9f;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.agent-finance-intro {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 58px 0 34px;
+}
+
+.agent-finance-intro > span {
+  color: #9d82ff;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.agent-finance-intro h1 {
+  font-size: clamp(38px, 5vw, 64px);
+  letter-spacing: 0;
+  margin: 10px 0 12px;
+}
+
+.agent-finance-intro p {
+  color: #9d9aaa;
+  margin: 0;
+}
+
+.agent-finance-content {
+  padding-top: 26px;
+}
+
+.agent-finance-login {
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 8px;
+  margin: 36px auto 0;
+  max-width: 460px;
+  padding: 28px;
+}
+
+.agent-finance-login > span {
+  color: #a58dff;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.agent-finance-login h2 {
+  font-size: 26px;
+  margin: 8px 0;
+}
+
+.agent-finance-login p,
+.agent-finance-generated,
+.agent-finance-loading,
+.agent-finance-empty {
+  color: #9693a4;
+}
+
+.agent-finance-login form,
+.agent-finance-login label {
+  display: grid;
+  gap: 10px;
+}
+
+.agent-finance-login form {
+  margin-top: 22px;
+}
+
+.agent-finance-login label {
+  color: #c8c5d1;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.agent-finance-login input,
+.agent-finance-toolbar input,
+.agent-finance-toolbar select {
+  background: #0d0f18;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 7px;
+  color: #f7f7fb;
+  font: inherit;
+  min-height: 44px;
+  padding: 0 12px;
+}
+
+.agent-finance-login button,
+.agent-finance-toolbar button {
+  background: #7559f4;
+  border: 0;
+  border-radius: 7px;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 850;
+  min-height: 44px;
+  padding: 0 15px;
+}
+
+.agent-finance-error {
+  background: rgba(196, 46, 60, 0.13);
+  border: 1px solid rgba(255, 112, 126, 0.3);
+  border-radius: 7px;
+  color: #ffb7bd;
+  padding: 11px;
+}
+
+.agent-finance-summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.agent-finance-summary > div,
+.agent-finance-ledger {
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.agent-finance-summary > div {
+  padding: 18px;
+}
+
+.agent-finance-summary span,
+.agent-finance-summary strong {
+  display: block;
+}
+
+.agent-finance-summary span {
+  color: #9693a4;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.agent-finance-summary strong {
+  font-size: 28px;
+  margin-top: 8px;
+}
+
+.agent-finance-ledger {
+  margin-top: 14px;
+  overflow: hidden;
+}
+
+.agent-finance-toolbar {
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+.agent-finance-toolbar > div {
+  display: flex;
+  gap: 8px;
+}
+
+.agent-finance-toolbar input {
+  min-width: min(320px, 34vw);
+}
+
+.agent-finance-toolbar button:nth-last-child(1) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.agent-finance-table {
+  overflow-x: auto;
+}
+
+.agent-finance-row {
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1.2fr 0.7fr 0.65fr 0.62fr 0.95fr 0.95fr 1.2fr;
+  min-width: 1080px;
+  padding: 14px 16px;
+}
+
+.agent-finance-row:last-child {
+  border-bottom: 0;
+}
+
+.agent-finance-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.agent-finance-head {
+  background: rgba(255, 255, 255, 0.035);
+  color: #8f8c9d;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.agent-finance-row time,
+.agent-finance-row code {
+  color: #aaa7b5;
+  font-size: 12px;
+}
+
+.agent-finance-state {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 850;
+  justify-self: start;
+  padding: 6px 9px;
+}
+
+.agent-finance-state.paid {
+  background: rgba(50, 190, 117, 0.13);
+  border-color: rgba(73, 220, 143, 0.26);
+  color: #81efb4;
+}
+
+.agent-finance-state.pending_payment {
+  background: rgba(239, 173, 53, 0.12);
+  color: #f1ca77;
+}
+
+.agent-finance-state.payment_failed,
+.agent-finance-state.payment_blocked,
+.agent-finance-state.disputed {
+  background: rgba(224, 75, 89, 0.12);
+  color: #ff9ba4;
+}
+
+.agent-finance-state.refunded {
+  background: rgba(63, 155, 225, 0.12);
+  color: #91cfff;
+}
+
+.agent-finance-generated,
+.agent-finance-empty,
+.agent-finance-loading {
+  font-size: 12px;
+  margin: 14px 16px;
 }
 
 .form-note {
@@ -2415,4 +2739,86 @@ h3 {
   .finance-head {
     display: none;
   }
+}
+
+@media (max-width: 760px) {
+  .agent-finance-page {
+    padding: 16px 14px 46px;
+  }
+
+  .agent-finance-header img {
+    width: 68px;
+  }
+
+  .agent-finance-intro {
+    padding: 42px 0 26px;
+  }
+
+  .agent-finance-intro h1 {
+    font-size: 38px;
+  }
+
+  .agent-finance-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .agent-finance-summary > div {
+    padding: 15px;
+  }
+
+  .agent-finance-summary strong {
+    font-size: 23px;
+  }
+
+  .agent-finance-toolbar,
+  .agent-finance-toolbar > div {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .agent-finance-toolbar input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .agent-finance-table {
+    display: grid;
+    gap: 10px;
+    overflow: visible;
+    padding: 10px;
+  }
+
+  .agent-finance-head {
+    display: none;
+  }
+
+  .agent-finance-row {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 7px;
+    gap: 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    padding: 14px;
+  }
+
+  .agent-finance-row:not(.agent-finance-head) > *::before {
+    color: #777485;
+    display: block;
+    font: 800 10px/1.2 system-ui, sans-serif;
+    margin-bottom: 5px;
+  }
+
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(1),
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(7) {
+    grid-column: 1 / -1;
+  }
+
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(1)::before { content: "商户订单号"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(2)::before { content: "代理编号"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(3)::before { content: "金额"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(4)::before { content: "状态"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(5)::before { content: "创建时间"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(6)::before { content: "支付确认时间"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(7)::before { content: "支付流水号"; }
 }

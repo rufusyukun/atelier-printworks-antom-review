@@ -49,7 +49,9 @@ function paymentAmountForCurrency(order, value = order.total, currency = order.c
 }
 
 function goodsCategory(item = {}) {
+  if (item.category) return String(item.category).slice(0, 128);
   const type = String(item.type || "").toLowerCase();
+  if (type.includes("verification")) return "business services/payment verification";
   if (type.includes("digital")) return "digital goods/3d printable model files";
   if (type.includes("license")) return "digital goods/commercial license";
   if (type.includes("custom")) return "customized goods/3d printing service";
@@ -63,9 +65,16 @@ function orderGoods(order, currency = order.currency) {
     goodsCategory: goodsCategory(item),
     goodsQuantity: String(item.qty || 1),
     goodsUnitAmount: paymentAmountForCurrency(order, item.price || 0, currency),
-    goodsUrl: `${siteUrl()}/products/${encodeURIComponent(item.id || "")}`,
+    goodsUrl: item.goodsUrl || `${siteUrl()}/products/${encodeURIComponent(item.id || "")}`,
     goodsSkuName: String(item.type || "Original 3D design").slice(0, 128)
   })).filter(item => item.referenceGoodsId);
+}
+
+function orderDescription(order = {}) {
+  if (order.source === "agent_payment_verification") {
+    return `BF agent payment verification ${order.id}`;
+  }
+  return `Atelier Printworks order ${order.id}`;
 }
 
 function checkoutUrlHost(url = "") {
@@ -129,7 +138,7 @@ async function createDirectWalletPayment(order, event) {
     env: checkoutEnvironment,
     order: {
       referenceOrderId: order.id,
-      orderDescription: `Atelier Printworks order ${order.id}`,
+      orderDescription: orderDescription(order),
       buyer: { referenceBuyerId: order.email, buyerEmail: order.email },
       orderAmount: normalizedPaymentAmount,
       goods: normalizedGoods
@@ -230,7 +239,7 @@ async function createHostedPaymentSession(order, event) {
     availablePaymentMethod: { paymentMethodTypeList },
     order: {
       referenceOrderId: order.id,
-      orderDescription: `Atelier Printworks order ${order.id}`,
+      orderDescription: orderDescription(order),
       buyer: { referenceBuyerId: order.email, buyerEmail: order.email },
       orderAmount: paymentAmount(order),
       goods: orderGoods(order)

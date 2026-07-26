@@ -1448,6 +1448,42 @@ async function createQuickOrder(form) {
   return body.order;
 }
 
+function agentPaymentPayload(form) {
+  const amount = Number(form.amount || 0);
+  if (!agentPaymentAmounts.includes(amount)) throw new Error("请选择有效的付款金额。");
+  const operatorReference = String(form.operatorReference || "").trim();
+  if (!operatorReference) throw new Error("请输入代理编号。");
+  return {
+    email: supportEmail,
+    address: "",
+    notes: `Internal source: agent_payment_verification. Operator reference: ${operatorReference}.`,
+    source: "agent_payment_verification",
+    operatorReference,
+    currency: "CNY",
+    total: amount,
+    delivery: "本订单用于内部支付验证，不产生商品配送或数字商品下载。",
+    checkoutLanguage: "zh-CN",
+    items: [{
+      id: `agent-payment-verification-${amount}`,
+      name: "代理付款验证",
+      type: "Payment Verification",
+      category: "business services/payment verification",
+      goodsUrl: `${location.origin}/t`,
+      qty: 1,
+      price: amount
+    }]
+  };
+}
+
+async function createAgentPaymentOrder(form) {
+  const body = await apiJson("/.netlify/functions/orders-create", {
+    method: "POST",
+    body: JSON.stringify(agentPaymentPayload(form))
+  });
+  saveServerOrderCache(body.order);
+  return body.order;
+}
+
 async function fetchServerOrder(orderId, options = {}) {
   const params = new URLSearchParams({ orderId });
   if (options.reconcile) params.set("reconcile", "1");
@@ -1465,6 +1501,12 @@ async function fetchAdminOrders() {
 
 async function fetchFinanceRecords() {
   return apiJson("/.netlify/functions/finance-records");
+}
+
+async function fetchAgentFinanceRecords(accessKey, reconcile = true) {
+  return apiJson(`/.netlify/functions/agent-finance-records${reconcile ? "?reconcile=1" : ""}`, {
+    headers: { "x-finance-access-key": accessKey }
+  });
 }
 
 function addToCart(productId) {
@@ -2611,12 +2653,17 @@ function quickOrderCheckoutPage(error = sessionStorage.getItem("atelier-quick-or
   `;
 }
 
-const agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000];
+const agentPaymentAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000];
+const agentFinanceAccessKeyStorage = "bf-finance-access-key";
+let agentFinanceRecordsCache = [];
 
-function agentPreviewPage() {
-  const defaultAmount = agentPreviewAmounts[2];
+function agentPaymentPage() {
+  const defaultAmount = agentPaymentAmounts[2];
+  const error = sessionStorage.getItem("bf-agent-payment-error") || "";
+  const operatorReference = sessionStorage.getItem("bf-agent-reference") || "";
+  sessionStorage.removeItem("bf-agent-payment-error");
   return `
-    <main class="agent-preview-page" data-agent-preview>
+    <main class="agent-preview-page" data-agent-payment>
       <header class="agent-preview-header">
         <div class="agent-preview-wordmark">
           <img src="src/assets/agent-bf-mark.png" alt="BF" />
@@ -2625,26 +2672,33 @@ function agentPreviewPage() {
       </header>
       <section class="agent-preview-hero">
         <div class="agent-preview-hero-copy">
-          <span class="agent-preview-kicker">安全支付预览</span>
+          <span class="agent-preview-kicker">安全支付</span>
           <h1>选择金额</h1>
-          <p>请选择本次需要验证的金额，确认后可继续查看付款页面。</p>
+          <p>请选择本次付款金额，确认后将跳转支付宝完成付款。</p>
         </div>
       </section>
-      <section class="agent-preview-panel" aria-label="选择金额">
-        <div class="agent-preview-grid" role="radiogroup" aria-label="付款金额">
-          ${agentPreviewAmounts.map((amount, index) => `
-            <label class="agent-preview-tier ${index === 2 ? "is-selected" : ""}">
-              <input type="radio" name="agent-preview-amount" value="${amount}" ${index === 2 ? "checked" : ""} />
-              <strong>¥${amount.toLocaleString("zh-CN")}</strong>
-            </label>
-          `).join("")}
-        </div>
-        <div class="agent-preview-notice"><b>预览模式</b><span>此页面仅用于查看视觉效果，不会创建订单或发起付款。</span></div>
-      </section>
-      <footer class="agent-preview-bar">
-        <div><span>金额</span><strong data-agent-preview-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong></div>
-        <button type="button" data-agent-preview-action>确认金额</button>
-      </footer>
+      <form data-agent-payment-form>
+        <section class="agent-preview-panel" aria-label="选择金额">
+          ${error ? `<div class="agent-payment-error">${escapeHtml(error)}</div>` : ""}
+          <div class="agent-preview-grid" role="radiogroup" aria-label="付款金额">
+            ${agentPaymentAmounts.map((amount, index) => `
+              <label class="agent-preview-tier ${index === 2 ? "is-selected" : ""}">
+                <input type="radio" name="amount" value="${amount}" ${index === 2 ? "checked" : ""} />
+                <strong>¥${amount.toLocaleString("zh-CN")}</strong>
+              </label>
+            `).join("")}
+          </div>
+          <label class="agent-payment-reference">
+            <span>代理编号</span>
+            <input name="operatorReference" value="${escapeHtml(operatorReference)}" maxlength="40" autocomplete="off" placeholder="请输入代理编号" required />
+          </label>
+          <div class="agent-preview-notice"><b>真实付款</b><span>确认后将跳转支付宝并实际扣款。请核对金额，避免重复提交。</span></div>
+        </section>
+        <footer class="agent-preview-bar">
+          <div><span>金额</span><strong data-agent-payment-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong></div>
+          <button type="submit" data-agent-payment-action>前往支付宝支付</button>
+        </footer>
+      </form>
     </main>
   `;
 }
@@ -2704,6 +2758,154 @@ function financeReconciliationPage() {
       </section>
     </main>
   `;
+}
+
+function agentFinanceStatusLabel(status = "") {
+  const labels = {
+    paid: "已支付",
+    pending_payment: "待支付",
+    payment_failed: "支付失败",
+    payment_blocked: "已拦截",
+    refunded: "已退款",
+    disputed: "争议处理中"
+  };
+  return labels[status] || "待确认";
+}
+
+function agentFinanceLoginContent(error = "") {
+  return `
+    <section class="agent-finance-login">
+      <span>内部访问</span>
+      <h2>输入财务访问码</h2>
+      <p>访问码只保存在当前浏览器会话中，关闭页面后需重新输入。</p>
+      <form data-agent-finance-login>
+        ${error ? `<div class="agent-finance-error">${escapeHtml(error)}</div>` : ""}
+        <label>访问码<input name="accessKey" type="password" autocomplete="current-password" required /></label>
+        <button type="submit">进入对账后台</button>
+      </form>
+    </section>
+  `;
+}
+
+function agentFinanceRecordsContent(data = null, error = "") {
+  if (error) return agentFinanceLoginContent(error);
+  if (!data) return `<div class="agent-finance-loading">正在读取对账记录...</div>`;
+  const records = Array.isArray(data.records) ? data.records : [];
+  agentFinanceRecordsCache = records;
+  const totalByCurrency = Object.entries(data.summary?.totalByCurrency || {});
+  return `
+    <section class="agent-finance-summary" aria-label="对账汇总">
+      <div><span>全部订单</span><strong>${Number(data.summary?.orderCount || 0)}</strong></div>
+      <div><span>支付成功</span><strong>${Number(data.summary?.paidCount || 0)}</strong></div>
+      <div><span>待支付</span><strong>${Number(data.summary?.pendingCount || 0)}</strong></div>
+      ${totalByCurrency.map(([currency, amount]) => `<div><span>${escapeHtml(currency)} 已入账</span><strong>${financeMoney(amount, currency)}</strong></div>`).join("") || `<div><span>已入账</span><strong>¥0.00</strong></div>`}
+    </section>
+    <section class="agent-finance-ledger">
+      <div class="agent-finance-toolbar">
+        <div>
+          <input type="search" placeholder="搜索订单号或代理编号" aria-label="搜索记录" data-agent-finance-search />
+          <select aria-label="筛选支付状态" data-agent-finance-status>
+            <option value="">全部状态</option>
+            <option value="paid">已支付</option>
+            <option value="pending_payment">待支付</option>
+            <option value="payment_failed">支付失败</option>
+            <option value="payment_blocked">已拦截</option>
+            <option value="refunded">已退款</option>
+          </select>
+        </div>
+        <div>
+          <button type="button" data-agent-finance-refresh>刷新状态</button>
+          <button type="button" data-agent-finance-export>导出 CSV</button>
+          <button type="button" data-agent-finance-logout>退出</button>
+        </div>
+      </div>
+      <div class="agent-finance-table">
+        <div class="agent-finance-row agent-finance-head">
+          <span>商户订单号</span><span>代理编号</span><span>金额</span><span>状态</span><span>创建时间</span><span>支付确认时间</span><span>支付流水号</span>
+        </div>
+        ${records.length ? records.map(record => `
+          <div class="agent-finance-row" data-agent-finance-row data-status="${escapeHtml(record.status)}" data-search="${escapeHtml(`${record.orderId} ${record.operatorReference}`.toLowerCase())}">
+            <strong>${escapeHtml(record.orderId)}</strong>
+            <span>${escapeHtml(record.operatorReference || "未填写")}</span>
+            <strong>${financeMoney(record.amount, record.currency)}</strong>
+            <span class="agent-finance-state ${escapeHtml(record.status)}">${escapeHtml(agentFinanceStatusLabel(record.status))}</span>
+            <time>${escapeHtml(financeDate(record.createdAt))}</time>
+            <time>${escapeHtml(record.confirmedAt ? financeDate(record.confirmedAt) : "待支付成功")}</time>
+            <code>${escapeHtml(record.paymentReference || "待平台回传")}</code>
+          </div>
+        `).join("") : `<p class="agent-finance-empty">暂无该测试页面产生的订单。</p>`}
+      </div>
+      <p class="agent-finance-generated">数据更新时间：${escapeHtml(financeDate(data.summary?.generatedAt))}</p>
+    </section>
+  `;
+}
+
+function agentFinancePage() {
+  return `
+    <main class="agent-finance-page" data-agent-finance>
+      <header class="agent-finance-header">
+        <img src="src/assets/agent-bf-mark.png" alt="BF" />
+        <div><strong>财务对账后台</strong><span>代理支付专用</span></div>
+      </header>
+      <section class="agent-finance-intro">
+        <span>内部财务系统</span>
+        <h1>支付记录与入账核对</h1>
+        <p>仅显示 BF 代理支付页面产生的订单和支付结果。</p>
+      </section>
+      <section class="agent-finance-content" data-agent-finance-content>
+        ${agentFinanceLoginContent()}
+      </section>
+    </main>
+  `;
+}
+
+function downloadAgentFinanceCsv(records = []) {
+  const csvCell = value => {
+    const text = String(value ?? "");
+    const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;
+    return `"${safe.replaceAll('"', '""')}"`;
+  };
+  const header = ["商户订单号", "代理编号", "金额", "币种", "状态", "创建时间", "支付确认时间", "支付流水号"];
+  const rows = records.map(record => [
+    record.orderId,
+    record.operatorReference,
+    record.amount,
+    record.currency,
+    agentFinanceStatusLabel(record.status),
+    financeDate(record.createdAt),
+    record.confirmedAt ? financeDate(record.confirmedAt) : "",
+    record.paymentReference
+  ]);
+  const blob = new Blob([`\uFEFF${[header, ...rows].map(row => row.map(csvCell).join(",")).join("\n")}`], { type: "text/csv;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `bf-finance-${new Date().toISOString().slice(0, 10)}.csv`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+function filterAgentFinanceRows(root) {
+  const query = String(root.querySelector("[data-agent-finance-search]")?.value || "").trim().toLowerCase();
+  const status = root.querySelector("[data-agent-finance-status]")?.value || "";
+  root.querySelectorAll("[data-agent-finance-row]").forEach(row => {
+    const matchesQuery = !query || String(row.dataset.search || "").includes(query);
+    const matchesStatus = !status || row.dataset.status === status;
+    row.hidden = !(matchesQuery && matchesStatus);
+  });
+}
+
+async function loadAgentFinanceContent(mount, accessKey, reconcile = true) {
+  mount.innerHTML = agentFinanceRecordsContent();
+  try {
+    const data = await fetchAgentFinanceRecords(accessKey, reconcile);
+    sessionStorage.setItem(agentFinanceAccessKeyStorage, accessKey);
+    mount.innerHTML = agentFinanceRecordsContent(data);
+  } catch (error) {
+    if (/访问码|access/i.test(error.message || "")) {
+      sessionStorage.removeItem(agentFinanceAccessKeyStorage);
+    }
+    mount.innerHTML = agentFinanceRecordsContent(null, error.message || "读取失败，请稍后重试。");
+  }
 }
 
 function orderCard(order) {
@@ -3141,7 +3343,8 @@ function route() {
   if (path === "/cart") return cartPage();
   if (path === "/checkout") return checkoutPage();
   if (path === "/quick-order-checkout") return quickOrderCheckoutPage();
-  if (path === "/t") return agentPreviewPage();
+  if (path === "/t") return agentPaymentPage();
+  if (path === "/bf-finance") return agentFinancePage();
   if (path === "/finance-reconciliation") return financeReconciliationPage();
   if (path === "/order-lookup") return orderLookupPage();
   if (path === "/order-success") return orderSuccessPage();
@@ -3166,15 +3369,18 @@ function render() {
   const previousScrollY = window.scrollY;
   app.innerHTML = route();
   lastRenderedRoute = renderRoute;
-  document.documentElement.lang = currentLang;
-  const isAgentPreview = currentPath() === "/t";
-  document.title = isAgentPreview
+  const isAgentPayment = currentPath() === "/t";
+  const isAgentFinance = currentPath() === "/bf-finance";
+  document.documentElement.lang = isAgentPayment || isAgentFinance ? "zh-CN" : currentLang;
+  document.title = isAgentPayment
     ? "BF"
-    : "Atelier Printworks | Original 3D Print Goods & STL Packs";
+    : isAgentFinance
+      ? "BF 财务对账"
+      : "Atelier Printworks | Original 3D Print Goods & STL Packs";
   const standaloneMetaNames = ["apple-mobile-web-app-capable", "mobile-web-app-capable", "apple-mobile-web-app-title"];
   standaloneMetaNames.forEach(name => {
     let meta = document.head.querySelector(`meta[name="${name}"]`);
-    if (!isAgentPreview) {
+    if (!isAgentPayment) {
       meta?.remove();
       return;
     }
@@ -3289,20 +3495,73 @@ function render() {
       .then(data => { financeRecordsMount.innerHTML = financeRecordsContent(data); })
       .catch(error => { financeRecordsMount.innerHTML = financeRecordsContent(null, error.message || "请求失败"); });
   }
-  const agentPreview = app.querySelector("[data-agent-preview]");
-  if (agentPreview) {
-    const total = agentPreview.querySelector("[data-agent-preview-total]");
-    const button = agentPreview.querySelector("[data-agent-preview-action]");
-    agentPreview.querySelectorAll("input[name='agent-preview-amount']").forEach(input => {
+  const agentPayment = app.querySelector("[data-agent-payment]");
+  const agentPaymentForm = agentPayment?.querySelector("[data-agent-payment-form]");
+  if (agentPayment && agentPaymentForm) {
+    const total = agentPayment.querySelector("[data-agent-payment-total]");
+    agentPaymentForm.querySelectorAll("input[name='amount']").forEach(input => {
       input.addEventListener("change", () => {
-        agentPreview.querySelectorAll(".agent-preview-tier").forEach(tier => tier.classList.remove("is-selected"));
+        agentPayment.querySelectorAll(".agent-preview-tier").forEach(tier => tier.classList.remove("is-selected"));
         input.closest(".agent-preview-tier")?.classList.add("is-selected");
         if (total) total.textContent = `¥${Number(input.value).toLocaleString("zh-CN")}`;
       });
     });
-    button?.addEventListener("click", () => {
-      button.textContent = "当前为预览模式";
-      window.setTimeout(() => { button.textContent = "确认金额"; }, 1300);
+    agentPaymentForm.addEventListener("submit", async event => {
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(agentPaymentForm));
+      if (!String(data.operatorReference || "").trim()) {
+        sessionStorage.setItem("bf-agent-payment-error", "请输入代理编号后再继续付款。");
+        render();
+        return;
+      }
+      sessionStorage.setItem("bf-agent-reference", String(data.operatorReference).trim());
+      const button = agentPaymentForm.querySelector("[data-agent-payment-action]");
+      if (button) {
+        button.disabled = true;
+        button.textContent = "正在跳转...";
+      }
+      try {
+        const order = await createAgentPaymentOrder(data);
+        const session = await createHostedPaymentSession(order);
+        if (session.order) saveServerOrderCache(session.order);
+        sessionStorage.setItem("atelier-last-order", order.id);
+        if (!session.checkoutUrl) throw new Error("暂未取得支付页面，请稍后重试。");
+        location.href = session.checkoutUrl;
+      } catch (error) {
+        sessionStorage.setItem("bf-agent-payment-error", error.message || "支付请求失败，请稍后再试。");
+        render();
+      }
+    });
+  }
+  const agentFinance = app.querySelector("[data-agent-finance]");
+  const agentFinanceContent = agentFinance?.querySelector("[data-agent-finance-content]");
+  if (agentFinance && agentFinanceContent) {
+    const storedAccessKey = sessionStorage.getItem(agentFinanceAccessKeyStorage) || "";
+    if (storedAccessKey) loadAgentFinanceContent(agentFinanceContent, storedAccessKey);
+    agentFinanceContent.addEventListener("submit", event => {
+      const form = event.target.closest("[data-agent-finance-login]");
+      if (!form) return;
+      event.preventDefault();
+      const data = Object.fromEntries(new FormData(form));
+      loadAgentFinanceContent(agentFinanceContent, String(data.accessKey || "").trim());
+    });
+    agentFinanceContent.addEventListener("input", () => filterAgentFinanceRows(agentFinanceContent));
+    agentFinanceContent.addEventListener("change", () => filterAgentFinanceRows(agentFinanceContent));
+    agentFinanceContent.addEventListener("click", event => {
+      if (event.target.closest("[data-agent-finance-refresh]")) {
+        const key = sessionStorage.getItem(agentFinanceAccessKeyStorage) || "";
+        if (key) loadAgentFinanceContent(agentFinanceContent, key);
+      }
+      if (event.target.closest("[data-agent-finance-export]")) {
+        const visibleIds = new Set([...agentFinanceContent.querySelectorAll("[data-agent-finance-row]:not([hidden])")]
+          .map(row => row.querySelector("strong")?.textContent || ""));
+        downloadAgentFinanceCsv(agentFinanceRecordsCache.filter(record => visibleIds.has(record.orderId)));
+      }
+      if (event.target.closest("[data-agent-finance-logout]")) {
+        sessionStorage.removeItem(agentFinanceAccessKeyStorage);
+        agentFinanceRecordsCache = [];
+        agentFinanceContent.innerHTML = agentFinanceLoginContent();
+      }
     });
   }
   const lookupForm = app.querySelector("[data-order-lookup]");

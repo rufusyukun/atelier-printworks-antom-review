@@ -94,13 +94,26 @@ export function makeMerchantOrderId() {
   return `AP-${date}-${entropy}`;
 }
 
+function normalizedGoodsUrl(value = "") {
+  if (!value) return "";
+  try {
+    const merchantOrigin = new URL(siteUrl()).origin;
+    const url = new URL(value, merchantOrigin);
+    return url.origin === merchantOrigin ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
 function normalizeItems(items = []) {
   return items.map(item => ({
     id: String(item.id || ""),
     name: String(item.name || item.id || ""),
     type: String(item.type || "Unknown"),
     qty: Number(item.qty || 1),
-    price: Number(item.price || 0)
+    price: Number(item.price || 0),
+    category: String(item.category || ""),
+    goodsUrl: normalizedGoodsUrl(item.goodsUrl)
   })).filter(item => item.id && item.qty > 0);
 }
 
@@ -123,6 +136,8 @@ export function normalizeOrderPayload(payload, event) {
     email: String(payload.email || "").trim(),
     address: String(payload.address || ""),
     notes: String(payload.notes || ""),
+    source: String(payload.source || ""),
+    operatorReference: String(payload.operatorReference || ""),
     currency: String(payload.currency || "USD"),
     total,
     delivery: String(payload.delivery || ""),
