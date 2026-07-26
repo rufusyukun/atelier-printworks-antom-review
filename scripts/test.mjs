@@ -109,6 +109,16 @@ const checks = [
       !html.includes("ops-recharge-test")
   },
   {
+    name: "agent preview page is hidden from public navigation and cannot initiate payment",
+    pass: main.includes('path === "/t"') &&
+      main.includes("function agentPreviewPage") &&
+      [300, 600, 900, 1200, 1500, 2000, 3000].every(amount => main.includes(`agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000]`) || main.includes(` ${amount},`)) &&
+      !/["']#\/t["']/.test(main) &&
+      !html.includes('href="/t"') &&
+      !main.includes("data-agent-preview-form") &&
+      main.includes("Preview mode")
+  },
+  {
     name: "finance reconciliation page is unlinked and only exposes paid quick-order records",
     pass: main.includes('path === "/finance-reconciliation"') &&
       main.includes("financeReconciliationPage") &&

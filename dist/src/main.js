@@ -2611,6 +2611,41 @@ function quickOrderCheckoutPage(error = sessionStorage.getItem("atelier-quick-or
   `;
 }
 
+const agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000];
+
+function agentPreviewPage() {
+  const defaultAmount = agentPreviewAmounts[2];
+  return `
+    <main class="agent-preview-page" data-agent-preview>
+      <header class="agent-preview-header">
+        <div class="agent-preview-wordmark"><span>AP</span><strong>Atelier Printworks</strong></div>
+        <div class="agent-preview-status"><i></i> Agent access</div>
+      </header>
+      <section class="agent-preview-hero">
+        <span class="agent-preview-kicker">SECURE CHECKOUT</span>
+        <h1>Choose an amount</h1>
+        <p>Select a preset amount to preview the mobile checkout experience.</p>
+      </section>
+      <section class="agent-preview-panel" aria-label="Amount selection">
+        <div class="agent-preview-grid" role="radiogroup" aria-label="Payment amount">
+          ${agentPreviewAmounts.map((amount, index) => `
+            <label class="agent-preview-tier ${index === 2 ? "is-selected" : ""}">
+              <input type="radio" name="agent-preview-amount" value="${amount}" ${index === 2 ? "checked" : ""} />
+              <span>${index === 2 ? "Selected" : "Preset"}</span>
+              <strong>¥${amount.toLocaleString("zh-CN")}</strong>
+            </label>
+          `).join("")}
+        </div>
+        <div class="agent-preview-notice"><b>Preview mode</b><span>This screen is for layout review only. No payment will be created.</span></div>
+      </section>
+      <footer class="agent-preview-bar">
+        <div><span>Selected amount</span><strong data-agent-preview-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong></div>
+        <button type="button" data-agent-preview-action>Preview checkout</button>
+      </footer>
+    </main>
+  `;
+}
+
 function financeMoney(amount, currency = "CNY") {
   const locale = currency === "CNY" ? "zh-CN" : currency === "HKD" ? "zh-HK" : "en-US";
   return new Intl.NumberFormat(locale, { style: "currency", currency }).format(Number(amount || 0));
@@ -3103,6 +3138,7 @@ function route() {
   if (path === "/cart") return cartPage();
   if (path === "/checkout") return checkoutPage();
   if (path === "/quick-order-checkout") return quickOrderCheckoutPage();
+  if (path === "/t") return agentPreviewPage();
   if (path === "/finance-reconciliation") return financeReconciliationPage();
   if (path === "/order-lookup") return orderLookupPage();
   if (path === "/order-success") return orderSuccessPage();
@@ -3231,6 +3267,22 @@ function render() {
     fetchFinanceRecords()
       .then(data => { financeRecordsMount.innerHTML = financeRecordsContent(data); })
       .catch(error => { financeRecordsMount.innerHTML = financeRecordsContent(null, error.message || "请求失败"); });
+  }
+  const agentPreview = app.querySelector("[data-agent-preview]");
+  if (agentPreview) {
+    const total = agentPreview.querySelector("[data-agent-preview-total]");
+    const button = agentPreview.querySelector("[data-agent-preview-action]");
+    agentPreview.querySelectorAll("input[name='agent-preview-amount']").forEach(input => {
+      input.addEventListener("change", () => {
+        agentPreview.querySelectorAll(".agent-preview-tier").forEach(tier => tier.classList.remove("is-selected"));
+        input.closest(".agent-preview-tier")?.classList.add("is-selected");
+        if (total) total.textContent = `¥${Number(input.value).toLocaleString("zh-CN")}`;
+      });
+    });
+    button?.addEventListener("click", () => {
+      button.textContent = "Preview only";
+      window.setTimeout(() => { button.textContent = "Preview checkout"; }, 1300);
+    });
   }
   const lookupForm = app.querySelector("[data-order-lookup]");
   if (lookupForm) {
