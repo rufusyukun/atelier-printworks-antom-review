@@ -120,9 +120,9 @@ const checks = [
   },
   {
     name: "agent preview page includes the supplied test team logo asset",
-    pass: main.includes("agent-test-team-logo.jpg") &&
-      existsSync(join(root, "src/assets/agent-test-team-logo.jpg")) &&
-      statSync(join(root, "src/assets/agent-test-team-logo.jpg")).size > 50000
+    pass: main.includes("agent-bf-mark.png") &&
+      existsSync(join(root, "src/assets/agent-bf-mark.png")) &&
+      statSync(join(root, "src/assets/agent-bf-mark.png")).size > 50000
   },
   {
     name: "finance reconciliation page is unlinked and only exposes paid quick-order records",

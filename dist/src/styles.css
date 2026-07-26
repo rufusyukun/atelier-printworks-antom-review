@@ -1080,20 +1080,13 @@ h3 {
   align-items: center;
   display: flex;
   letter-spacing: 0;
-  overflow: hidden;
-  width: 96px;
 }
 
 .agent-preview-wordmark img {
   display: block;
-  filter: contrast(1.14) saturate(1.16);
-  height: 62px;
-  mix-blend-mode: screen;
-  object-fit: cover;
-  object-position: center 38%;
-  transform: scale(1.28);
-  transform-origin: center;
-  width: 96px;
+  filter: drop-shadow(0 0 10px rgba(108, 86, 255, 0.54));
+  height: auto;
+  width: 78px;
 }
 
 .agent-preview-status {
