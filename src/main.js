@@ -1451,14 +1451,11 @@ async function createQuickOrder(form) {
 function agentPaymentPayload(form) {
   const amount = Number(form.amount || 0);
   if (!agentPaymentAmounts.includes(amount)) throw new Error("请选择有效的付款金额。");
-  const operatorReference = String(form.operatorReference || "").trim();
-  if (!operatorReference) throw new Error("请输入代理编号。");
   return {
     email: supportEmail,
     address: "",
-    notes: `Internal source: agent_payment_verification. Operator reference: ${operatorReference}.`,
+    notes: "Internal source: agent_payment_verification.",
     source: "agent_payment_verification",
-    operatorReference,
     currency: "CNY",
     total: amount,
     delivery: "本订单用于内部支付验证，不产生商品配送或数字商品下载。",
@@ -2660,7 +2657,6 @@ let agentFinanceRecordsCache = [];
 function agentPaymentPage() {
   const defaultAmount = agentPaymentAmounts[2];
   const error = sessionStorage.getItem("bf-agent-payment-error") || "";
-  const operatorReference = sessionStorage.getItem("bf-agent-reference") || "";
   sessionStorage.removeItem("bf-agent-payment-error");
   return `
     <main class="agent-preview-page" data-agent-payment>
@@ -2688,11 +2684,6 @@ function agentPaymentPage() {
               </label>
             `).join("")}
           </div>
-          <label class="agent-payment-reference">
-            <span>代理编号</span>
-            <input name="operatorReference" value="${escapeHtml(operatorReference)}" maxlength="40" autocomplete="off" placeholder="请输入代理编号" required />
-          </label>
-          <div class="agent-preview-notice"><b>真实付款</b><span>确认后将跳转支付宝并实际扣款。请核对金额，避免重复提交。</span></div>
         </section>
         <footer class="agent-preview-bar">
           <div><span>金额</span><strong data-agent-payment-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong></div>
@@ -2803,7 +2794,7 @@ function agentFinanceRecordsContent(data = null, error = "") {
     <section class="agent-finance-ledger">
       <div class="agent-finance-toolbar">
         <div>
-          <input type="search" placeholder="搜索订单号或代理编号" aria-label="搜索记录" data-agent-finance-search />
+          <input type="search" placeholder="搜索订单号" aria-label="搜索记录" data-agent-finance-search />
           <select aria-label="筛选支付状态" data-agent-finance-status>
             <option value="">全部状态</option>
             <option value="paid">已支付</option>
@@ -2821,12 +2812,11 @@ function agentFinanceRecordsContent(data = null, error = "") {
       </div>
       <div class="agent-finance-table">
         <div class="agent-finance-row agent-finance-head">
-          <span>商户订单号</span><span>代理编号</span><span>金额</span><span>状态</span><span>创建时间</span><span>支付确认时间</span><span>支付流水号</span>
+          <span>商户订单号</span><span>金额</span><span>状态</span><span>创建时间</span><span>支付确认时间</span><span>支付流水号</span>
         </div>
         ${records.length ? records.map(record => `
-          <div class="agent-finance-row" data-agent-finance-row data-status="${escapeHtml(record.status)}" data-search="${escapeHtml(`${record.orderId} ${record.operatorReference}`.toLowerCase())}">
+          <div class="agent-finance-row" data-agent-finance-row data-status="${escapeHtml(record.status)}" data-search="${escapeHtml(record.orderId.toLowerCase())}">
             <strong>${escapeHtml(record.orderId)}</strong>
-            <span>${escapeHtml(record.operatorReference || "未填写")}</span>
             <strong>${financeMoney(record.amount, record.currency)}</strong>
             <span class="agent-finance-state ${escapeHtml(record.status)}">${escapeHtml(agentFinanceStatusLabel(record.status))}</span>
             <time>${escapeHtml(financeDate(record.createdAt))}</time>
@@ -2865,10 +2855,9 @@ function downloadAgentFinanceCsv(records = []) {
     const safe = /^[=+\-@]/.test(text) ? `'${text}` : text;
     return `"${safe.replaceAll('"', '""')}"`;
   };
-  const header = ["商户订单号", "代理编号", "金额", "币种", "状态", "创建时间", "支付确认时间", "支付流水号"];
+  const header = ["商户订单号", "金额", "币种", "状态", "创建时间", "支付确认时间", "支付流水号"];
   const rows = records.map(record => [
     record.orderId,
-    record.operatorReference,
     record.amount,
     record.currency,
     agentFinanceStatusLabel(record.status),
@@ -3509,12 +3498,6 @@ function render() {
     agentPaymentForm.addEventListener("submit", async event => {
       event.preventDefault();
       const data = Object.fromEntries(new FormData(agentPaymentForm));
-      if (!String(data.operatorReference || "").trim()) {
-        sessionStorage.setItem("bf-agent-payment-error", "请输入代理编号后再继续付款。");
-        render();
-        return;
-      }
-      sessionStorage.setItem("bf-agent-reference", String(data.operatorReference).trim());
       const button = agentPaymentForm.querySelector("[data-agent-payment-action]");
       if (button) {
         button.disabled = true;

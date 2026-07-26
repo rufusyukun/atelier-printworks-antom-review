@@ -13,13 +13,12 @@ export async function handler(event) {
   }
   if (order.source === "agent_payment_verification") {
     const validAmount = AGENT_PAYMENT_AMOUNTS.has(order.total);
-    const validReference = Boolean(order.operatorReference.trim());
     const validItem = order.items.length === 1 &&
       order.items[0].id === `agent-payment-verification-${order.total}` &&
       order.items[0].price === order.total &&
       order.items[0].qty === 1;
-    if (!validAmount || !validReference || !validItem) {
-      return jsonResponse(422, { error: "代理付款订单金额或编号无效" });
+    if (!validAmount || !validItem) {
+      return jsonResponse(422, { error: "付款订单金额无效" });
     }
   }
   const saved = await saveOrder(order);

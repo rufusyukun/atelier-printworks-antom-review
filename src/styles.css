@@ -1217,54 +1217,6 @@ h3 {
   transform: scale(1);
 }
 
-.agent-preview-notice {
-  align-items: center;
-  background: rgba(105, 80, 244, 0.08);
-  border: 1px solid rgba(136, 113, 255, 0.26);
-  border-radius: 14px;
-  color: #c1bdd0;
-  display: flex;
-  font-size: 13px;
-  gap: 10px;
-  line-height: 1.4;
-  margin-top: 16px;
-  padding: 14px;
-}
-
-.agent-preview-notice b { color: #b5a5ff; white-space: nowrap; }
-
-.agent-payment-reference {
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  display: grid;
-  gap: 8px;
-  margin-top: 16px;
-  padding: 14px;
-}
-
-.agent-payment-reference span {
-  color: #bcb7d3;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.agent-payment-reference input {
-  background: rgba(5, 6, 13, 0.72);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 10px;
-  color: #fff;
-  font: inherit;
-  min-height: 48px;
-  padding: 0 13px;
-}
-
-.agent-payment-reference input:focus {
-  border-color: #9b83ff;
-  box-shadow: 0 0 0 3px rgba(137, 109, 255, 0.2);
-  outline: 0;
-}
-
 .agent-payment-error {
   background: rgba(196, 46, 60, 0.13);
   border: 1px solid rgba(255, 112, 126, 0.32);
@@ -1924,8 +1876,8 @@ h3 {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   gap: 12px;
-  grid-template-columns: 1.2fr 0.7fr 0.65fr 0.62fr 0.95fr 0.95fr 1.2fr;
-  min-width: 1080px;
+  grid-template-columns: 1.2fr 0.65fr 0.62fr 0.95fr 0.95fr 1.2fr;
+  min-width: 960px;
   padding: 14px 16px;
 }
 
@@ -2810,15 +2762,14 @@ h3 {
   }
 
   .agent-finance-row:not(.agent-finance-head) > :nth-child(1),
-  .agent-finance-row:not(.agent-finance-head) > :nth-child(7) {
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(6) {
     grid-column: 1 / -1;
   }
 
   .agent-finance-row:not(.agent-finance-head) > :nth-child(1)::before { content: "商户订单号"; }
-  .agent-finance-row:not(.agent-finance-head) > :nth-child(2)::before { content: "代理编号"; }
-  .agent-finance-row:not(.agent-finance-head) > :nth-child(3)::before { content: "金额"; }
-  .agent-finance-row:not(.agent-finance-head) > :nth-child(4)::before { content: "状态"; }
-  .agent-finance-row:not(.agent-finance-head) > :nth-child(5)::before { content: "创建时间"; }
-  .agent-finance-row:not(.agent-finance-head) > :nth-child(6)::before { content: "支付确认时间"; }
-  .agent-finance-row:not(.agent-finance-head) > :nth-child(7)::before { content: "支付流水号"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(2)::before { content: "金额"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(3)::before { content: "状态"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(4)::before { content: "创建时间"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(5)::before { content: "支付确认时间"; }
+  .agent-finance-row:not(.agent-finance-head) > :nth-child(6)::before { content: "支付流水号"; }
 }

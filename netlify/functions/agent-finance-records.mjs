@@ -39,7 +39,6 @@ function normalizedStatus(order = {}) {
 function financeRecord(order = {}) {
   return {
     orderId: String(order.id || ""),
-    operatorReference: String(order.operatorReference || "未填写"),
     amount: Number(order.total || 0),
     currency: String(order.currency || "CNY"),
     status: normalizedStatus(order),

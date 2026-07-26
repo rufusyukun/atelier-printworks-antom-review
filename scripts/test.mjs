@@ -119,7 +119,8 @@ const checks = [
       main.includes("data-agent-payment-form") &&
       main.includes("createAgentPaymentOrder") &&
       main.includes('source: "agent_payment_verification"') &&
-      main.includes("真实付款") &&
+      !main.includes("代理编号") &&
+      !main.includes("真实付款") &&
       main.includes('aria-label="付款金额"') &&
       main.includes('? "BF"') &&
       main.includes("apple-mobile-web-app-title") &&
@@ -152,7 +153,7 @@ const checks = [
     name: "agent payment tiers and goods URLs are enforced server-side",
     pass: readFileSync(orderCreatePath, "utf8").includes("AGENT_PAYMENT_AMOUNTS") &&
       readFileSync(orderCreatePath, "utf8").includes("agent-payment-verification-${order.total}") &&
-      readFileSync(orderCreatePath, "utf8").includes("代理付款订单金额或编号无效") &&
+      readFileSync(orderCreatePath, "utf8").includes("付款订单金额无效") &&
       orderService.includes("function normalizedGoodsUrl") &&
       orderService.includes("url.origin === merchantOrigin")
   },
