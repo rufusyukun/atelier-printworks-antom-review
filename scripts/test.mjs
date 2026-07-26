@@ -116,7 +116,10 @@ const checks = [
       !/["']#\/t["']/.test(main) &&
       !html.includes('href="/t"') &&
       !main.includes("data-agent-preview-form") &&
-      main.includes("预览模式")
+      main.includes("预览模式") &&
+      main.includes('aria-label="付款金额"') &&
+      css.includes("grid-template-columns: repeat(4, minmax(0, 1fr));") &&
+      css.includes(".agent-preview-tier:focus-within")
   },
   {
     name: "agent preview page includes the supplied test team logo asset",

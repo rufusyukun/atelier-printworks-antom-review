@@ -2624,12 +2624,18 @@ function agentPreviewPage() {
         <div class="agent-preview-status"><i></i> 代理专用</div>
       </header>
       <section class="agent-preview-hero">
-        <span class="agent-preview-kicker">安全支付预览</span>
-        <h1>选择金额</h1>
-        <p>选择预设金额，查看移动端付款页面的展示效果。</p>
+        <div class="agent-preview-hero-copy">
+          <span class="agent-preview-kicker">安全支付预览</span>
+          <h1>选择金额</h1>
+          <p>请选择本次需要验证的金额，确认后可继续查看付款页面。</p>
+        </div>
+        <div class="agent-preview-meta" aria-label="金额说明">
+          <span><small>结算币种</small><strong>人民币 CNY</strong></span>
+          <span><small>可选档位</small><strong>8 个金额</strong></span>
+        </div>
       </section>
-      <section class="agent-preview-panel" aria-label="Amount selection">
-        <div class="agent-preview-grid" role="radiogroup" aria-label="Payment amount">
+      <section class="agent-preview-panel" aria-label="选择金额">
+        <div class="agent-preview-grid" role="radiogroup" aria-label="付款金额">
           ${agentPreviewAmounts.map((amount, index) => `
             <label class="agent-preview-tier ${index === 2 ? "is-selected" : ""}">
               <input type="radio" name="agent-preview-amount" value="${amount}" ${index === 2 ? "checked" : ""} />
@@ -2640,8 +2646,8 @@ function agentPreviewPage() {
         <div class="agent-preview-notice"><b>预览模式</b><span>此页面仅用于查看视觉效果，不会创建订单或发起付款。</span></div>
       </section>
       <footer class="agent-preview-bar">
-        <div><span>已选金额</span><strong data-agent-preview-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong></div>
-        <button type="button" data-agent-preview-action>查看付款预览</button>
+        <div><span>金额</span><strong data-agent-preview-total>¥${defaultAmount.toLocaleString("zh-CN")}</strong></div>
+        <button type="button" data-agent-preview-action>确认金额</button>
       </footer>
     </main>
   `;
@@ -3282,7 +3288,7 @@ function render() {
     });
     button?.addEventListener("click", () => {
       button.textContent = "当前为预览模式";
-      window.setTimeout(() => { button.textContent = "查看付款预览"; }, 1300);
+      window.setTimeout(() => { button.textContent = "确认金额"; }, 1300);
     });
   }
   const lookupForm = app.querySelector("[data-order-lookup]");
