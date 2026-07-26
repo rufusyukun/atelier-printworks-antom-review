@@ -2629,10 +2629,6 @@ function agentPreviewPage() {
           <h1>选择金额</h1>
           <p>请选择本次需要验证的金额，确认后可继续查看付款页面。</p>
         </div>
-        <div class="agent-preview-meta" aria-label="金额说明">
-          <span><small>结算币种</small><strong>人民币 CNY</strong></span>
-          <span><small>可选档位</small><strong>8 个金额</strong></span>
-        </div>
       </section>
       <section class="agent-preview-panel" aria-label="选择金额">
         <div class="agent-preview-grid" role="radiogroup" aria-label="付款金额">

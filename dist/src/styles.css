@@ -1114,7 +1114,7 @@ h3 {
   align-items: end;
   display: grid;
   gap: 32px;
-  grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.65fr);
+  grid-template-columns: 1fr;
   padding: 52px 0 30px;
 }
 
@@ -1138,39 +1138,6 @@ h3 {
   line-height: 1.6;
   margin: 0;
   max-width: 420px;
-}
-
-.agent-preview-meta {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.agent-preview-meta span {
-  min-width: 0;
-  padding: 14px 0;
-}
-
-.agent-preview-meta span + span {
-  border-left: 1px solid rgba(255, 255, 255, 0.1);
-  padding-left: 18px;
-}
-
-.agent-preview-meta small,
-.agent-preview-meta strong {
-  display: block;
-}
-
-.agent-preview-meta small {
-  color: #858196;
-  font-size: 11px;
-  margin-bottom: 5px;
-}
-
-.agent-preview-meta strong {
-  color: #eeecf8;
-  font-size: 14px;
 }
 
 .agent-preview-panel { padding-bottom: 132px; }
@@ -2328,10 +2295,6 @@ h3 {
   .agent-preview-hero p {
     font-size: 15px;
     line-height: 1.55;
-  }
-
-  .agent-preview-meta {
-    max-width: 100%;
   }
 
   .agent-preview-grid {
