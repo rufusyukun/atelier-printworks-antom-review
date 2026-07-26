@@ -2619,7 +2619,7 @@ function agentPreviewPage() {
     <main class="agent-preview-page" data-agent-preview>
       <header class="agent-preview-header">
         <div class="agent-preview-wordmark">
-          <img src="src/assets/agent-test-team-logo.jpg" alt="测试团队标识" />
+          <img src="src/assets/agent-test-team-logo.jpg" alt="BF" />
         </div>
         <div class="agent-preview-status"><i></i> 代理专用</div>
       </header>
