@@ -3167,6 +3167,24 @@ function render() {
   app.innerHTML = route();
   lastRenderedRoute = renderRoute;
   document.documentElement.lang = currentLang;
+  const isAgentPreview = currentPath() === "/t";
+  document.title = isAgentPreview
+    ? "BF"
+    : "Atelier Printworks | Original 3D Print Goods & STL Packs";
+  const standaloneMetaNames = ["apple-mobile-web-app-capable", "mobile-web-app-capable", "apple-mobile-web-app-title"];
+  standaloneMetaNames.forEach(name => {
+    let meta = document.head.querySelector(`meta[name="${name}"]`);
+    if (!isAgentPreview) {
+      meta?.remove();
+      return;
+    }
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = name;
+      document.head.append(meta);
+    }
+    meta.content = name === "apple-mobile-web-app-title" ? "BF" : "yes";
+  });
   const languageSelect = document.querySelector(".language-select");
   if (languageSelect) {
     languageSelect.addEventListener("change", event => {

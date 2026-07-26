@@ -118,6 +118,8 @@ const checks = [
       !main.includes("data-agent-preview-form") &&
       main.includes("预览模式") &&
       main.includes('aria-label="付款金额"') &&
+      main.includes('? "BF"') &&
+      main.includes("apple-mobile-web-app-title") &&
       css.includes("grid-template-columns: repeat(4, minmax(0, 1fr));") &&
       css.includes(".agent-preview-tier:focus-within")
   },
