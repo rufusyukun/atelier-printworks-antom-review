@@ -1079,19 +1079,17 @@ h3 {
 .agent-preview-wordmark {
   align-items: center;
   display: flex;
-  font-size: 14px;
-  gap: 10px;
   letter-spacing: 0;
 }
 
 .agent-preview-wordmark img {
   border: 1px solid rgba(143, 113, 255, 0.45);
-  border-radius: 9px;
-  box-shadow: 0 0 18px rgba(122, 89, 255, 0.35);
-  height: 38px;
+  border-radius: 12px;
+  box-shadow: 0 0 22px rgba(122, 89, 255, 0.42);
+  height: 50px;
   object-fit: cover;
-  object-position: center;
-  width: 82px;
+  object-position: center 39%;
+  width: 112px;
 }
 
 .agent-preview-status {
