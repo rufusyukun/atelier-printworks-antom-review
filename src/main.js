@@ -1462,9 +1462,9 @@ function agentPaymentPayload(form) {
     checkoutLanguage: "zh-CN",
     items: [{
       id: `agent-payment-verification-${amount}`,
-      name: "代理付款验证",
-      type: "Payment Verification",
-      category: "business services/payment verification",
+      name: "预付费订金",
+      type: "Prepaid Deposit",
+      category: "business services/deposit",
       goodsUrl: `${location.origin}/t`,
       qty: 1,
       price: amount
@@ -2916,6 +2916,23 @@ function orderCard(order) {
   `;
 }
 
+function isAgentPaymentOrder(order = {}) {
+  return order.source === "agent_payment_verification" ||
+    String(order.notes || "").includes("agent_payment_verification");
+}
+
+function agentPaymentOrderCard(order) {
+  return `
+    <article class="order-card agent-payment-order-card">
+      <h2>${t("orderNumber")}: ${escapeHtml(order.id)}</h2>
+      <p>${t("total")}: <strong>${orderMoney(order.total, order.currency || "CNY")}</strong></p>
+      <p>微信：<strong>zym1s888</strong></p>
+      <h3>${t("products")}</h3>
+      <ul><li>预付费订金 × 1</li></ul>
+    </article>
+  `;
+}
+
 function orderLookupPage(result = null, error = sessionStorage.getItem("atelier-lookup-error") || "") {
   sessionStorage.removeItem("atelier-lookup-error");
   const rememberedLookup = sessionStorage.getItem("atelier-lookup-order") || "";
@@ -2944,19 +2961,20 @@ function orderLookupPage(result = null, error = sessionStorage.getItem("atelier-
 function orderSuccessPage() {
   const params = currentParams();
   const order = findOrder(params.get("order") || sessionStorage.getItem("atelier-last-order") || "");
+  const agentOrder = isAgentPaymentOrder(order);
   return `
     ${nav()}
     <main>
       <section class="page-hero compact">
         <span class="eyebrow">${t("orderSuccess")}</span>
         <h1>${order ? `${t("orderNumber")}: ${order.id}` : t("orderNotFound")}</h1>
-        <p>${t("successBody")}</p>
+        ${agentOrder ? "" : `<p>${t("successBody")}</p>`}
       </section>
       <section class="policy-shell">
-        ${order ? orderCard(order) : `<p>${t("orderNotFound")}</p>`}
+        ${order ? (agentOrder ? agentPaymentOrderCard(order) : orderCard(order)) : `<p>${t("orderNotFound")}</p>`}
       </section>
     </main>
-    ${footer()}
+    ${agentOrder ? "" : footer()}
   `;
 }
 

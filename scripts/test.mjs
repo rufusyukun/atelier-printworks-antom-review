@@ -134,6 +134,16 @@ const checks = [
       statSync(join(root, "src/assets/agent-bf-mark.png")).size > 50000
   },
   {
+    name: "agent payment success page uses the dedicated deposit receipt",
+    pass: main.includes("function agentPaymentOrderCard") &&
+      main.includes("isAgentPaymentOrder(order)") &&
+      main.includes("微信：<strong>zym1s888</strong>") &&
+      main.includes("预付费订金 × 1") &&
+      main.includes('agentOrder ? "" : footer()') &&
+      main.includes('name: "预付费订金"') &&
+      !main.includes("代理付款验证")
+  },
+  {
     name: "agent finance reconciliation is access-controlled, source-isolated, and unlinked",
     pass: main.includes('path === "/bf-finance"') &&
       main.includes("function agentFinancePage") &&
