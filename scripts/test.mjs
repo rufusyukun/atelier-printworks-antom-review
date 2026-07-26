@@ -112,7 +112,7 @@ const checks = [
     name: "agent preview page is hidden from public navigation and cannot initiate payment",
     pass: main.includes('path === "/t"') &&
       main.includes("function agentPreviewPage") &&
-      [300, 600, 900, 1200, 1500, 2000, 3000].every(amount => main.includes(`agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000]`) || main.includes(` ${amount},`)) &&
+      [300, 600, 900, 1200, 1500, 2000, 3000, 5000].every(amount => main.includes(`agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000]`) || main.includes(` ${amount},`)) &&
       !/["']#\/t["']/.test(main) &&
       !html.includes('href="/t"') &&
       !main.includes("data-agent-preview-form") &&

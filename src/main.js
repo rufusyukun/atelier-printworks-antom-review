@@ -2611,7 +2611,7 @@ function quickOrderCheckoutPage(error = sessionStorage.getItem("atelier-quick-or
   `;
 }
 
-const agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000];
+const agentPreviewAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000];
 
 function agentPreviewPage() {
   const defaultAmount = agentPreviewAmounts[2];
