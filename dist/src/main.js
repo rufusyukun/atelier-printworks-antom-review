@@ -2631,7 +2631,6 @@ function agentPreviewPage() {
           ${agentPreviewAmounts.map((amount, index) => `
             <label class="agent-preview-tier ${index === 2 ? "is-selected" : ""}">
               <input type="radio" name="agent-preview-amount" value="${amount}" ${index === 2 ? "checked" : ""} />
-              <span>${index === 2 ? "当前选择" : "预设金额"}</span>
               <strong>¥${amount.toLocaleString("zh-CN")}</strong>
             </label>
           `).join("")}
