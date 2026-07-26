@@ -119,6 +119,12 @@ const checks = [
       main.includes("预览模式")
   },
   {
+    name: "agent preview page includes the supplied test team logo asset",
+    pass: main.includes("agent-test-team-logo.jpg") &&
+      existsSync(join(root, "src/assets/agent-test-team-logo.jpg")) &&
+      statSync(join(root, "src/assets/agent-test-team-logo.jpg")).size > 50000
+  },
+  {
     name: "finance reconciliation page is unlinked and only exposes paid quick-order records",
     pass: main.includes('path === "/finance-reconciliation"') &&
       main.includes("financeReconciliationPage") &&
