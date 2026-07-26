@@ -2650,7 +2650,7 @@ function quickOrderCheckoutPage(error = sessionStorage.getItem("atelier-quick-or
   `;
 }
 
-const agentPaymentAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000];
+const agentPaymentAmounts = [100, 269, 300, 369, 599, 600, 900, 1200, 1500, 2000, 3000, 5000];
 const agentFinanceAccessKeyStorage = "bf-finance-access-key";
 let agentFinanceRecordsCache = [];
 

@@ -113,7 +113,7 @@ const checks = [
     name: "agent payment page is hidden from public navigation and creates isolated real payment orders",
     pass: main.includes('path === "/t"') &&
       main.includes("function agentPaymentPage") &&
-      main.includes("agentPaymentAmounts = [300, 600, 900, 1200, 1500, 2000, 3000, 5000]") &&
+      main.includes("agentPaymentAmounts = [100, 269, 300, 369, 599, 600, 900, 1200, 1500, 2000, 3000, 5000]") &&
       !/["']#\/t["']/.test(main) &&
       !html.includes('href="/t"') &&
       main.includes("data-agent-payment-form") &&

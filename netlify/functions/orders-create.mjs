@@ -1,6 +1,6 @@
 import { connectOrderStorage, jsonResponse, normalizeOrderPayload, parseJson, saveOrder } from "./_order-service.mjs";
 
-const AGENT_PAYMENT_AMOUNTS = new Set([300, 600, 900, 1200, 1500, 2000, 3000, 5000]);
+const AGENT_PAYMENT_AMOUNTS = new Set([100, 269, 300, 369, 599, 600, 900, 1200, 1500, 2000, 3000, 5000]);
 
 export async function handler(event) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
