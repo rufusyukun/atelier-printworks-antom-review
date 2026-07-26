@@ -141,7 +141,8 @@ const checks = [
       !main.includes("#/bf-finance") &&
       !html.includes("bf-finance") &&
       existsSync(agentFinanceRecordsPath) &&
-      readFileSync(agentFinanceRecordsPath, "utf8").includes("AGENT_FINANCE_ACCESS_KEY") &&
+      readFileSync(agentFinanceRecordsPath, "utf8").includes("ACCESS_KEY_SHA256") &&
+      readFileSync(agentFinanceRecordsPath, "utf8").includes('createHash("sha256")') &&
       readFileSync(agentFinanceRecordsPath, "utf8").includes("x-finance-access-key") &&
       readFileSync(agentFinanceRecordsPath, "utf8").includes("agent_payment_verification") &&
       readFileSync(agentFinanceRecordsPath, "utf8").includes("timingSafeEqual") &&

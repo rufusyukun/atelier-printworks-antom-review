@@ -1,18 +1,17 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { connectOrderStorage, isPaidOrder, jsonResponse, listOrders, reconcilePayment } from "./_order-service.mjs";
 
-function env(name) {
-  return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-}
+const ACCESS_KEY_SHA256 = "57e25a6ff8811c34e5c9a58126e5f39f55b3b26bd504d50c0698e1225a454d13";
 
 function accessKey(event = {}) {
   return event.headers?.["x-finance-access-key"] || event.headers?.["X-Finance-Access-Key"] || "";
 }
 
-function safeEqual(left = "", right = "") {
-  const leftBuffer = Buffer.from(String(left));
-  const rightBuffer = Buffer.from(String(right));
-  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+function isValidAccessKey(value = "") {
+  if (!value) return false;
+  const providedHash = createHash("sha256").update(String(value)).digest();
+  const expectedHash = Buffer.from(ACCESS_KEY_SHA256, "hex");
+  return timingSafeEqual(providedHash, expectedHash);
 }
 
 function isAgentPayment(order = {}) {
@@ -52,9 +51,7 @@ function financeRecord(order = {}) {
 
 export async function handler(event) {
   if (event.httpMethod !== "GET") return jsonResponse(405, { error: "Method not allowed" });
-  const expectedKey = env("AGENT_FINANCE_ACCESS_KEY");
-  if (!expectedKey) return jsonResponse(503, { error: "财务访问码尚未配置" });
-  if (!safeEqual(accessKey(event), expectedKey)) return jsonResponse(401, { error: "访问码不正确" });
+  if (!isValidAccessKey(accessKey(event))) return jsonResponse(401, { error: "访问码不正确" });
 
   connectOrderStorage(event);
   let orders = (await listOrders()).filter(isAgentPayment);
