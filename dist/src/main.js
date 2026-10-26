@@ -2650,12 +2650,12 @@ function quickOrderCheckoutPage(error = sessionStorage.getItem("atelier-quick-or
   `;
 }
 
-const agentPaymentAmounts = [100, 269, 300, 369, 599, 600, 900, 1200, 1500, 2000, 3000, 5000];
+const agentPaymentAmounts = [30, 50, 100, 269, 300, 369, 599, 600, 900, 1200, 1500, 2000, 3000, 5000];
 const agentFinanceAccessKeyStorage = "bf-finance-access-key";
 let agentFinanceRecordsCache = [];
 
 function agentPaymentPage() {
-  const defaultAmount = agentPaymentAmounts[2];
+  const defaultAmount = 300;
   const error = sessionStorage.getItem("bf-agent-payment-error") || "";
   sessionStorage.removeItem("bf-agent-payment-error");
   return `
@@ -2677,9 +2677,9 @@ function agentPaymentPage() {
         <section class="agent-preview-panel" aria-label="选择金额">
           ${error ? `<div class="agent-payment-error">${escapeHtml(error)}</div>` : ""}
           <div class="agent-preview-grid" role="radiogroup" aria-label="付款金额">
-            ${agentPaymentAmounts.map((amount, index) => `
-              <label class="agent-preview-tier ${index === 2 ? "is-selected" : ""}">
-                <input type="radio" name="amount" value="${amount}" ${index === 2 ? "checked" : ""} />
+            ${agentPaymentAmounts.map(amount => `
+              <label class="agent-preview-tier ${amount === defaultAmount ? "is-selected" : ""}">
+                <input type="radio" name="amount" value="${amount}" ${amount === defaultAmount ? "checked" : ""} />
                 <strong>¥${amount.toLocaleString("zh-CN")}</strong>
               </label>
             `).join("")}
