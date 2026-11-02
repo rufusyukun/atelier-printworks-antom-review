@@ -1,6 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
-const ACCESS_KEY_SHA256 = "7719d36ce83caaf4cc9d14cb3cb7cad58db89fdf092a2451c5459548976aa873";
+const ACCESS_KEY_SHA256 = "57e25a6ff8811c34e5c9a58126e5f39f55b3b26bd504d50c0698e1225a454d13";
 // High-entropy operator credential: only its digest is bundled. An environment override takes precedence.
 const ADMIN_ACCESS_KEY_SHA256 = "e145033c7481a57984fbdc676878158ec8d9071a32f7edd8cc88aceecf8ea0ef";
 export function header(event, name) {
