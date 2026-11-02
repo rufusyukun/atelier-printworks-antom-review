@@ -1,21 +1,8 @@
-import { createHash, timingSafeEqual } from "node:crypto";
-import { connectOrderStorage, isPaidOrder, jsonResponse, listOrders, reconcilePayment } from "./_order-service.mjs";
-
-const ACCESS_KEY_SHA256 = "57e25a6ff8811c34e5c9a58126e5f39f55b3b26bd504d50c0698e1225a454d13";
-
-function accessKey(event = {}) {
-  return event.headers?.["x-finance-access-key"] || event.headers?.["X-Finance-Access-Key"] || "";
-}
-
-function isValidAccessKey(value = "") {
-  if (!value) return false;
-  const providedHash = createHash("sha256").update(String(value)).digest();
-  const expectedHash = Buffer.from(ACCESS_KEY_SHA256, "hex");
-  return timingSafeEqual(providedHash, expectedHash);
-}
+import { financeAuthorized } from "./_access.mjs";
+import { connectOrderStorage, isPaidOrder, jsonResponse, listOrders, reconcilePayment, mapConcurrent } from "./_order-service.mjs";
 
 function isAgentPayment(order = {}) {
-  return order.source === "agent_payment_verification" ||
+  return order.source ? order.source === "agent_payment_verification" :
     String(order.notes || "").includes("agent_payment_verification");
 }
 
@@ -27,6 +14,8 @@ function confirmationTime(order = {}) {
 }
 
 function normalizedStatus(order = {}) {
+  if ([order.status, order.paymentStatus].includes("refunded")) return "refunded";
+  if ([order.status, order.paymentStatus].includes("disputed")) return "disputed";
   if (isPaidOrder(order)) return "paid";
   const value = String(order.paymentStatus || order.status || "pending_payment").toLowerCase();
   if (value.includes("blocked")) return "payment_blocked";
@@ -50,7 +39,7 @@ function financeRecord(order = {}) {
 
 export async function handler(event) {
   if (event.httpMethod !== "GET") return jsonResponse(405, { error: "Method not allowed" });
-  if (!isValidAccessKey(accessKey(event))) return jsonResponse(401, { error: "访问码不正确" });
+  if (!financeAuthorized(event)) return jsonResponse(401, { error: "访问码不正确" });
 
   connectOrderStorage(event);
   let orders = (await listOrders()).filter(isAgentPayment);
@@ -58,13 +47,14 @@ export async function handler(event) {
     new URLSearchParams(event.rawQuery || event.rawUrl?.split("?")[1] || "").get("reconcile") === "1";
   if (shouldReconcile) {
     const pendingOrders = orders
-      .filter(order => normalizedStatus(order) === "pending_payment")
-      .slice(0, 8);
+      .filter(order => normalizedStatus(order) === "pending_payment" && Date.now() - new Date(order.paymentDiagnostics?.lastInquiryPayment?.createdAt || 0).getTime() >= 10 * 60_000)
+      .sort((a, b) => new Date(a.paymentDiagnostics?.lastInquiryPayment?.createdAt || 0) - new Date(b.paymentDiagnostics?.lastInquiryPayment?.createdAt || 0))
+      .slice(0, 2);
     const reconciled = new Map();
-    for (const order of pendingOrders) {
+    await mapConcurrent(pendingOrders, async order => {
       const next = await reconcilePayment(order).catch(() => order);
       reconciled.set(order.id, next || order);
-    }
+    }, 1);
     orders = orders.map(order => reconciled.get(order.id) || order);
   }
 

@@ -1,4 +1,4 @@
-import { createSign, createVerify } from "node:crypto";
+import { createSign, createVerify, randomBytes } from "node:crypto";
 import { connectLambda, getStore } from "@netlify/blobs";
 
 const ORDER_STATES = [
@@ -15,7 +15,6 @@ const ORDER_STATES = [
 
 const POLICY_VERSION = "2026-07-01-payment-terms";
 const MEMORY_KEY = "__atelierPrintworksOrders";
-const ORDER_INDEX_KEY = "__order_index";
 let lastStorageFallbackReason = "";
 
 function memoryStore() {
@@ -25,7 +24,7 @@ function memoryStore() {
 
 async function blobStore() {
   try {
-    return getStore({ name: "atelier-orders" });
+    return getStore({ name: "atelier-orders", consistency: "strong" });
   } catch (error) {
     lastStorageFallbackReason = error.message || String(error);
     return null;
@@ -70,6 +69,7 @@ export function jsonResponse(statusCode, body) {
 
 export async function parseJson(event) {
   try {
+    if ((event.body || "").length > 32768) return null;
     return JSON.parse(event.body || "{}");
   } catch {
     return null;
@@ -79,7 +79,7 @@ export async function parseJson(event) {
 export function getClientEvidence(event) {
   const headers = event.headers || {};
   const forwarded = headers["x-forwarded-for"] || headers["X-Forwarded-For"] || "";
-  const customerIp = (forwarded.split(",")[0] || headers["x-nf-client-connection-ip"] || headers["client-ip"] || "").trim();
+  const customerIp = (headers["x-nf-client-connection-ip"] || forwarded.split(",")[0] || "").trim();
   const customerCountry = headers["x-country"] || headers["x-nf-geo"] || headers["cf-ipcountry"] || "Unknown";
   return {
     customerIp: customerIp || "Unknown",
@@ -90,7 +90,7 @@ export function getClientEvidence(event) {
 
 export function makeMerchantOrderId() {
   const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
-  const entropy = Math.random().toString(36).slice(2, 8).toUpperCase();
+  const entropy = randomBytes(16).toString("hex").toUpperCase();
   return `AP-${date}-${entropy}`;
 }
 
@@ -119,20 +119,20 @@ function normalizeItems(items = []) {
 
 export function normalizeOrderPayload(payload, event) {
   const evidence = getClientEvidence(event);
-  const items = normalizeItems(payload.items || []);
+  const items = normalizeItems(Array.isArray(payload.items) ? payload.items : []);
   const total = Number(payload.total || items.reduce((sum, item) => sum + item.price * item.qty, 0));
-  const merchantOrderId = payload.merchantOrderId || makeMerchantOrderId();
+  const merchantOrderId = makeMerchantOrderId();
   return {
     id: merchantOrderId,
     merchantOrderId,
-    paymentRequestId: payload.paymentRequestId || "",
-    paymentSessionId: payload.paymentSessionId || "",
-    paymentProviderTransactionId: payload.paymentProviderTransactionId || "",
-    createdAt: payload.createdAt || new Date().toISOString(),
+    paymentRequestId: "",
+    paymentSessionId: "",
+    paymentProviderTransactionId: "",
+    createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    status: payload.status || "pending_payment",
-    paymentStatus: payload.paymentStatus || "pending",
-    fulfillmentStatus: payload.fulfillmentStatus || "not_started",
+    status: "pending_payment",
+    paymentStatus: "pending",
+    fulfillmentStatus: "not_started",
     email: String(payload.email || "").trim(),
     address: String(payload.address || ""),
     notes: String(payload.notes || ""),
@@ -142,16 +142,16 @@ export function normalizeOrderPayload(payload, event) {
     total,
     delivery: String(payload.delivery || ""),
     items,
-    customerIp: payload.customerIp || evidence.customerIp,
-    customerCountry: payload.customerCountry || evidence.customerCountry,
-    userAgent: payload.userAgent || evidence.userAgent,
+    customerIp: evidence.customerIp,
+    customerCountry: evidence.customerCountry,
+    userAgent: evidence.userAgent,
     policyVersion: payload.policyVersion || POLICY_VERSION,
     checkoutLanguage: payload.checkoutLanguage || "en",
-    rawPaymentEvents: payload.rawPaymentEvents || [],
-    paymentEvents: payload.paymentEvents || [],
-    downloadAccess: payload.downloadAccess || [],
-    fulfillmentRecords: payload.fulfillmentRecords || [],
-    supportNotes: payload.supportNotes || []
+    rawPaymentEvents: [],
+    paymentEvents: [],
+    downloadAccess: [],
+    fulfillmentRecords: [],
+    supportNotes: [],
   };
 }
 
@@ -199,26 +199,15 @@ export async function saveOrder(order) {
       if (order.merchantOrderId && order.merchantOrderId !== order.id) {
         await store.setJSON(order.merchantOrderId, order);
       }
-      await saveOrderIndex(store, order.id);
       return order;
     } catch (error) {
       lastStorageFallbackReason = error.message || String(error);
       // Fall through to in-memory storage for local smoke tests.
     }
   }
+  if (paymentApiEnabled()) throw new Error("订单存储暂不可用，请稍后重试");
   memoryStore().set(order.id, order);
   return order;
-}
-
-async function saveOrderIndex(store, orderId) {
-  try {
-    const existing = await store.get(ORDER_INDEX_KEY, { type: "json" });
-    const ids = Array.isArray(existing?.ids) ? existing.ids : [];
-    const next = [orderId, ...ids.filter(id => id !== orderId)].slice(0, 250);
-    await store.setJSON(ORDER_INDEX_KEY, { ids: next, updatedAt: new Date().toISOString() });
-  } catch (error) {
-    lastStorageFallbackReason = error.message || String(error);
-  }
 }
 
 function listableOrder(order) {
@@ -244,40 +233,43 @@ export async function getOrder(orderId) {
       // Fall through to in-memory storage for local smoke tests.
     }
   }
+  if (paymentApiEnabled()) throw new Error("订单存储暂不可用，请稍后重试");
   return memoryStore().get(normalized) || null;
+}
+
+// Bounded parallel I/O, avoiding one remote round trip per historical order.
+export async function mapConcurrent(items, fn, concurrency = 12) {
+  const results = new Array(items.length);
+  let next = 0;
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await fn(items[index]);
+    }
+  }));
+  return results;
 }
 
 export async function listOrders() {
   const config = supabaseConfig();
   if (config) {
-    const rows = await supabaseRequest(`${config.table}?select=payload&order=updated_at.desc&limit=100`);
-    return (rows || []).map(row => row.payload);
+    const orders = [];
+    for (let offset = 0; ; offset += 500) {
+      const rows = await supabaseRequest(`${config.table}?select=payload&order=id.asc&limit=500&offset=${offset}`);
+      orders.push(...(rows || []).map(row => row.payload));
+      if (!rows || rows.length < 500) return orders.filter(listableOrder);
+    }
   }
   const store = await blobStore();
   if (store) {
-    try {
-      const index = await store.get(ORDER_INDEX_KEY, { type: "json" }).catch(() => null);
-      const indexedOrders = [];
-      for (const id of index?.ids || []) {
-        const order = await store.get(id, { type: "json" }).catch(() => null);
-        if (listableOrder(order) && !indexedOrders.some(item => item.id === order.id)) indexedOrders.push(order);
-      }
-      if (indexedOrders.length) {
-        return indexedOrders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
-      }
-      const list = await store.list();
-      const orders = [];
-      for (const blob of list.blobs || []) {
-        const order = await store.get(blob.key, { type: "json" });
-        if (listableOrder(order) && !orders.some(item => item.id === order.id)) orders.push(order);
-      }
-      return orders.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)).slice(0, 100);
-    } catch (error) {
-      lastStorageFallbackReason = error.message || String(error);
-      // Fall through to in-memory storage for local smoke tests.
-    }
+    // Listing is authoritative; the old shared index can lose entries on concurrent writes.
+    const list = await store.list();
+    const keys = [...new Set(list.blobs.map(blob => blob.key).filter(key => !key.startsWith("__")))];
+    const orders = await mapConcurrent(keys, key => store.get(key, { type: "json" }));
+    return orders.filter(listableOrder).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
   }
-  return [...memoryStore().values()].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  if (paymentApiEnabled()) throw new Error("订单存储暂不可用，请稍后重试");
+  return [...memoryStore().values()].filter(listableOrder).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
 function normalizedIdentity(value = "") {
@@ -287,12 +279,13 @@ function normalizedIdentity(value = "") {
 function paidAt(order = {}) {
   const paidEvent = [...(order.paymentEvents || [])]
     .reverse()
-    .find(event => /success|paid|finished|complete/i.test(`${event.status || ""} ${event.paymentStatus || ""}`));
-  return paidEvent?.at || order.paidAt || order.updatedAt || order.createdAt || "";
+    .find(event => [event.status, event.paymentStatus].some(value => ["success", "paid", "finished", "complete", "completed"].includes(String(value || "").toLowerCase())));
+  return order.paidAt || paidEvent?.at || order.updatedAt || order.createdAt || "";
 }
 
 export function isPaidOrder(order = {}) {
-  return /paid|success|fulfilled/i.test(`${order.paymentStatus || ""} ${order.status || ""} ${order.fulfillmentStatus || ""}`);
+  if ([order.status, order.paymentStatus].some(value => ["refunded", "disputed"].includes(String(value).toLowerCase()))) return false;
+  return [order.paymentStatus, order.status].some(value => ["paid", "success", "fulfilled"].includes(String(value).toLowerCase()));
 }
 
 export async function recentSuccessfulPaymentBlock(order, windowMs = 60_000) {
@@ -342,6 +335,7 @@ export async function orderStorageStatus() {
 export async function updateOrder(orderId, patch) {
   const existing = await getOrder(orderId);
   if (!existing) return null;
+  if (["paid", "refunded", "disputed"].includes(existing.status) && patch.status && ["pending_payment", "payment_failed", "payment_session_failed", "payment_blocked"].includes(patch.status)) return existing;
   const next = {
     ...existing,
     ...patch,
@@ -355,6 +349,7 @@ export async function updateOrder(orderId, patch) {
 export async function appendPaymentEvent(orderId, paymentEvent) {
   const existing = await getOrder(orderId);
   if (!existing) return null;
+  if ((existing.paymentEvents || []).some(event => event.id === paymentEvent.id)) return existing;
   const paymentEvents = [...(existing.paymentEvents || []), paymentEvent];
   const rawPaymentEvents = [...(existing.rawPaymentEvents || []), paymentEvent.raw || paymentEvent];
   return updateOrder(orderId, { paymentEvents, rawPaymentEvents });
@@ -394,7 +389,8 @@ export async function inquirePayment(order) {
       "request-time": requestTime,
       signature
     },
-    body: requestBody
+    body: requestBody,
+    signal: AbortSignal.timeout(12000)
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok || body.result?.resultStatus !== "S") {
@@ -416,7 +412,7 @@ export async function reconcilePayment(order, options = {}) {
   const lastInquiryAt = new Date(lastInquiry?.createdAt || 0).getTime();
   if (!options.force && lastInquiryAt && Date.now() - lastInquiryAt < 10 * 60 * 1000) return order;
   const inquiry = await inquirePayment(order);
-  if (inquiry.inquiryFailed) {
+  if (inquiry?.inquiryFailed) {
     return updateOrder(order.id, {
       paymentDiagnostics: {
         ...(order.paymentDiagnostics || {}),
@@ -467,7 +463,7 @@ export async function reconcilePayment(order, options = {}) {
 
 export function stateFromPaymentResult(result = "") {
   const normalized = String(result).toLowerCase();
-  if (/success|paid|finished|complete/.test(normalized)) return "paid";
+  if (["success", "paid", "finished", "complete", "completed"].includes(normalized)) return "paid";
   if (/fail|cancel|close|expired|decline/.test(normalized)) return "payment_failed";
   if (/refund/.test(normalized)) return "refunded";
   if (/dispute|chargeback/.test(normalized)) return "disputed";
@@ -533,11 +529,13 @@ export function verifyApiSignature({ method = "POST", requestUri, clientId, requ
   if (!publicKey || !signatureHeader) return false;
   const match = String(signatureHeader).match(/signature=([^,]+)/);
   if (!match) return false;
+  try {
   const signature = Buffer.from(decodeURIComponent(match[1]), "base64");
   const contentToBeValidated = `${method} ${requestUri}\n${clientId}.${requestTime}.${requestBody}`;
   const verifier = createVerify("RSA-SHA256");
   verifier.update(contentToBeValidated, "utf8");
   return verifier.verify(normalizePemKey(publicKey, "PUBLIC KEY"), signature);
+  } catch { return false; }
 }
 
 export { ORDER_STATES, POLICY_VERSION };

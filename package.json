@@ -6,7 +6,7 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "lint": "node scripts/lint.mjs",
-    "test": "node scripts/test.mjs",
+    "test": "node scripts/test.mjs && node --test scripts/payment-security.test.mjs",
     "dev": "node scripts/dev-server.mjs"
   },
   "dependencies": {

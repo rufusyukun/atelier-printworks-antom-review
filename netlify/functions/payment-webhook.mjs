@@ -1,4 +1,4 @@
-import { antomConfig, appendPaymentEvent, connectOrderStorage, getOrder, jsonResponse, paymentApiEnabled, stateFromPaymentResult, updateOrder, verifyApiSignature } from "./_order-service.mjs";
+import { antomConfig, appendPaymentEvent, isPaidOrder, connectOrderStorage, getOrder, jsonResponse, paymentApiEnabled, stateFromPaymentResult, updateOrder, verifyApiSignature } from "./_order-service.mjs";
 
 function notifySuccess(body = {}) {
   return jsonResponse(200, {
@@ -40,7 +40,7 @@ export async function handler(event) {
   const config = antomConfig();
   const signatureHeader = event.headers?.signature || event.headers?.Signature || "";
   const requestTime = event.headers?.["request-time"] || event.headers?.["Request-Time"] || "";
-  if (paymentApiEnabled() && config.publicKey) {
+  if (paymentApiEnabled()) {
     const valid = verifyApiSignature({
       method: "POST",
       requestUri: "/.netlify/functions/payment-webhook",
@@ -60,12 +60,20 @@ export async function handler(event) {
   }
   const orderId = pickOrderId(payload);
   const order = await getOrder(orderId);
-  if (!order) return notifySuccess({ accepted: true, warning: "Order not found yet" });
+  if (!order) return notifyFailure(503, "Order not available yet; retry notification");
+  if (payload.paymentRequestId !== (order.paymentRequestId || order.id)) return notifyFailure(400, "Payment request mismatch");
+  const expected = order.paymentDiagnostics?.lastCreateSession?.requestShape;
+  const expectedCurrency = expected?.currency || order.currency;
+  const expectedValue = expected?.value || String(Math.round(order.total * 100));
+  if (payload.paymentAmount?.currency !== expectedCurrency || String(payload.paymentAmount?.value) !== expectedValue) return notifyFailure(400, "Payment amount mismatch");
+  if (order.paymentProviderTransactionId && payload.paymentId !== order.paymentProviderTransactionId) return notifyFailure(400, "Payment reference mismatch");
 
   const result = pickPaymentResult(payload);
   const nextState = stateFromPaymentResult(result);
+  if ((isPaidOrder(order) && nextState !== "paid") || ["refunded", "disputed"].includes(order.status)) return notifySuccess({ received: true });
+  if (isPaidOrder(order) && nextState === "paid" && order.paymentProviderTransactionId === payload.paymentId) return notifySuccess({ received: true });
   const eventRecord = {
-    id: payload.notifyId || payload.eventId || `${order.id}-${Date.now()}`,
+    id: payload.notifyId || payload.eventId || `${order.id}-${payload.paymentId}-${nextState}`,
     at: new Date().toISOString(),
     status: result || nextState,
     paymentProviderTransactionId: payload.paymentId || payload.transactionId || payload.paymentProviderTransactionId || "",

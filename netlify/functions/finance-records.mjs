@@ -1,3 +1,4 @@
+import { adminAuthorized } from "./_access.mjs";
 import { connectOrderStorage, isPaidOrder, jsonResponse, listOrders } from "./_order-service.mjs";
 
 function isQuickOrder(order = {}) {
@@ -26,6 +27,7 @@ function financeRecord(order = {}) {
 
 export async function handler(event) {
   if (event.httpMethod !== "GET") return jsonResponse(405, { error: "Method not allowed" });
+  if (!adminAuthorized(event)) return jsonResponse(401, { error: "需要管理员访问码" });
   connectOrderStorage(event);
 
   const records = (await listOrders())

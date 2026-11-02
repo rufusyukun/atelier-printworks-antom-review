@@ -2842,3 +2842,15 @@ h3 {
   .agent-finance-row:not(.agent-finance-head) > :nth-child(5)::before { content: "支付确认时间"; }
   .agent-finance-row:not(.agent-finance-head) > :nth-child(6)::before { content: "支付流水号"; }
 }
+
+/* Agent receipt shares the payment page shell and has no storefront navigation. */
+.agent-result-panel { max-width: 640px; margin: 24px auto; padding: 32px 24px; border: 1px solid #dce4ef; border-radius: 24px; background: #fff; text-align: center; }
+.agent-result-panel h1 { font-size: clamp(24px, 5vw, 34px); margin: 16px 0; }
+.agent-result-panel > p { color: #5d6b80; line-height: 1.7; }
+.agent-result-symbol { display: grid; place-items: center; width: 72px; height: 72px; margin: auto; border-radius: 50%; font-size: 36px; background: #fff3d7; color: #8a5c00; }
+.agent-result-symbol.is-paid { background: #e4f7ee; color: #13764b; }
+.agent-result-symbol.is-failed { background: #fff0ed; color: #a13a26; }
+.agent-result-receipt { text-align: left; margin: 24px 0; overflow-wrap: anywhere; }
+.agent-result-receipt .order-card { padding: 20px; }
+.agent-result-receipt h2 { font-size: 16px; }
+.agent-result-panel > .button { width: 100%; }

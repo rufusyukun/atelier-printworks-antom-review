@@ -1318,16 +1318,40 @@ function saveServerOrdersCache(orders = []) {
   localStorage.setItem("atelier-server-orders-cache", JSON.stringify(unique.slice(0, 100)));
 }
 
+function rememberOrderToken(orderId, token) {
+  if (orderId && token) localStorage.setItem(`atelier-order-token-${orderId}`, token);
+}
+function orderHeaders(orderId) {
+  return { "x-order-token": localStorage.getItem(`atelier-order-token-${orderId}`) || "" };
+}
+function adminHeaders() {
+  return { "x-admin-access-key": sessionStorage.getItem("atelier-admin-access") || "" };
+}
 async function apiJson(path, options = {}) {
   const response = await fetch(path, {
     ...options,
-    headers: {
-      "content-type": "application/json",
-      ...(options.headers || {})
-    }
+    signal: options.signal || AbortSignal.timeout(45000),
+    headers: { "content-type": "application/json", ...(options.headers || {}) }
   });
   const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(body.error || "Request failed");
+  if (body.order?.id && body.accessToken) rememberOrderToken(body.order.id, body.accessToken);
+  if (body.order?.id) {
+    saveServerOrderCache(body.order);
+    if (body.order.source === "agent_payment_verification") {
+      if (["paid", "payment_failed", "refunded", "disputed"].includes(body.order.status)) localStorage.removeItem("bf-payment-attempt");
+      else {
+        try {
+          const attempt = JSON.parse(localStorage.getItem("bf-payment-attempt") || "null");
+          if (attempt) localStorage.setItem("bf-payment-attempt", JSON.stringify({ ...attempt, orderId: body.order.id }));
+        } catch { /* A stored receipt remains available through the order cache. */ }
+      }
+    }
+  }
+  if (!response.ok) {
+    const error = new Error(body.error || "Request failed");
+    error.status = response.status;
+    throw error;
+  }
   return body;
 }
 
@@ -1363,7 +1387,8 @@ async function createServerOrder(form) {
 async function createHostedPaymentSession(order) {
   return apiJson("/.netlify/functions/payment-session", {
     method: "POST",
-    body: JSON.stringify({ orderId: order.id, orderSnapshot: order })
+    headers: orderHeaders(order.id),
+    body: JSON.stringify({ orderId: order.id })
   });
 }
 
@@ -1473,34 +1498,47 @@ function agentPaymentPayload(form) {
 }
 
 async function createAgentPaymentOrder(form) {
-  const body = await apiJson("/.netlify/functions/orders-create", {
+  const amount = Number(form.amount);
+  const key = "bf-payment-attempt";
+  let attempt;
+  try { attempt = JSON.parse(localStorage.getItem(key) || "null"); } catch { attempt = null; }
+  if (attempt?.orderId) {
+    const prior = await fetchServerOrder(attempt.orderId);
+    if (["paid", "payment_failed", "refunded", "disputed"].includes(prior.status)) { localStorage.removeItem(key); attempt = null; }
+  }
+  if (attempt && attempt.amount !== amount) throw new Error("上一笔付款尚未确认，请先在原金额继续或联系财务核对，避免重复付款。");
+  if (!attempt) {
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    attempt = { amount, token: Array.from(bytes, value => value.toString(16).padStart(2, "0")).join("") };
+    localStorage.setItem(key, JSON.stringify(attempt));
+  }
+  return apiJson("/.netlify/functions/agent-checkout", {
     method: "POST",
+    headers: { "x-order-token": attempt.token },
     body: JSON.stringify(agentPaymentPayload(form))
   });
-  saveServerOrderCache(body.order);
-  return body.order;
 }
 
 async function fetchServerOrder(orderId, options = {}) {
   const params = new URLSearchParams({ orderId });
   if (options.reconcile) params.set("reconcile", "1");
   if (options.force) params.set("force", "1");
-  const body = await apiJson(`/.netlify/functions/orders-get?${params.toString()}`);
+  const body = await apiJson(`/.netlify/functions/orders-get?${params.toString()}`, { headers: { ...orderHeaders(orderId), ...adminHeaders() } });
   saveServerOrderCache(body.order);
   return body.order;
 }
 
 async function fetchAdminOrders() {
-  const body = await apiJson("/.netlify/functions/orders-get?reconcile=recent&force=1&limit=12");
+  const body = await apiJson("/.netlify/functions/orders-get", { headers: adminHeaders() });
   saveServerOrdersCache(body.orders || []);
   return body.orders || [];
 }
 
 async function fetchFinanceRecords() {
-  return apiJson("/.netlify/functions/finance-records");
+  return apiJson("/.netlify/functions/finance-records", { headers: adminHeaders() });
 }
 
-async function fetchAgentFinanceRecords(accessKey, reconcile = true) {
+async function fetchAgentFinanceRecords(accessKey, reconcile = false) {
   return apiJson(`/.netlify/functions/agent-finance-records${reconcile ? "?reconcile=1" : ""}`, {
     headers: { "x-finance-access-key": accessKey }
   });
@@ -2655,7 +2693,9 @@ const agentFinanceAccessKeyStorage = "bf-finance-access-key";
 let agentFinanceRecordsCache = [];
 
 function agentPaymentPage() {
-  const defaultAmount = 300;
+  let pendingAttempt = null;
+  try { pendingAttempt = JSON.parse(localStorage.getItem("bf-payment-attempt") || "null"); } catch { /* No pending attempt. */ }
+  const defaultAmount = agentPaymentAmounts.includes(pendingAttempt?.amount) ? pendingAttempt.amount : 300;
   const error = sessionStorage.getItem("bf-agent-payment-error") || "";
   sessionStorage.removeItem("bf-agent-payment-error");
   return `
@@ -2671,6 +2711,7 @@ function agentPaymentPage() {
           <span class="agent-preview-kicker">安全支付</span>
           <h1>选择金额</h1>
           <p>请选择本次付款金额，确认后将跳转支付宝完成付款。</p>
+          ${pendingAttempt?.orderId ? `<p><a href="/order-success?order=${encodeURIComponent(pendingAttempt.orderId)}">查看上一笔付款状态</a>，未确认前请勿重复付款。</p>` : ""}
         </div>
       </section>
       <form data-agent-payment-form>
@@ -2891,7 +2932,7 @@ function filterAgentFinanceRows(root) {
   });
 }
 
-async function loadAgentFinanceContent(mount, accessKey, reconcile = true) {
+async function loadAgentFinanceContent(mount, accessKey, reconcile = false) {
   mount.innerHTML = agentFinanceRecordsContent();
   try {
     const data = await fetchAgentFinanceRecords(accessKey, reconcile);
@@ -2911,8 +2952,8 @@ function orderCard(order) {
       <span class="pill">${adminOrderStatusLabel(order.paymentStatus || order.status)}</span>
       <h2>${t("orderNumber")}: ${order.id}</h2>
       <p>${t("total")}: <strong>${orderMoney(order.total, order.currency || checkoutCurrency)}</strong></p>
-      <p>${t("delivery")}: ${order.delivery}</p>
-      <p>${t("email")}: ${order.email}</p>
+      <p>${t("delivery")}: ${escapeHtml(order.delivery || "")}</p>
+      <p>${t("email")}: ${escapeHtml(order.email || "")}</p>
       <h3>${t("products")}</h3>
       <ul>${order.items.map(item => {
         const product = products.find(product => product.id === item.id);
@@ -2925,13 +2966,15 @@ function orderCard(order) {
 }
 
 function isAgentPaymentOrder(order = {}) {
-  return order.source === "agent_payment_verification" ||
+  if (!order) return false;
+  return order.source ? order.source === "agent_payment_verification" :
     String(order.notes || "").includes("agent_payment_verification");
 }
 
 function agentPaymentOrderCard(order) {
   return `
     <article class="order-card agent-payment-order-card">
+      <p role="status">${order.paymentStatus === "paid" ? "支付成功" : ["refunded", "disputed", "payment_failed"].includes(order.status) ? escapeHtml(adminOrderStatusLabel(order.status)) : "等待支付确认，请勿重复付款"}</p>
       <h2>${t("orderNumber")}: ${escapeHtml(order.id)}</h2>
       <p>${t("total")}: <strong>${orderMoney(order.total, order.currency || "CNY")}</strong></p>
       <p>请加微信：<strong>zym1s888</strong></p>
@@ -2966,10 +3009,27 @@ function orderLookupPage(result = null, error = sessionStorage.getItem("atelier-
   `;
 }
 
+function agentPaymentResultPage(order) {
+  const paid = order.paymentStatus === "paid" && !["refunded", "disputed"].includes(order.status);
+  const failed = ["payment_failed", "payment_blocked", "refunded", "disputed"].includes(order.status);
+  const title = paid ? "支付成功" : failed ? "支付未成功或已关闭" : "正在确认付款结果";
+  const detail = paid ? "款项已确认，请保留订单号。" : failed ? "请核对订单状态。如支付宝已扣款，请联系财务，切勿再次付款。" : "尚未收到最终付款结果。请勿重复付款，以支付宝账单及财务核对结果为准。";
+  return `<main class="agent-preview-page agent-result-page">
+    <header class="agent-preview-header"><div class="agent-preview-wordmark"><img src="/src/assets/agent-bf-mark.png" alt="BF" /></div><div class="agent-preview-status">付款结果</div></header>
+    <section class="agent-result-panel" aria-live="polite">
+      <div class="agent-result-symbol ${paid ? "is-paid" : failed ? "is-failed" : "is-pending"}">${paid ? "✓" : failed ? "!" : "…"}</div>
+      <h1>${title}</h1><p>${detail}</p>
+      <div class="agent-result-receipt">${agentPaymentOrderCard(order)}</div>
+      <a class="button primary" href="/t">确认，返回选择金额</a>
+    </section>
+  </main>`;
+}
+
 function orderSuccessPage() {
   const params = currentParams();
   const order = findOrder(params.get("order") || sessionStorage.getItem("atelier-last-order") || "");
   const agentOrder = isAgentPaymentOrder(order);
+  if (agentOrder) return agentPaymentResultPage(order);
   return `
     ${nav()}
     <main>
@@ -3332,6 +3392,18 @@ function auditChecklistPage() {
   `;
 }
 
+function importReturnToken() {
+  const hash = location.hash.replace(/^#/, "");
+  if (!hash.startsWith("/order-success?")) return;
+  const params = new URLSearchParams(hash.split("?")[1]);
+  const token = params.get("access_token") || "";
+  const orderId = params.get("order") || "";
+  if (/^[a-f0-9]{64}$/i.test(token) && /^AP-[A-Z0-9-]+$/.test(orderId)) {
+    rememberOrderToken(orderId, token);
+    history.replaceState(null, "", `/order-success?order=${encodeURIComponent(orderId)}`);
+  }
+}
+
 function currentRoute() {
   const hashRoute = location.hash.replace("#", "");
   const pathRoute = `${location.pathname || "/"}${location.search || ""}`;
@@ -3360,9 +3432,13 @@ function route() {
   if (path === "/quick-order-checkout") return quickOrderCheckoutPage();
   if (path === "/t") return agentPaymentPage();
   if (path === "/bf-finance") return agentFinancePage();
-  if (path === "/finance-reconciliation") return financeReconciliationPage();
+
   if (path === "/order-lookup") return orderLookupPage();
   if (path === "/order-success") return orderSuccessPage();
+  if (["/admin", "/finance-reconciliation"].includes(path) || adminOrderMatch) {
+    if (!sessionStorage.getItem("atelier-admin-access")) return `<main class="finance-page"><h1>管理后台登录</h1><p>请输入管理员访问码（与代理对账访问码不同）。</p><form data-admin-login><input name="code" type="password" required autocomplete="current-password" aria-label="管理员访问码" /><button type="submit">登录</button></form><p data-admin-error></p></main>`;
+  }
+  if (path === "/finance-reconciliation") return financeReconciliationPage();
   if (path === "/admin") return adminOrdersPage();
   if (adminOrderMatch) return adminOrderDetailPage(adminOrderMatch[1]);
   if (path === "/audit-checklist") return auditChecklistPage();
@@ -3384,7 +3460,8 @@ function render() {
   const previousScrollY = window.scrollY;
   app.innerHTML = route();
   lastRenderedRoute = renderRoute;
-  const isAgentPayment = currentPath() === "/t";
+  const isAgentReceipt = currentPath() === "/order-success" && isAgentPaymentOrder(findOrder(currentParams().get("order") || sessionStorage.getItem("atelier-last-order") || ""));
+  const isAgentPayment = currentPath() === "/t" || isAgentReceipt;
   const isAgentFinance = currentPath() === "/bf-finance";
   document.documentElement.lang = isAgentPayment || isAgentFinance ? "zh-CN" : currentLang;
   document.title = isAgentPayment
@@ -3523,6 +3600,8 @@ function render() {
     });
     agentPaymentForm.addEventListener("submit", async event => {
       event.preventDefault();
+      if (agentPaymentForm.dataset.submitting === "true") return;
+      agentPaymentForm.dataset.submitting = "true";
       const data = Object.fromEntries(new FormData(agentPaymentForm));
       const button = agentPaymentForm.querySelector("[data-agent-payment-action]");
       const loading = agentPaymentForm.querySelector("[data-agent-payment-loading]");
@@ -3532,13 +3611,14 @@ function render() {
       }
       if (loading) loading.hidden = false;
       try {
-        const order = await createAgentPaymentOrder(data);
-        const session = await createHostedPaymentSession(order);
+        const session = await createAgentPaymentOrder(data);
+        const order = session.order;
         if (session.order) saveServerOrderCache(session.order);
         sessionStorage.setItem("atelier-last-order", order.id);
         if (!session.checkoutUrl) throw new Error("暂未取得支付页面，请稍后重试。");
         location.href = session.checkoutUrl;
       } catch (error) {
+        agentPaymentForm.dataset.submitting = "false";
         if (loading) loading.hidden = true;
         sessionStorage.setItem("bf-agent-payment-error", error.message || "支付请求失败，请稍后再试。");
         render();
@@ -3562,7 +3642,7 @@ function render() {
     agentFinanceContent.addEventListener("click", event => {
       if (event.target.closest("[data-agent-finance-refresh]")) {
         const key = sessionStorage.getItem(agentFinanceAccessKeyStorage) || "";
-        if (key) loadAgentFinanceContent(agentFinanceContent, key);
+        if (key) loadAgentFinanceContent(agentFinanceContent, key, true);
       }
       if (event.target.closest("[data-agent-finance-export]")) {
         const visibleIds = new Set([...agentFinanceContent.querySelectorAll("[data-agent-finance-row]:not([hidden])")]
@@ -3605,12 +3685,20 @@ function render() {
   app.querySelectorAll("[data-export-evidence]").forEach(button => {
     button.addEventListener("click", () => downloadAdminEvidence(button.dataset.exportEvidence));
   });
+  const adminLogin = app.querySelector("[data-admin-login]");
+  if (adminLogin) adminLogin.addEventListener("submit", async event => {
+    event.preventDefault();
+    sessionStorage.setItem("atelier-admin-access", String(new FormData(adminLogin).get("code") || ""));
+    try { await fetchAdminOrders(); render(); }
+    catch { sessionStorage.removeItem("atelier-admin-access"); app.querySelector("[data-admin-error]").textContent = "访问码无效或管理员访问尚未配置"; }
+  });
   const path = currentPath();
-  if (path === "/admin" && !window.__atelierAdminOrdersLoading) {
+  if (path === "/admin" && sessionStorage.getItem("atelier-admin-access") && !window.__atelierAdminOrdersLoading && !window.__atelierAdminOrdersLoaded) {
     window.__atelierAdminOrdersLoading = true;
     fetchAdminOrders()
       .then(() => {
         window.__atelierAdminOrdersLoading = false;
+        window.__atelierAdminOrdersLoaded = true;
         if (currentPath() === "/admin") render();
       })
       .catch(() => {
@@ -3620,14 +3708,21 @@ function render() {
   if (path === "/order-success" && !window.__atelierOrderSuccessLoading) {
     const params = currentParams();
     const orderId = params.get("order") || sessionStorage.getItem("atelier-last-order") || "";
-    if (orderId && !findOrder(orderId)) {
+    if (orderId && window.__atelierLastVerifiedOrder !== orderId) {
       window.__atelierOrderSuccessLoading = true;
-      fetchServerOrder(orderId, { reconcile: true, force: true })
-        .then(() => {
+      fetchServerOrder(orderId)
+        .then(order => {
+          window.__atelierLastVerifiedOrder = orderId;
           window.__atelierOrderSuccessLoading = false;
+          if (["paid", "payment_failed", "refunded", "disputed"].includes(order.status)) localStorage.removeItem("bf-payment-attempt");
+          else if ((window.__atelierReceiptPolls || 0) < 6) {
+            window.__atelierReceiptPolls = (window.__atelierReceiptPolls || 0) + 1;
+            setTimeout(() => { window.__atelierLastVerifiedOrder = ""; if (currentPath() === "/order-success") render(); }, 10000);
+          }
           if (currentPath() === "/order-success") render();
         })
         .catch(() => {
+          window.__atelierLastVerifiedOrder = orderId;
           window.__atelierOrderSuccessLoading = false;
         });
     }
@@ -3635,5 +3730,6 @@ function render() {
   window.scrollTo({ top: shouldResetScroll ? 0 : previousScrollY, behavior: "instant" });
 }
 
-window.addEventListener("hashchange", render);
+window.addEventListener("hashchange", () => { importReturnToken(); render(); });
+importReturnToken();
 render();

@@ -1,4 +1,11 @@
-import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, recentSuccessfulPaymentBlock, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
+import { orderAuthorized, customerOrder, header } from "./_access.mjs";
+import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, isPaidOrder, parseJson, recentSuccessfulPaymentBlock, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
+
+function paymentReturnUrl(order, event) {
+  // Fragment stays out of HTTP logs and referrers; supports the wallet's separate browser.
+  const params = new URLSearchParams({ order: order.id, access_token: header(event, "x-order-token") });
+  return `${siteUrl()}/order-success?order=${encodeURIComponent(order.id)}#/order-success?${params}`;
+}
 
 function mockCheckoutUrl(order) {
   const params = new URLSearchParams({ order: order.id, payment: "mock_pending" });
@@ -113,7 +120,7 @@ function isInternalPaymentProbe(order = {}) {
   return id.startsWith("AP-STORAGE-PROBE") || id.startsWith("AP-RAPID-") || email === "storage-probe@example.com";
 }
 
-async function createDirectWalletPayment(order, event) {
+export async function createDirectWalletPayment(order, event) {
   const config = antomConfig();
   const status = paymentConfigStatus();
   if (!status.readyForApi) {
@@ -133,7 +140,7 @@ async function createDirectWalletPayment(order, event) {
     paymentAmount: normalizedPaymentAmount,
     settlementStrategy: { settlementCurrency: paymentCurrency },
     paymentMethod: { paymentMethodType },
-    paymentRedirectUrl: `${siteUrl()}/order-success?order=${encodeURIComponent(order.id)}`,
+    paymentRedirectUrl: paymentReturnUrl(order, event),
     paymentNotifyUrl: `${siteUrl()}/.netlify/functions/payment-webhook`,
     env: checkoutEnvironment,
     order: {
@@ -161,7 +168,8 @@ async function createDirectWalletPayment(order, event) {
       "request-time": requestTime,
       signature
     },
-    body: requestBody
+    body: requestBody,
+    signal: AbortSignal.timeout(15000)
   });
   const body = await response.json().catch(() => ({}));
   const checkoutUrl = paymentUrlFromPayResponse(body);
@@ -251,7 +259,7 @@ async function createHostedPaymentSession(order, event) {
       merchantRegion: config.merchantRegion
     },
     env: checkoutEnvironment,
-    paymentRedirectUrl: `${siteUrl()}/order-success?order=${encodeURIComponent(order.id)}`,
+    paymentRedirectUrl: paymentReturnUrl(order, event),
     paymentNotifyUrl: `${siteUrl()}/.netlify/functions/payment-webhook`
   };
   const requestBody = JSON.stringify(requestPayload);
@@ -271,7 +279,8 @@ async function createHostedPaymentSession(order, event) {
       "request-time": requestTime,
       signature
     },
-    body: requestBody
+    body: requestBody,
+    signal: AbortSignal.timeout(15000)
   });
   const body = await response.json().catch(() => ({}));
   const normalUrl = body.normalUrl || body.paymentRedirectUrl || body.paymentSessionData?.paymentRedirectUrl || "";
@@ -316,13 +325,11 @@ async function createHostedPaymentSession(order, event) {
 export async function handler(event) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
   connectOrderStorage(event);
-  const payload = JSON.parse(event.body || "{}");
+  const payload = await parseJson(event);
+  if (!payload || typeof payload.orderId !== "string") return jsonResponse(400, { error: "Invalid order request" });
   let order = await getOrder(payload.orderId);
-  if (!order && payload.orderSnapshot && paymentMode() !== "live") {
-    order = normalizeOrderPayload(payload.orderSnapshot, event);
-    await saveOrder(order);
-  }
-  if (!order) return jsonResponse(404, { error: "Order not found" });
+  if (!order || !orderAuthorized(event, order)) return jsonResponse(403, { error: "订单访问凭证无效，请从原付款页面重试" });
+  if (isPaidOrder(order) || ["refunded", "disputed"].includes(order.status)) return jsonResponse(409, { error: "订单已完成或已关闭，请勿重复支付", order: customerOrder(order) });
 
   try {
     if (isInternalPaymentProbe(order)) {
@@ -342,7 +349,7 @@ export async function handler(event) {
           { at: new Date().toISOString(), note: "内部支付探针已被本系统拦截，未向支付服务商发起交易。" }
         ]
       });
-      return jsonResponse(403, { error: "Internal payment probe blocked before provider submission.", code: "INTERNAL_PAYMENT_PROBE_BLOCKED", order: updated });
+      return jsonResponse(403, { error: "Internal payment probe blocked before provider submission.", code: "INTERNAL_PAYMENT_PROBE_BLOCKED", order: customerOrder(updated) });
     }
     const block = await recentSuccessfulPaymentBlock(order);
     if (block) {
@@ -355,14 +362,18 @@ export async function handler(event) {
           { at: new Date().toISOString(), note: `${block.message} Matched order: ${block.matchedOrderId}` }
         ]
       });
-      return jsonResponse(429, { error: block.message, code: block.code, retryAfterSeconds: block.retryAfterSeconds, matchedOrderId: block.matchedOrderId, order: updated });
+      return jsonResponse(429, { error: block.message, code: block.code, retryAfterSeconds: block.retryAfterSeconds, order: customerOrder(updated) });
     }
-    const session = paymentEntrypoint() === "pay"
+      if (order.checkoutSession?.checkoutUrl && Date.now() - order.checkoutSession.savedAt < 5 * 60_000) {
+        return jsonResponse(200, { order: customerOrder(order), checkoutUrl: order.checkoutSession.checkoutUrl, mode: order.checkoutSession.mode });
+      }
+    const session = paymentApiEnabled() && paymentEntrypoint() === "pay"
       ? await createDirectWalletPayment(order, event)
       : await createHostedPaymentSession(order, event);
     const updated = await updateOrder(order.id, {
       status: "pending_payment",
       paymentStatus: "pending",
+      checkoutSession: { ...session, savedAt: Date.now() },
       paymentRequestId: session.paymentRequestId,
       paymentSessionId: session.paymentSessionId,
       paymentProviderTransactionId: session.paymentProviderTransactionId || order.paymentProviderTransactionId || "",
@@ -371,11 +382,11 @@ export async function handler(event) {
         lastCreateSession: session.paymentDiagnostics
       }
     });
-    return jsonResponse(200, { order: updated, ...session });
+    return jsonResponse(200, { order: customerOrder(updated), checkoutUrl: session.checkoutUrl, mode: session.mode });
   } catch (error) {
     await updateOrder(order.id, {
-      status: "payment_session_failed",
-      paymentStatus: "failed",
+      status: "pending_payment",
+      paymentStatus: "pending",
       paymentDiagnostics: {
         ...(order.paymentDiagnostics || {}),
         lastCreateSessionError: error.paymentDiagnostics || { message: error.message, at: new Date().toISOString() }
@@ -385,6 +396,6 @@ export async function handler(event) {
         { at: new Date().toISOString(), note: `Hosted checkout session error: ${error.message}` }
       ]
     });
-    return jsonResponse(500, { error: error.message, paymentDiagnostics: error.paymentDiagnostics || null });
+    return jsonResponse(502, { error: "暂未取得支付宝响应，请勿重复付款；重试将继续同一订单，可在对账后台确认结果。" });
   }
 }

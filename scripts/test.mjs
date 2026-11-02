@@ -156,17 +156,17 @@ const checks = [
       !main.includes("#/bf-finance") &&
       !html.includes("bf-finance") &&
       existsSync(agentFinanceRecordsPath) &&
-      readFileSync(agentFinanceRecordsPath, "utf8").includes("ACCESS_KEY_SHA256") &&
-      readFileSync(agentFinanceRecordsPath, "utf8").includes('createHash("sha256")') &&
-      readFileSync(agentFinanceRecordsPath, "utf8").includes("x-finance-access-key") &&
+      readFileSync(join(root, "netlify/functions/_access.mjs"), "utf8").includes("ACCESS_KEY_SHA256") &&
+      readFileSync(join(root, "netlify/functions/_access.mjs"), "utf8").includes('createHash("sha256")') &&
+      readFileSync(join(root, "netlify/functions/_access.mjs"), "utf8").includes("x-finance-access-key") &&
       readFileSync(agentFinanceRecordsPath, "utf8").includes("agent_payment_verification") &&
-      readFileSync(agentFinanceRecordsPath, "utf8").includes("timingSafeEqual") &&
+      readFileSync(join(root, "netlify/functions/_access.mjs"), "utf8").includes("timingSafeEqual") &&
       readFileSync(agentFinanceRecordsPath, "utf8").includes("reconcilePayment")
   },
   {
     name: "agent payment tiers and goods URLs are enforced server-side",
     pass: readFileSync(orderCreatePath, "utf8").includes("AGENT_PAYMENT_AMOUNTS") &&
-      readFileSync(orderCreatePath, "utf8").includes("agent-payment-verification-${order.total}") &&
+      readFileSync(orderCreatePath, "utf8").includes("agent-payment-verification-${amount}") &&
       readFileSync(orderCreatePath, "utf8").includes("付款订单金额无效") &&
       orderService.includes("function normalizedGoodsUrl") &&
       orderService.includes("url.origin === merchantOrigin")
@@ -272,8 +272,8 @@ const checks = [
       readFileSync(ordersGetPath, "utf8").includes("reconcilePayment") &&
       orderService.includes("lastInquiryPayment") &&
       readFileSync(ordersGetPath, "utf8").includes("reconcile\") === \"recent\"") &&
-      main.includes("reconcile=recent&force=1&limit=12") &&
-      main.includes("fetchServerOrder(orderId, { reconcile: true, force: true })")
+      main.includes('apiJson("/.netlify/functions/orders-get",') &&
+      main.includes("fetchServerOrder(orderId)")
   },
   {
     name: "order service has optional blob persistence fallback",
@@ -290,11 +290,11 @@ const checks = [
       readFileSync(ordersGetPath, "utf8").includes("storage\") === \"status")
   },
   {
-    name: "server order list is backed by an explicit index",
-    pass: orderService.includes("ORDER_INDEX_KEY") &&
-      orderService.includes("saveOrderIndex") &&
+    name: "server order list uses complete listing with bounded parallel reads",
+    pass: orderService.includes("store.list()") &&
+      orderService.includes("mapConcurrent(keys") &&
       orderService.includes("listableOrder") &&
-      orderService.includes("indexedOrders")
+      !orderService.includes("slice(0, 100)")
   },
   {
     name: "payment functions keep live credentials and signature handling server-side",
