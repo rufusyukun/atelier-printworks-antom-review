@@ -17,9 +17,11 @@ Tests use local memory/mock storage and fake network transports only. No live pa
 
 Opening finance/admin pages does not issue inquiries. The receipt polls only local order records, at most six times after its initial read. Manual agent-finance refresh reconciles at most two pending orders sequentially, with a ten-minute per-order interval. User payment attempts and same-order retries may call the provider's pay API using the stable request ID; they are not stress tests.
 
-## One-minute policy
+## Repeat-payment policy — local update 2026-11-03
 
-The existing 60-second rule remains: a previous successful payment must match email AND IP AND browser user agent. It is not identity verification and does not identify an Alipay account. Agent orders use a shared contact email, so shared IP/browser configurations may falsely match different users; changing network/browser can evade it. It is a repeat-payment heuristic, not a financial concurrency lock.
+At the owner's instruction, the former 60-second restriction and its wait message have been removed from the local code. A fresh attempt may proceed immediately after another successful payment with the same email, IP and browser user agent. The checkout path no longer enumerates historical orders for that rule. Paid/refunded/disputed orders still reject another payment session; amount validation, attempt-token retry protection and callback checks remain.
+
+This change is local and has not been deployed. Historical blocked records are not rewritten.
 
 ## Verification / release limits
 
@@ -31,6 +33,6 @@ The existing 60-second rule remains: a previous successful payment must match em
 
 ## Outstanding blockers for a claim of full payment safety
 
-Netlify Blobs is not a transactional ledger. Cross-instance concurrent create/update/callback writes, distributed rate limits and the 60-second rule are not atomic. Stable provider request IDs reduce duplicate charge risk but do not eliminate every race. Existing historical data was not rewritten or certified. A transactional database with unique request/event constraints, atomic state transitions, durable payment events, indexed identity/time queries and reconciliation audit records is required before scaling. No migration is performed by this patch.
+Netlify Blobs is not a transactional ledger. Cross-instance concurrent create/update/callback writes are not atomic. The historical 60-second heuristic has been removed locally by owner instruction. Stable provider request IDs reduce duplicate charge risk but do not eliminate every race. Existing historical data was not rewritten or certified. A transactional database with unique request/event constraints, atomic state transitions, durable payment events, indexed identity/time queries and reconciliation audit records is required before scaling. No migration is performed by this patch.
 
 Complete ledger listing still scales with the number of stored orders. Parallel reads improve the current implementation, but indexed database queries are the long-term performance fix. The current host cannot establish mainland reachability/latency; a custom domain alone does not prove faster access. Do not call this patch a complete security certification or a verified mainland speed fix.
