@@ -254,14 +254,10 @@ const checks = [
       ["merchantOrderId", "paymentRequestId", "paymentSessionId", "paymentProviderTransactionId", "customerIp", "customerCountry", "policyVersion", "rawPaymentEvents"].every(field => orderService.includes(field))
   },
   {
-    name: "server blocks repeated successful payments within one minute",
-    pass: orderService.includes("recentSuccessfulPaymentBlock") &&
-      orderService.includes("60_000") &&
-      orderService.includes("RECENT_SUCCESSFUL_PAYMENT") &&
-      orderService.includes("请稍等 1 分钟后再提交下一笔订单") &&
-      readFileSync(paymentSessionPath, "utf8").includes("jsonResponse(429") &&
-      readFileSync(paymentSessionPath, "utf8").includes("payment_blocked") &&
-      main.includes("连续支付已被系统拦截")
+    name: "checkout does not enforce a historical successful-payment cooldown",
+    pass: !orderService.includes("recentSuccessfulPaymentBlock") &&
+      !orderService.includes("RECENT_SUCCESSFUL_PAYMENT") &&
+      !readFileSync(paymentSessionPath, "utf8").includes("jsonResponse(429")
   },
   {
     name: "server can reconcile payment status through inquiry API",

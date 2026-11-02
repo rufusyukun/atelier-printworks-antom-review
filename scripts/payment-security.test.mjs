@@ -10,8 +10,9 @@ import { handler as checkout } from '../netlify/functions/agent-checkout.mjs';
 import { handler as finance } from '../netlify/functions/agent-finance-records.mjs';
 import { handler as internalFinance } from '../netlify/functions/finance-records.mjs';
 import { handler as webhook } from '../netlify/functions/payment-webhook.mjs';
-import { getOrder, updateOrder, saveOrder, isPaidOrder, stateFromPaymentResult, recentSuccessfulPaymentBlock, mapConcurrent, signApiRequest, verifyApiSignature } from '../netlify/functions/_order-service.mjs';
+import { getOrder, updateOrder, saveOrder, isPaidOrder, stateFromPaymentResult, mapConcurrent, signApiRequest, verifyApiSignature } from '../netlify/functions/_order-service.mjs';
 import { catalog } from '../netlify/functions/_catalog.mjs';
+import { paymentUrlFromPayResponse } from '../netlify/functions/payment-session.mjs';
 
 // No credentials, no network, and only process-local mock storage in this suite.
 for (const key of Object.keys(process.env)) if (/^(ANTOM_|SUPABASE_|NETLIFY_)/.test(key)) delete process.env[key];
@@ -60,6 +61,37 @@ test('finance key cannot grant generic admin access',async()=>{
 test('combined checkout and retry return same order/session in mock mode',async()=>{
  const e=event(payload(50));const first=await checkout(e);assert.equal(first.statusCode,200);const second=await checkout(e);assert.equal(second.statusCode,200);assert.equal(body(first).order.id,body(second).order.id);assert.equal(body(first).checkoutUrl,body(second).checkoutUrl);assert.match(first.headers['server-timing'],/order;dur=/);
 });
+
+test('wallet URL selection follows device priority and uses the available URL',()=>{
+ const urls={applinkUrl:'https://wallet.invalid/app',schemeUrl:'alipays://wallet',normalUrl:'https://wallet.invalid/web'};
+ assert.equal(paymentUrlFromPayResponse(urls,'IOS'),urls.applinkUrl);
+ assert.equal(paymentUrlFromPayResponse(urls,'ANDROID'),urls.schemeUrl);
+ assert.equal(paymentUrlFromPayResponse(urls,'WEB'),urls.normalUrl);
+ for(const key of Object.keys(urls)) for(const os of ['IOS','ANDROID','WEB']) assert.equal(paymentUrlFromPayResponse({[key]:urls[key]},os),urls[key]);
+ assert.equal(paymentUrlFromPayResponse({}), '');
+});
+
+test('checkout timings are numeric and retry omits provider and persistence work',async()=>{
+ const e=event(payload(100));const first=await checkout(e);const retry=await checkout(e);
+ assert.equal(first.statusCode,200);assert.equal(retry.statusCode,200);
+ for(const name of ['order','payment','lookup','provider','persist']) assert.match(first.headers['server-timing'],new RegExp(name+';dur=\\d+'));
+ assert.ok(!retry.headers['server-timing'].includes('provider;'));
+ assert.ok(!retry.headers['server-timing'].includes('persist;'));
+ assert.ok(!first.headers['server-timing'].includes(e.headers['x-order-token']));
+});
+
+test('wallet fallback only offers the same-session HTTPS link without another payment request',()=>{
+ const nodes=[];const timers=[];const location={};
+ const source=readFileSync(new URL('../src/main.js',import.meta.url),'utf8');
+ const fn=source.slice(source.indexOf('function openAgentWallet('),source.indexOf('async function createAgentPaymentOrder('));
+ const context=vm.createContext({location,document:{createElement:()=>({})},setTimeout:fn=>timers.push(fn)});
+ vm.runInContext(fn,context);
+ context.session={checkoutUrl:'alipays://wallet',checkoutFallbackUrl:'https://wallet.invalid/same-session'};
+ context.loading={appendChild:node=>nodes.push(node)};
+ vm.runInContext('openAgentWallet(session, loading)',context);
+ assert.equal(location.href,'alipays://wallet');assert.equal(nodes[0].href,context.session.checkoutFallbackUrl);
+ assert.equal(nodes[0].hidden,true);timers[0]();assert.equal(nodes[0].hidden,false);assert.equal(location.href,'alipays://wallet');
+});
 test('unpaid/unsuccessful/unfulfilled are not recognized as paid',()=>{
  for(const status of ['unpaid','unsuccessful','unfulfilled','pending_payment','refunded','disputed']) {assert.equal(isPaidOrder({status}),false);assert.notEqual(stateFromPaymentResult(status),'paid');}
  assert.equal(isPaidOrder({status:'refunded',paymentStatus:'paid'}),false);
@@ -76,13 +108,9 @@ test('webhook amount mismatch is rejected, duplicate success is idempotent and l
  assert.equal((await getOrder(owned.id)).status,'paid');
  assert.equal((await session(event({orderId:owned.id},token))).statusCode,409);
 });
-test('60 second rule: matching identity blocked; different IP/browser and expired payment allowed',async()=>{
- const previous=await getOrder(owned.id);const next={...previous,id:'NEW',status:'pending_payment'};
- assert.equal((await recentSuccessfulPaymentBlock(next)).code,'RECENT_SUCCESSFUL_PAYMENT');
- assert.equal(await recentSuccessfulPaymentBlock({...next,customerIp:'203.0.113.99'}),null);
- assert.equal(await recentSuccessfulPaymentBlock({...next,userAgent:'different browser'}),null);
- await saveOrder({...previous,paidAt:new Date(Date.now()-61000).toISOString(),paymentEvents:[]});
- assert.equal(await recentSuccessfulPaymentBlock(next),null);
+test('a fresh attempt can pay immediately after the same identity succeeded; paid attempt stays closed',async()=>{
+ const fresh=await checkout(event(payload()));assert.equal(fresh.statusCode,200);
+ assert.equal((await session(event({orderId:owned.id},token))).statusCode,409);
 });
 test('ledger retains records beyond 100 and isolates sources',async()=>{
  for(let i=0;i<110;i++) await saveOrder({id:`TEST-${i}`,source:i%2?'agent_payment_verification':'storefront',createdAt:new Date().toISOString(),total:30,currency:'CNY',status:'pending_payment'});

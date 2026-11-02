@@ -1,6 +1,6 @@
 import { asModernFunction } from "./_http.mjs";
 import { orderAuthorized, customerOrder, header } from "./_access.mjs";
-import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, isPaidOrder, parseJson, recentSuccessfulPaymentBlock, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
+import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, isPaidOrder, parseJson, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
 
 function paymentReturnUrl(order, event) {
   // Fragment stays out of HTTP logs and referrers; supports the wallet's separate browser.
@@ -111,8 +111,11 @@ function paymentEntrypoint() {
   return (process.env.PAYMENT_ENTRYPOINT || "pay").trim().toLowerCase();
 }
 
-function paymentUrlFromPayResponse(body = {}) {
-  return body.applinkUrl || body.schemeUrl || body.normalUrl || "";
+export function paymentUrlFromPayResponse(body = {}, osType = "WEB") {
+  const keys = osType === "ANDROID" ? ["schemeUrl", "applinkUrl", "normalUrl"]
+    : osType === "IOS" ? ["applinkUrl", "schemeUrl", "normalUrl"]
+    : ["normalUrl", "applinkUrl", "schemeUrl"];
+  return keys.map(key => body[key]).find(url => typeof url === "string" && url.trim()) || "";
 }
 
 function isInternalPaymentProbe(order = {}) {
@@ -173,7 +176,7 @@ export async function createDirectWalletPayment(order, event) {
     signal: AbortSignal.timeout(15000)
   });
   const body = await response.json().catch(() => ({}));
-  const checkoutUrl = paymentUrlFromPayResponse(body);
+  const checkoutUrl = paymentUrlFromPayResponse(body, checkoutEnvironment.osType);
   const diagnostics = {
     createdAt: new Date().toISOString(),
     mode: paymentMode(),
@@ -213,6 +216,7 @@ export async function createDirectWalletPayment(order, event) {
     paymentRequestId: body.paymentRequestId || order.id,
     paymentProviderTransactionId: body.paymentId || "",
     checkoutUrl,
+    checkoutFallbackUrl: typeof body.normalUrl === "string" && body.normalUrl.startsWith("https://") ? body.normalUrl : "",
     mode: paymentMode(),
     paymentDiagnostics: diagnostics
   };
@@ -323,12 +327,12 @@ async function createHostedPaymentSession(order, event) {
   };
 }
 
-export async function handler(event) {
+async function createPaymentSession(event, timings) {
   if (event.httpMethod !== "POST") return jsonResponse(405, { error: "Method not allowed" });
   connectOrderStorage(event);
   const payload = await parseJson(event);
   if (!payload || typeof payload.orderId !== "string") return jsonResponse(400, { error: "Invalid order request" });
-  let order = await getOrder(payload.orderId);
+  let order = await timed(timings, "lookup", () => getOrder(payload.orderId));
   if (!order || !orderAuthorized(event, order)) return jsonResponse(403, { error: "订单访问凭证无效，请从原付款页面重试" });
   if (isPaidOrder(order) || ["refunded", "disputed"].includes(order.status)) return jsonResponse(409, { error: "订单已完成或已关闭，请勿重复支付", order: customerOrder(order) });
 
@@ -352,26 +356,13 @@ export async function handler(event) {
       });
       return jsonResponse(403, { error: "Internal payment probe blocked before provider submission.", code: "INTERNAL_PAYMENT_PROBE_BLOCKED", order: customerOrder(updated) });
     }
-    const block = await recentSuccessfulPaymentBlock(order);
-    if (block) {
-      const updated = await updateOrder(order.id, {
-        status: "payment_blocked",
-        paymentStatus: "blocked",
-        fulfillmentStatus: "not_started",
-        supportNotes: [
-          ...(order.supportNotes || []),
-          { at: new Date().toISOString(), note: `${block.message} Matched order: ${block.matchedOrderId}` }
-        ]
-      });
-      return jsonResponse(429, { error: block.message, code: block.code, retryAfterSeconds: block.retryAfterSeconds, order: customerOrder(updated) });
-    }
       if (order.checkoutSession?.checkoutUrl && Date.now() - order.checkoutSession.savedAt < 5 * 60_000) {
-        return jsonResponse(200, { order: customerOrder(order), checkoutUrl: order.checkoutSession.checkoutUrl, mode: order.checkoutSession.mode });
+        return jsonResponse(200, { order: customerOrder(order), checkoutUrl: order.checkoutSession.checkoutUrl, checkoutFallbackUrl: order.checkoutSession.checkoutFallbackUrl || "", mode: order.checkoutSession.mode });
       }
-    const session = paymentApiEnabled() && paymentEntrypoint() === "pay"
-      ? await createDirectWalletPayment(order, event)
-      : await createHostedPaymentSession(order, event);
-    const updated = await updateOrder(order.id, {
+    const session = await timed(timings, "provider", () => paymentApiEnabled() && paymentEntrypoint() === "pay"
+      ? createDirectWalletPayment(order, event)
+      : createHostedPaymentSession(order, event));
+    const updated = await timed(timings, "persist", () => updateOrder(order.id, {
       status: "pending_payment",
       paymentStatus: "pending",
       checkoutSession: { ...session, savedAt: Date.now() },
@@ -382,8 +373,8 @@ export async function handler(event) {
         ...(order.paymentDiagnostics || {}),
         lastCreateSession: session.paymentDiagnostics
       }
-    });
-    return jsonResponse(200, { order: customerOrder(updated), checkoutUrl: session.checkoutUrl, mode: session.mode });
+    }));
+    return jsonResponse(200, { order: customerOrder(updated), checkoutUrl: session.checkoutUrl, checkoutFallbackUrl: session.checkoutFallbackUrl || "", mode: session.mode });
   } catch (error) {
     await updateOrder(order.id, {
       status: "pending_payment",
@@ -399,6 +390,18 @@ export async function handler(event) {
     });
     return jsonResponse(502, { error: "暂未取得支付宝响应，请勿重复付款；重试将继续同一订单，可在对账后台确认结果。" });
   }
+}
+
+async function timed(timings, name, action) {
+  const start = performance.now();
+  try { return await action(); }
+  finally { timings.push(name + ";dur=" + Math.round(performance.now() - start)); }
+}
+
+export async function handler(event) {
+  const timings = [];
+  const response = await createPaymentSession(event, timings);
+  return { ...response, headers: { ...response.headers, "server-timing": timings.join(",") } };
 }
 
 export default asModernFunction(handler);
