@@ -2718,7 +2718,7 @@ let agentFinanceRecordsCache = [];
 function agentPaymentPage() {
   let pendingAttempt = null;
   try { pendingAttempt = JSON.parse(localStorage.getItem("bf-payment-attempt") || "null"); } catch { /* No pending attempt. */ }
-  const defaultAmount = agentPaymentAmounts.includes(pendingAttempt?.amount) ? pendingAttempt.amount : 300;
+  const defaultAmount = agentPaymentAmounts.includes(pendingAttempt?.amount) ? pendingAttempt.amount : 50;
   const error = sessionStorage.getItem("bf-agent-payment-error") || "";
   sessionStorage.removeItem("bf-agent-payment-error");
   return `
