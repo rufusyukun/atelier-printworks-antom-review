@@ -1328,12 +1328,21 @@ function adminHeaders() {
   return { "x-admin-access-key": sessionStorage.getItem("atelier-admin-access") || "" };
 }
 async function apiJson(path, options = {}) {
+  const started = performance.now();
   const response = await fetch(path, {
     ...options,
     signal: options.signal || AbortSignal.timeout(45000),
     headers: { "content-type": "application/json", ...(options.headers || {}) }
   });
   const body = await response.json().catch(() => ({}));
+  if (path === "/.netlify/functions/agent-checkout") {
+    try {
+      sessionStorage.setItem("bf-checkout-timing", JSON.stringify({
+        at: new Date().toISOString(), requestMs: Math.round(performance.now() - started),
+        status: response.status, serverTiming: response.headers.get("server-timing") || ""
+      }));
+    } catch { /* Diagnostics must never interrupt payment navigation. */ }
+  }
   if (body.order?.id && body.accessToken) rememberOrderToken(body.order.id, body.accessToken);
   if (body.order?.id) {
     saveServerOrderCache(body.order);
@@ -1495,6 +1504,20 @@ function agentPaymentPayload(form) {
       price: amount
     }]
   };
+}
+
+function openAgentWallet(session, loading) {
+  const fallback = session.checkoutFallbackUrl;
+  if (loading && /^https:\/\//.test(fallback || "") && fallback !== session.checkoutUrl) {
+    // Continue the same payment; do not submit a second order or race an automatic redirect.
+    const link = document.createElement("a");
+    link.href = fallback;
+    link.textContent = "未打开支付宝？点击继续付款";
+    link.hidden = true;
+    loading.appendChild(link);
+    setTimeout(() => { link.hidden = false; }, 1800);
+  }
+  location.href = session.checkoutUrl;
 }
 
 async function createAgentPaymentOrder(form) {
@@ -3616,7 +3639,7 @@ function render() {
         if (session.order) saveServerOrderCache(session.order);
         sessionStorage.setItem("atelier-last-order", order.id);
         if (!session.checkoutUrl) throw new Error("暂未取得支付页面，请稍后重试。");
-        location.href = session.checkoutUrl;
+        openAgentWallet(session, loading);
       } catch (error) {
         agentPaymentForm.dataset.submitting = "false";
         if (loading) loading.hidden = true;
