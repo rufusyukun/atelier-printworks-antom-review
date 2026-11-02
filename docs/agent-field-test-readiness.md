@@ -2,7 +2,7 @@
 
 ## Changed
 
-- `/t` and `/bf-finance` keep their URLs and existing finance credential.
+- `/t` and `/bf-finance` keep their URLs. The finance credential was rotated after a real credential was mistakenly included in an initial test commit in the public repository. That old credential must fail authentication; tests now use a fake environment override. No replacement plaintext credential is committed.
 - New combined `agent-checkout` endpoint removes one browser/server round trip. The frontend retains a 256-bit attempt token across uncertain network retries; the server derives a stable merchant order ID and rejects a different amount for the same attempt.
 - Server owns catalog prices, agent amounts, currency, initial statuses, IDs, timestamps and payment evidence. Payment/receipt APIs require the per-order token. The wallet return carries it in the URL fragment, imports it into browser storage and removes it from the address bar.
 - Generic list/internal finance endpoints require a separate operator credential. `ADMIN_ACCESS_KEY` can override the bundled digest; no plaintext operator credential is committed. Legacy orders without tokens must be handled through authenticated finance/admin views.

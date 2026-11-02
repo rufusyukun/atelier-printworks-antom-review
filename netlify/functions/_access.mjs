@@ -1,6 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 
-const ACCESS_KEY_SHA256 = "57e25a6ff8811c34e5c9a58126e5f39f55b3b26bd504d50c0698e1225a454d13";
+const ACCESS_KEY_SHA256 = "7719d36ce83caaf4cc9d14cb3cb7cad58db89fdf092a2451c5459548976aa873";
 // High-entropy operator credential: only its digest is bundled. An environment override takes precedence.
 const ADMIN_ACCESS_KEY_SHA256 = "e145033c7481a57984fbdc676878158ec8d9071a32f7edd8cc88aceecf8ea0ef";
 export function header(event, name) {
@@ -10,7 +10,10 @@ export function digest(value) { return createHash("sha256").update(String(value)
 function matches(value, hash) {
   return Boolean(value && /^[a-f0-9]{64}$/i.test(hash || "") && timingSafeEqual(Buffer.from(digest(value), "hex"), Buffer.from(hash, "hex")));
 }
-export function financeAuthorized(event) { return matches(header(event, "x-finance-access-key"), ACCESS_KEY_SHA256); }
+export function financeAuthorized(event) {
+  const key = globalThis.Netlify?.env?.get?.("BF_FINANCE_ACCESS_KEY") || process.env.BF_FINANCE_ACCESS_KEY;
+  return matches(header(event, "x-finance-access-key"), key ? digest(key) : ACCESS_KEY_SHA256);
+}
 export function adminAuthorized(event) {
   const key = globalThis.Netlify?.env?.get?.("ADMIN_ACCESS_KEY") || process.env.ADMIN_ACCESS_KEY;
   return matches(header(event, "x-admin-access-key"), key ? digest(key) : ADMIN_ACCESS_KEY_SHA256);
