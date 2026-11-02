@@ -32,6 +32,7 @@ async function blobStore() {
 }
 
 export function connectOrderStorage(event) {
+  if (event.__modern) return true;
   try {
     connectLambda(event);
     return true;

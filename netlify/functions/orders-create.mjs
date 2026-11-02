@@ -1,3 +1,4 @@
+import { asModernFunction } from "./_http.mjs";
 import { connectOrderStorage, jsonResponse, normalizeOrderPayload, parseJson, saveOrder, getOrder, siteUrl } from "./_order-service.mjs";
 import { catalog, quickPackages } from "./_catalog.mjs";
 import { newOrderToken, digest, customerOrder } from "./_access.mjs";
@@ -54,3 +55,5 @@ export async function handler(event) {
     return jsonResponse(200, { order: customerOrder(saved), accessToken: token });
   } catch { return jsonResponse(503, { error: "订单存储暂不可用，请稍后重试" }); }
 }
+
+export default asModernFunction(handler);

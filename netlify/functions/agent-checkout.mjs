@@ -1,3 +1,4 @@
+import { asModernFunction } from "./_http.mjs";
 import { handler as createOrder } from "./orders-create.mjs";
 import { handler as createSession } from "./payment-session.mjs";
 import { jsonResponse, parseJson } from "./_order-service.mjs";
@@ -19,3 +20,5 @@ export async function handler(event) {
     return jsonResponse(503, { order, accessToken, error: "支付服务暂时不可用，请保留当前页面重试同一订单" });
   }
 }
+
+export default asModernFunction(handler);

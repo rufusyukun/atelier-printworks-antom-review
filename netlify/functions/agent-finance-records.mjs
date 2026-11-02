@@ -1,3 +1,4 @@
+import { asModernFunction } from "./_http.mjs";
 import { financeAuthorized } from "./_access.mjs";
 import { connectOrderStorage, isPaidOrder, jsonResponse, listOrders, reconcilePayment, mapConcurrent } from "./_order-service.mjs";
 
@@ -79,3 +80,5 @@ export async function handler(event) {
     }
   });
 }
+
+export default asModernFunction(handler);

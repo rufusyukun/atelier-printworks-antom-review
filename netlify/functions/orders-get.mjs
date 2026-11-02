@@ -1,3 +1,4 @@
+import { asModernFunction } from "./_http.mjs";
 import { adminAuthorized, orderAuthorized, customerOrder, withoutCredentials } from "./_access.mjs";
 import { connectOrderStorage, getOrder, jsonResponse, listOrders, orderStorageStatus, reconcilePayment } from "./_order-service.mjs";
 
@@ -32,3 +33,5 @@ export async function handler(event) {
   }
   return jsonResponse(200, { orders: orders.map(withoutCredentials) });
 }
+
+export default asModernFunction(handler);

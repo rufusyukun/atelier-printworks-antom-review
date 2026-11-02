@@ -131,3 +131,11 @@ test('agent ledger does not accept a storefront note as an agent source, and ref
  assert.ok(!r.records.some(record=>record.orderId==='SPOOF-NOTE'));
  assert.equal(r.records.find(record=>record.orderId==='REFUNDED-AGENT').status,'refunded');
 });
+
+test('modern runtime bridge preserves request body and query and trusts context IP',async()=>{
+ const {asModernFunction}=await import('../netlify/functions/_http.mjs');
+ let captured;
+ const wrapped=asModernFunction(async event=>{captured=event;return {statusCode:200,headers:{'content-type':'application/json'},body:'{"ok":true}'};});
+ const result=await wrapped(new Request('https://example.invalid/test?orderId=ONE',{method:'POST',headers:{'x-nf-client-connection-ip':'forged'},body:'{"data":"exact"}'}),{ip:'203.0.113.7'});
+ assert.equal(result.status,200);assert.equal(captured.__modern,true);assert.equal(captured.body,'{"data":"exact"}');assert.equal(captured.rawQuery,'orderId=ONE');assert.equal(captured.headers['x-nf-client-connection-ip'],'203.0.113.7');
+});

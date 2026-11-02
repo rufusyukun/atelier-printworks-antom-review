@@ -1,3 +1,4 @@
+import { asModernFunction } from "./_http.mjs";
 import { orderAuthorized, customerOrder, header } from "./_access.mjs";
 import { antomConfig, connectOrderStorage, jsonResponse, paymentApiEnabled, paymentConfigStatus, paymentMode, isPaidOrder, parseJson, recentSuccessfulPaymentBlock, signApiRequest, siteUrl, getOrder, normalizeOrderPayload, saveOrder, updateOrder } from "./_order-service.mjs";
 
@@ -399,3 +400,5 @@ export async function handler(event) {
     return jsonResponse(502, { error: "暂未取得支付宝响应，请勿重复付款；重试将继续同一订单，可在对账后台确认结果。" });
   }
 }
+
+export default asModernFunction(handler);

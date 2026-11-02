@@ -1,3 +1,4 @@
+import { asModernFunction } from "./_http.mjs";
 import { antomConfig, appendPaymentEvent, isPaidOrder, connectOrderStorage, getOrder, jsonResponse, paymentApiEnabled, stateFromPaymentResult, updateOrder, verifyApiSignature } from "./_order-service.mjs";
 
 function notifySuccess(body = {}) {
@@ -90,3 +91,5 @@ export async function handler(event) {
   });
   return notifySuccess({ received: true, orderId: updated?.id || order.id });
 }
+
+export default asModernFunction(handler);

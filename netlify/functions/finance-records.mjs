@@ -1,3 +1,4 @@
+import { asModernFunction } from "./_http.mjs";
 import { adminAuthorized } from "./_access.mjs";
 import { connectOrderStorage, isPaidOrder, jsonResponse, listOrders } from "./_order-service.mjs";
 
@@ -49,3 +50,5 @@ export async function handler(event) {
     }
   });
 }
+
+export default asModernFunction(handler);
