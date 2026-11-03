@@ -43,7 +43,12 @@ export async function handler(event) {
   if (!financeAuthorized(event)) return jsonResponse(401, { error: "访问码不正确" });
 
   connectOrderStorage(event);
-  let orders = (await listOrders()).filter(isAgentPayment);
+  // Historical records exported on 2026-11-03 remain stored; hide them only in this view.
+  const archivedHistoryBefore = Date.parse("2026-11-03T05:10:35.000Z");
+  let orders = (await listOrders()).filter(isAgentPayment).filter(order => {
+    const createdAt = Date.parse(order.createdAt || "");
+    return !Number.isFinite(createdAt) || createdAt >= archivedHistoryBefore;
+  });
   const shouldReconcile = event.queryStringParameters?.reconcile === "1" ||
     new URLSearchParams(event.rawQuery || event.rawUrl?.split("?")[1] || "").get("reconcile") === "1";
   if (shouldReconcile) {
