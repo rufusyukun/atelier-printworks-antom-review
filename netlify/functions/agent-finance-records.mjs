@@ -44,7 +44,7 @@ export async function handler(event) {
 
   connectOrderStorage(event);
   // Historical records exported on 2026-11-03 remain stored; hide them only in this view.
-  const archivedHistoryBefore = Date.parse("2026-11-03T05:10:35.000Z");
+  const archivedHistoryBefore = Date.parse("2026-11-03T05:58:54.000Z");
   let orders = (await listOrders()).filter(isAgentPayment).filter(order => {
     const createdAt = Date.parse(order.createdAt || "");
     return !Number.isFinite(createdAt) || createdAt >= archivedHistoryBefore;
